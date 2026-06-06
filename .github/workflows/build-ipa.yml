@@ -23,6 +23,13 @@ jobs:
       - name: Install Dependencies
         run: flutter pub get
 
+      # 【核心修复】强行修改 Xcode 项目配置，关闭所有强制签名要求
+      - name: Disable Xcode Auto Code Signing
+        run: |
+          sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGNING_REQUIRED = YES/CODE_SIGNING_REQUIRED = NO/g' ios/Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGNING_ALLOWED = YES/CODE_SIGNING_ALLOWED = NO/g' ios/Runner.xcodeproj/project.pbxproj
+
       - name: Build iOS (No Codesign)
         run: flutter build ios --release --no-codesign
 
