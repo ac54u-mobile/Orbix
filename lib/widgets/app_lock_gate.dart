@@ -47,7 +47,8 @@ class AppLockGateState extends State<AppLockGate>
       _enabled = true;
       _locked = true;
     });
-    _promptAuth();
+    // 推迟到下一帧再弹 Face ID，避免在 initState 中调用 setState
+    WidgetsBinding.instance.addPostFrameCallback((_) => _promptAuth());
   }
 
   @override

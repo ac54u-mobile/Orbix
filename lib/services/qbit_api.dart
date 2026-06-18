@@ -494,7 +494,9 @@ class QBitApi {
       // "Fails." 既可能是“重复种子（其实已在列表）”，也可能是“链接/文件无效”。
       // 以列表为准：真的多了新种子就是成功；否则才提示已存在/无效。
       if (r.data.toString().toLowerCase().contains('fail')) {
-        if (await addedNew() == true) return null;
+        final added = await addedNew();
+        if (added == true) return null;
+        if (added == null) return '无法确认任务是否添加成功，请刷新列表检查';
         return '该种子已在列表中，或链接/文件无效';
       }
       return null;
