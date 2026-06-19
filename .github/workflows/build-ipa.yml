@@ -33,14 +33,24 @@ jobs:
       - name: Prepare iOS Project
         run: flutter build ios --simulator --config-only
 
+      # Flutter stable 现已将插件迁移为 Swift Package Manager，旧 Podfile
+      # 混合 SPM 可能残留脏沙箱。强制 clean + pod install 保证同步。
+      - name: Sync CocoaPods Sandbox
+        run: |
+          cd ios
+          rm -rf Pods .symlinks
+          pod install --repo-update
+        # 即使 pod install 失败也继续（所有依赖都是 SPM 时可能不需要）
+        continue-on-error: true
+
       - name: Force Disable All Code Signing
         run: |
-          perl -i -pe 's/DEVELOPMENT_TEAM = .*;/DEVELOPMENT_TEAM = "";/' ios/Runner.xcodeproj/project.pbxproj
-          perl -i -pe 's/CODE_SIGN_IDENTITY = .*;/CODE_SIGN_IDENTITY = "";/' ios/Runner.xcodeproj/project.pbxproj
+          perl -i -pe 's/DEVELOPMENT_TEAM = .*;/DEVELOPMENT_TEAM = “”;/' ios/Runner.xcodeproj/project.pbxproj
+          perl -i -pe 's/CODE_SIGN_IDENTITY = .*;/CODE_SIGN_IDENTITY = “”;/' ios/Runner.xcodeproj/project.pbxproj
           perl -i -pe 's/CODE_SIGNING_ALLOWED = .*;/CODE_SIGNING_ALLOWED = NO;/' ios/Runner.xcodeproj/project.pbxproj
           perl -i -pe 's/CODE_SIGNING_REQUIRED = .*;/CODE_SIGNING_REQUIRED = NO;/' ios/Runner.xcodeproj/project.pbxproj
 
-      # 此时 Xcode 工程已变“瞎子”，放行无签编译
+      # 此时 Xcode 工程已变”瞎子”，放行无签编译
       - name: Build iOS (Unsigned)
         run: flutter build ios --release --no-codesign
 
