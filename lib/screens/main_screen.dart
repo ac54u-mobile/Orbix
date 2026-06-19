@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dio/dio.dart';
@@ -781,12 +780,6 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
     }
   }
 
-  // 兜底：复制 .ipa 直链，便于手动用浏览器 / TrollStore 处理。
-  Future<void> _copyIpaLink(AppRelease rel) async {
-    await Clipboard.setData(ClipboardData(text: rel.ipaUrl));
-    if (mounted) Toast.show(context, '下载链接已复制', type: ToastType.success);
-  }
-
   String _fmtMB(int bytes) =>
       bytes <= 0 ? '' : '${(bytes / 1048576).toStringAsFixed(1)} MB';
 
@@ -856,82 +849,36 @@ class _ServerSettingsPageState extends State<ServerSettingsPage> {
     );
   }
 
-  // 更新卡片：紧凑样式
+  // 更新卡片：Tesla 极简 — 单行版本号 + 大小 + 紧凑更新按钮。
   Widget _buildUpdateCard(AppRelease rel) {
     final accent = AppColors.accent.resolveFrom(context);
-    final notes = rel.notes.trim();
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.of(AppColors.card),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: accent.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
+    final sizeStr = rel.ipaSize > 0 ? _fmtMB(rel.ipaSize) : '';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(CupertinoIcons.sparkles, color: accent, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text('新版本 ${rel.tag}',
-                    style: AppTypography.cardTitle().copyWith(fontSize: 16)),
-              ),
-            ],
-          ),
-          if (notes.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              notes,
-              style: AppTypography.subtitle(),
-              maxLines: 3,
+          Icon(CupertinoIcons.sparkles, color: accent, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${rel.tag}${sizeStr.isNotEmpty ? '  ·  $sizeStr' : ''}',
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: AppTypography.body().copyWith(
+                color: accent,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ],
-          const SizedBox(height: 10),
-          SizedBox(
-            width: double.infinity,
-            child: CupertinoButton.filled(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              borderRadius: BorderRadius.circular(8),
-              onPressed: () => _install(rel),
-              child: const Text('立即更新',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            ),
+          ),
+          CupertinoButton.filled(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            borderRadius: BorderRadius.circular(14),
+            onPressed: () => _install(rel),
+            child: const Text('更新',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
           ),
         ],
       ),
-    );
-  }
-
-  // 空闲态：「立即更新」主按钮 + 复制直链兜底。
-  Widget _buildUpdateActions(AppRelease rel) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: CupertinoButton.filled(
-            padding: const EdgeInsets.symmetric(vertical: 13),
-            borderRadius: BorderRadius.circular(12),
-            onPressed: () => _install(rel),
-            child: const Text('立即更新',
-                style: TextStyle(fontWeight: FontWeight.w600)),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Center(
-          child: CupertinoButton(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            minimumSize: Size.zero,
-            onPressed: () => _copyIpaLink(rel),
-            child: Text('复制下载链接', style: AppTypography.subtitle()),
-          ),
-        ),
-      ],
     );
   }
 
