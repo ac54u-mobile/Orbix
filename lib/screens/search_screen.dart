@@ -354,8 +354,8 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
           sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.72,
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 170, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.72,
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) => _buildCard(list[index], index),
@@ -766,8 +766,8 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.72,
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 170, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 0.72,
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) => Container(
