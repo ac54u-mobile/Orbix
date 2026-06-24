@@ -25,10 +25,16 @@ struct ContentView: View {
                     showLoginFromWelcome = true
                 })
                 .sheet(isPresented: $showLoginFromWelcome) {
-                    LoginView { _ in
+                    LoginView { config in
                         showLoginFromWelcome = false
-                        withAnimation(.smooth(duration: 0.35)) {
-                            destination = .main
+                        Task {
+                            await QBitApi.shared.setActiveServer(config)
+                            _ = await QBitApi.shared.connect()
+                            await MainActor.run {
+                                withAnimation(.smooth(duration: 0.35)) {
+                                    destination = .main
+                                }
+                            }
                         }
                     }
                 }
