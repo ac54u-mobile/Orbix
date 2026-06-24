@@ -12,7 +12,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/qbit_api.dart';
 import '../services/torrent_search_service.dart';
-import '../services/torrent_translate_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../widgets/media_viewer.dart';
@@ -603,24 +602,22 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
     showCupertinoModalPopup(
       context: context,
       builder: (ctx) {
-        String? _description;
+        String? localDesc;
         final fileName = (r['fileName'] ?? '').toString();
 
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            if (_description == null && pageUrl.isNotEmpty) {
-              _description = '';
+            if (localDesc == null && pageUrl.isNotEmpty) {
+              localDesc = '';
               TorrentSearchService.instance.fetchDescription(pageUrl).then((desc) {
                 setSheetState(() {
-                  _description = desc ?? '';
-                  r['description'] = _description;
+                  localDesc = desc ?? '';
+                  r['description'] = localDesc;
                 });
               });
             }
 
-            final loading = _description == '';
-            final descText = loading ? null : _description;
-            final hasDesc = descText != null && descText.isNotEmpty;
+            final loading = localDesc == '';
 
             return CupertinoPageScaffold(
               backgroundColor: AppColors.of(AppColors.groupedBg),
@@ -672,7 +669,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
                                 const SizedBox(width: 6),
                                 Text('加载作品简介…', style: AppTypography.caption(color: AppColors.of(AppColors.tertiaryLabel))),
                               ])
-                            else if (hasDesc)
+                            else if (localDesc?.isNotEmpty == true)
                               Container(
                                 width: double.infinity,
                                 padding: const EdgeInsets.all(12),
@@ -681,7 +678,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  descText!,
+                                  localDesc!,
                                   style: AppTypography.body().copyWith(fontSize: 13, height: 1.5),
                                 ),
                               ),
