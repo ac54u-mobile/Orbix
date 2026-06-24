@@ -112,6 +112,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
         _lastPage = 5;
         _applyFilters();
       });
+      _preTranslate(items);
     } catch (_) { if (mounted) setState(() => _state = _OnlineState.error); }
   }
 
@@ -128,6 +129,7 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
         _lastPage = 10;
         _applyFilters();
       });
+      _preTranslate(items);
     } catch (_) { if (mounted) setState(() => _state = _OnlineState.error); }
   }
 
@@ -145,6 +147,14 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
       }
       setState(() { _isLoadingMore = false; _lastPage = start + 15 - 1; _applyFilters(); });
     } catch (_) { if (mounted) setState(() => _isLoadingMore = false); }
+  }
+
+  void _preTranslate(List<ScrapedTorrent> items) {
+    for (final item in items) {
+      if (item.description != null && item.description!.isNotEmpty) {
+        TorrentSearchService.instance.translateDescription(item.description!);
+      }
+    }
   }
 
   void _applyFilters() {
@@ -325,6 +335,10 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
       controller: _scrollCtrl,
       physics: const BouncingScrollPhysics(),
       slivers: [
+        CupertinoSliverRefreshControl(onRefresh: () async {
+          final q = _queryCtrl.text.trim();
+          if (q.isEmpty) { await _loadLatest(); } else { await _runSearch(q); }
+        }),
         // ── 粘性 Tab 栏（搜索框 + 分类标签） ──
         SliverPersistentHeader(
           pinned: true,

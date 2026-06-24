@@ -96,7 +96,8 @@ class TorrentSearchService {
           seen.add(key);
           if (q.isEmpty ||
               item.code.toLowerCase().contains(q) ||
-              item.title.toLowerCase().contains(q)) {
+              item.title.toLowerCase().contains(q) ||
+              (item.description?.toLowerCase().contains(q) ?? false)) {
             results.add(item);
           }
         }
