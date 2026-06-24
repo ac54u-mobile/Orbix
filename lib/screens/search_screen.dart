@@ -744,48 +744,27 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
     required VoidCallback onTap,
     bool primary = false,
   }) {
-    if (primary) {
-      return SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: CupertinoButton(
-          padding: EdgeInsets.zero,
-          onPressed: onTap,
-          color: AppColors.accent,
-          borderRadius: BorderRadius.circular(12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 20, color: Colors.white),
-              const SizedBox(width: 8),
-              Text(label, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-      );
-    }
-    return SizedBox(
-      width: double.infinity,
-      height: 46,
+    final color = primary ? AppColors.accent : AppColors.of(AppColors.secondaryLabel);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: CupertinoButton(
         padding: EdgeInsets.zero,
         onPressed: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: double.infinity,
-          height: 46,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.of(AppColors.separator), width: 1),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: AppColors.accent),
-              const SizedBox(width: 8),
-              Text(label, style: TextStyle(color: AppColors.accent, fontSize: 15, fontWeight: FontWeight.w500)),
-            ],
-          ),
+        child: Row(
+          children: [
+            Icon(icon, size: primary ? 22 : 20, color: color),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: primary ? 16 : 15,
+                fontWeight: primary ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+            const Spacer(),
+            Icon(CupertinoIcons.chevron_right, size: 14, color: AppColors.of(AppColors.tertiaryLabel)),
+          ],
         ),
       ),
     );
