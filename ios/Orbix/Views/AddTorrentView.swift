@@ -17,6 +17,7 @@ struct AddTorrentView: View {
     @State private var tags = ""
     @State private var savePath = ""
     @State private var isSubmitting = false
+    @State private var showFilePicker = false
 
     var body: some View {
         NavigationStack {
@@ -100,6 +101,25 @@ struct AddTorrentView: View {
             .insetGroupedStyle()
             .navigationTitle("添加种子")
             .navigationBarTitleDisplayMode(.inline)
+            .fileImporter(
+                isPresented: $showFilePicker,
+                allowedContentTypes: [.data, UTType(filenameExtension: "torrent")].compactMap { $0 },
+                allowsMultipleSelection: false
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    guard let url = urls.first else { return }
+                    guard url.startAccessingSecurityScopedResource() else { return }
+                    defer { url.stopAccessingSecurityScopedResource() }
+                    
+                    if let data = try? Data(contentsOf: url) {
+                        selectedFileURL = url
+                        selectedFileData = data
+                    }
+                case .failure(let error):
+                    print(error.localizedDescription)
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("取消") { dismiss() }
@@ -159,7 +179,6 @@ struct AddTorrentView: View {
     }
 
     private func pickFile() {
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [UTType(filenameExtension: "torrent") ?? .data])
-        // Would need UIViewControllerRepresentable for SwiftUI
+        showFilePicker = true
     }
 }

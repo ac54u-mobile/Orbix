@@ -6,6 +6,7 @@ struct ServerManagementView: View {
 
     @State private var servers: [ServerConfig] = []
     @State private var showLogin = false
+    @State private var editingServer: ServerConfig? = nil
 
     var body: some View {
         NavigationStack {
@@ -94,7 +95,9 @@ struct ServerManagementView: View {
         }
         .onAppear { loadServers() }
         .sheet(isPresented: $showLogin) {
-            // editingServer passed via environment hack
+            LoginView(server: editingServer) { config in
+                loadServers()
+            }
         }
     }
 
@@ -111,7 +114,8 @@ struct ServerManagementView: View {
     }
 
     private func showLoginWith(_ server: ServerConfig?) {
-        // This would ideally pass server to LoginView via state
+        editingServer = server
+        showLogin = true
     }
 }
 

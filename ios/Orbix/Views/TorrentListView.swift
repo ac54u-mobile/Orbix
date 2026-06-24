@@ -9,12 +9,12 @@ struct TorrentListView: View {
     @State private var isLoading = true
 
     enum TorrentFilter: String, CaseIterable {
-        case all = "All"
-        case downloading = "Downloading"
-        case seeding = "Seeding"
-        case active = "Active"
-        case paused = "Paused"
-        case completed = "Completed"
+        case all = "全部"
+        case downloading = "下载中"
+        case seeding = "做种中"
+        case active = "活动中"
+        case paused = "已暂停"
+        case completed = "已完成"
     }
 
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
@@ -72,7 +72,7 @@ struct TorrentListView: View {
                     .insetGroupedStyle()
                 }
             }
-            .navigationTitle("Torrents")
+            .navigationTitle("种子")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -93,12 +93,16 @@ struct TorrentListView: View {
         }
     }
 
+    @Namespace private var animationNamespace
+
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 0) {
                 ForEach(TorrentFilter.allCases, id: \.self) { f in
                     Button {
-                        withAnimation(.snappy) { filter = f }
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            filter = f
+                        }
                     } label: {
                         VStack(spacing: 6) {
                             Text(f.rawValue)
@@ -107,10 +111,20 @@ struct TorrentListView: View {
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
 
-                            RoundedRectangle(cornerRadius: 1)
-                                .fill(filter == f ? AppColors.accent : .clear)
-                                .frame(height: 2)
-                                .padding(.horizontal, 16)
+                            ZStack {
+                                if filter == f {
+                                    RoundedRectangle(cornerRadius: 1)
+                                        .fill(AppColors.accent)
+                                        .frame(height: 2)
+                                        .padding(.horizontal, 16)
+                                        .matchedGeometryEffect(id: "underline", in: animationNamespace)
+                                } else {
+                                    RoundedRectangle(cornerRadius: 1)
+                                        .fill(Color.clear)
+                                        .frame(height: 2)
+                                        .padding(.horizontal, 16)
+                                }
+                            }
                         }
                     }
                 }

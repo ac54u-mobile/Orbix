@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var destination: Destination = .splash
+    @State private var showLoginFromWelcome = false
 
     enum Destination {
         case splash
@@ -20,11 +21,17 @@ struct ContentView: View {
                     }
                 })
             case .welcome:
-                WelcomeView(onComplete: {
-                    withAnimation(.smooth(duration: 0.35)) {
-                        destination = .main
-                    }
+                WelcomeView(onAddServer: {
+                    showLoginFromWelcome = true
                 })
+                .sheet(isPresented: $showLoginFromWelcome) {
+                    LoginView { _ in
+                        showLoginFromWelcome = false
+                        withAnimation(.smooth(duration: 0.35)) {
+                            destination = .main
+                        }
+                    }
+                }
             case .serverSelection:
                 ServerSelectionView(onConnected: {
                     withAnimation(.smooth(duration: 0.35)) {

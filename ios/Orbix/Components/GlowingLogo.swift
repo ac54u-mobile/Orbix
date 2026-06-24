@@ -10,7 +10,7 @@ struct GlowingLogo: View {
                 .frame(width: size, height: size)
                 .shadow(color: AppColors.accent.opacity(0.4), radius: size * 0.25, x: 0, y: 4)
 
-            Image(systemName: "arrow.triangle.branch")
+            Image(systemName: "icloud.and.arrow.down.fill")
                 .font(.system(size: size * 0.35, weight: .medium))
                 .foregroundColor(.white)
         }

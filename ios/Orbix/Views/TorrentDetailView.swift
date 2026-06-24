@@ -151,10 +151,10 @@ struct TorrentDetailView: View {
 
     private func transferSection(_ torrent: TorrentInfo) -> some View {
         Section("传输") {
-            DetailRow(label: "下载速度", value: formattedSpeed(torrent.dlspeed), color: AppColors.accent)
-            DetailRow(label: "上传速度", value: formattedSpeed(torrent.upspeed), color: AppColors.success)
-            DetailRow(label: "已下载", value: formattedSize(torrent.downloaded))
-            DetailRow(label: "已上传", value: formattedSize(torrent.uploaded))
+            DetailRow(label: "下载速度", value: formatSpeed(torrent.dlspeed), color: AppColors.accent)
+            DetailRow(label: "上传速度", value: formatSpeed(torrent.upspeed), color: AppColors.success)
+            DetailRow(label: "已下载", value: formatBytes(torrent.downloaded))
+            DetailRow(label: "已上传", value: formatBytes(torrent.uploaded))
             DetailRow(label: "分享率", value: String(format: "%.2f", torrent.ratio))
             if torrent.eta > 0 {
                 DetailRow(label: "预计完成", value: torrent.etaFormatted)
@@ -165,7 +165,7 @@ struct TorrentDetailView: View {
 
     private func infoSection(_ props: TorrentProperties) -> some View {
         Section("信息") {
-            DetailRow(label: "总大小", value: formattedSize(props.totalSize))
+            DetailRow(label: "总大小", value: formatBytes(props.totalSize))
             DetailRow(label: "保存路径", value: props.savePath)
                 .font(.system(size: 13, design: .monospaced))
             if !props.category.isEmpty {
@@ -193,7 +193,7 @@ struct TorrentDetailView: View {
                         Text("\(file.progressPercent)%")
                             .caption()
                         Spacer()
-                        Text(formattedSize(file.size))
+                        Text(formatBytes(file.size))
                             .caption()
                     }
                 }
@@ -264,18 +264,7 @@ struct TorrentDetailView: View {
         return torrent.isCompleted ? AppColors.success : AppColors.accent
     }
 
-    private func formattedSpeed(_ speed: Int64) -> String {
-        if speed >= 1_000_000 { return String(format: "%.1f MB/s", Double(speed) / 1_000_000) }
-        if speed >= 1_000 { return String(format: "%.1f KB/s", Double(speed) / 1_000) }
-        return "\(speed) B/s"
-    }
 
-    private func formattedSize(_ bytes: Int64) -> String {
-        if bytes >= 1_000_000_000 { return String(format: "%.2f GB", Double(bytes) / 1_000_000_000) }
-        if bytes >= 1_000_000 { return String(format: "%.2f MB", Double(bytes) / 1_000_000) }
-        if bytes >= 1_000 { return String(format: "%.2f KB", Double(bytes) / 1_000) }
-        return "\(bytes) B"
-    }
 }
 
 private struct ActionButton: View {

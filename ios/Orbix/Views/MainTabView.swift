@@ -10,14 +10,14 @@ struct MainTabView: View {
             TorrentListView()
                 .tabItem {
                     Image(systemName: "square.stack")
-                    Text("Torrents")
+                    Text("种子")
                 }
                 .tag(0)
 
             StatsView()
                 .tabItem {
                     Image(systemName: "chart.bar")
-                    Text("Stats")
+                    Text("传输")
                 }
                 .tag(1)
 

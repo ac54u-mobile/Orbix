@@ -36,7 +36,7 @@ struct StatsView: View {
                     .insetGroupedStyle()
                 }
             }
-            .navigationTitle("Stats")
+            .navigationTitle("传输统计")
             .onAppear { refresh() }
             .onReceive(timer) { _ in refresh() }
         }
@@ -85,12 +85,12 @@ struct StatsView: View {
     private var transferVolumeSection: some View {
         Section("传输量") {
             if let state = transfer?.serverState {
-                DetailStatRow(label: "会话下载", value: formattedSize(state.alltimeDl))
-                DetailStatRow(label: "会话上传", value: formattedSize(state.alltimeUl))
-                DetailStatRow(label: "总计下载", value: formattedSize(transfer?.dlInfoData ?? 0))
-                DetailStatRow(label: "总计上传", value: formattedSize(transfer?.upInfoData ?? 0))
+                DetailStatRow(label: "会话下载", value: formatBytes(transfer?.dlInfoData ?? 0))
+                DetailStatRow(label: "会话上传", value: formatBytes(transfer?.upInfoData ?? 0))
+                DetailStatRow(label: "总计下载", value: formatBytes(state.alltimeDl))
+                DetailStatRow(label: "总计上传", value: formatBytes(state.alltimeUl))
                 DetailStatRow(label: "全局分享率", value: state.globalRatio ?? "-")
-                DetailStatRow(label: "浪费", value: formattedSize(state.totalWastedSession))
+                DetailStatRow(label: "浪费", value: formatBytes(state.totalWastedSession))
             }
         }
     }
@@ -118,7 +118,7 @@ struct StatsView: View {
     private var diskSection: some View {
         Section("磁盘") {
             if let state = transfer?.serverState {
-                DetailStatRow(label: "可用空间", value: formattedSize(state.freeSpaceOnDisk))
+                DetailStatRow(label: "可用空间", value: formatBytes(state.freeSpaceOnDisk))
             }
         }
     }
@@ -154,13 +154,6 @@ struct StatsView: View {
         case "firewalled": return AppColors.warning
         default: return AppColors.danger
         }
-    }
-
-    private func formattedSize(_ bytes: Int64) -> String {
-        if bytes >= 1_000_000_000 { return String(format: "%.2f GB", Double(bytes) / 1_000_000_000) }
-        if bytes >= 1_000_000 { return String(format: "%.2f MB", Double(bytes) / 1_000_000) }
-        if bytes >= 1_000 { return String(format: "%.2f KB", Double(bytes) / 1_000) }
-        return "\(bytes) B"
     }
 
     private func refresh() {

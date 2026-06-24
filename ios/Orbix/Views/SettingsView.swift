@@ -178,7 +178,7 @@ struct SettingsView: View {
                     .bodyFont(AppColors.accent)
                 Spacer()
                 if let size = release.ipaSize {
-                    Text(formattedSize(size))
+                    Text(formatBytes(size))
                         .caption()
                 }
             }
@@ -278,11 +278,4 @@ struct SettingsView: View {
 
         let vc = UIActivityViewController(activityItems: [url], applicationActivities: nil)
         root.present(vc, animated: true)
-    }
-
-    private func formattedSize(_ bytes: Int64) -> String {
-        if bytes >= 1_000_000 { return String(format: "%.1f MB", Double(bytes) / 1_000_000) }
-        if bytes >= 1_000 { return String(format: "%.1f KB", Double(bytes) / 1_000) }
-        return "\(bytes) B"
-    }
-}
+    }}

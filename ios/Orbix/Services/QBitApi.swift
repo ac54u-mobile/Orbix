@@ -11,8 +11,26 @@ actor QBitApi {
     private let decoder = JSONDecoder()
 
     // MARK: - Server Management
-    func loadSavedConfig() -> ServerConfig? { activeServer }
-    func setActiveServer(_ config: ServerConfig) { activeServer = config }
+    func loadSavedConfig() -> ServerConfig? {
+        guard let host = UserDefaults.standard.string(forKey: "qbit_host") else { return nil }
+        return ServerConfig(
+            name: UserDefaults.standard.string(forKey: "qbit_name") ?? host,
+            host: host,
+            port: UserDefaults.standard.integer(forKey: "qbit_port"),
+            username: UserDefaults.standard.string(forKey: "qbit_username") ?? "",
+            password: UserDefaults.standard.string(forKey: "qbit_password") ?? "",
+            https: UserDefaults.standard.bool(forKey: "qbit_https")
+        )
+    }
+    func setActiveServer(_ config: ServerConfig) {
+        activeServer = config
+        UserDefaults.standard.set(config.name, forKey: "qbit_name")
+        UserDefaults.standard.set(config.host, forKey: "qbit_host")
+        UserDefaults.standard.set(config.port, forKey: "qbit_port")
+        UserDefaults.standard.set(config.username, forKey: "qbit_username")
+        UserDefaults.standard.set(config.password, forKey: "qbit_password")
+        UserDefaults.standard.set(config.https, forKey: "qbit_https")
+    }
 
     func loadServers() -> [ServerConfig] {
         guard let data = UserDefaults.standard.data(forKey: "qbit_servers"),
@@ -83,6 +101,7 @@ actor QBitApi {
     }
 
     private func login(server: ServerConfig) async -> ConnectResult {
+        sessionCookie = nil
         guard let url = URL(string: "\(server.url)/api/v2/auth/login") else {
             return ConnectResult(status: .unknown, message: "Invalid URL")
         }

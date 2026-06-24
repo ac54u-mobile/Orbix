@@ -35,18 +35,6 @@ enum AppTypography {
     }
 }
 
-extension Font {
-    func leading(_ style: LeadingStyle) -> Font {
-        self.leading(style)
-    }
-}
-
-enum LeadingStyle {
-    case tight
-    case standard
-    case loose
-}
-
 extension View {
     func hero(_ color: Color = AppColors.label) -> some View {
         self.font(AppTypography.hero(color))
