@@ -37,10 +37,10 @@ struct LoginView: View {
 
                         VStack(spacing: 6) {
                             Text("Orbix")
-                                .font(.system(size: 24, weight: .bold, design: .rounded))
+                                .font(.system(size: 22, weight: .bold, design: .rounded))
                                 .foregroundColor(.primary)
                             Text("配置 qBittorrent 连接")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.system(size: 13, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -122,7 +122,7 @@ struct LoginView: View {
                                     .tint(AppColors.accent)
                             } else {
                                 Text("测试连接")
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(.system(size: 15, weight: .semibold))
                             }
                             Spacer()
                         }
@@ -133,7 +133,7 @@ struct LoginView: View {
                             Image(systemName: result.isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
                                 .foregroundColor(result.isSuccess ? .green : .red)
                             Text(result.isSuccess ? "连接成功" : result.message)
-                                .font(.system(size: 14))
+                                .font(.system(size: 13))
                                 .foregroundColor(result.isSuccess ? .green : .red)
                         }
                         .frame(maxWidth: .infinity, alignment: .center)
@@ -154,7 +154,7 @@ struct LoginView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存") { save() }
-                        .font(.system(size: 17, weight: .bold))
+                        .font(.system(size: 15, weight: .bold))
                         .disabled(host.isEmpty || username.isEmpty)
                 }
             }
@@ -214,10 +214,10 @@ private struct FormRow<Content: View>: View {
                 .frame(width: 24, alignment: .center)
 
             VStack(alignment: .leading, spacing: 0) {
-                content
-                    .font(.system(size: 16))
+                    content
+                        .font(.system(size: 15))
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 1)
     }
 }
