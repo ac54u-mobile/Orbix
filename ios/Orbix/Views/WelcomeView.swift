@@ -13,10 +13,12 @@ struct WelcomeView: View {
                 GlowingLogo(size: 88)
 
                 Text("Orbix")
-                    .largeTitle()
+                    .font(.system(size: 34, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
 
                 Text("qBittorrent 客户端")
-                    .subtitle()
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundColor(.secondary)
 
                 VStack(spacing: 12) {
                     FeatureTile(
@@ -40,20 +42,26 @@ struct WelcomeView: View {
                 Spacer()
 
                 Button {
+                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
+                    impactMed.impactOccurred()
                     onAddServer()
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "plus.circle.fill")
-                        Text("添加服务器")
-                            .bodyFont(.white)
+                            .font(.system(size: 20, weight: .semibold))
+                        Text("开始配置")
+                            .font(.system(size: 17, weight: .bold))
                     }
+                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
+                    .frame(height: 56)
                     .background(
-                        RoundedRectangle(cornerRadius: 14)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .fill(AppColors.accent)
+                            .shadow(color: AppColors.accent.opacity(0.3), radius: 12, x: 0, y: 6)
                     )
                 }
+                .buttonStyle(ScaleButtonStyle())
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
             }
@@ -104,5 +112,14 @@ private struct FeatureTile: View {
                         .stroke(Color.white.opacity(colorScheme == .dark ? 0.05 : 0), lineWidth: 0.5)
                 )
         )
+    }
+}
+
+struct ScaleButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1)
+            .opacity(configuration.isPressed ? 0.9 : 1)
+            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
     }
 }
