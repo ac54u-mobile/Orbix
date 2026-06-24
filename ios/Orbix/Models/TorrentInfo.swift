@@ -40,6 +40,32 @@ struct TorrentInfo: Codable, Identifiable {
         case errorString = "error_string"
     }
 
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        hash = try c.decode(String.self, forKey: .hash)
+        name = try c.decode(String.self, forKey: .name)
+        state = try c.decode(String.self, forKey: .state)
+        progress = try c.decode(Double.self, forKey: .progress)
+        dlspeed = try c.decode(Int64.self, forKey: .dlspeed)
+        upspeed = try c.decode(Int64.self, forKey: .upspeed)
+        dlLimit = try c.decode(Int64.self, forKey: .dlLimit)
+        upLimit = try c.decode(Int64.self, forKey: .upLimit)
+        eta = try c.decode(Int64.self, forKey: .eta)
+        size = try c.decode(Int64.self, forKey: .size)
+        downloaded = try c.decode(Int64.self, forKey: .downloaded)
+        uploaded = try c.decode(Int64.self, forKey: .uploaded)
+        ratio = try c.decode(Double.self, forKey: .ratio)
+        numSeeds = try c.decode(Int.self, forKey: .numSeeds)
+        numLeechs = try c.decode(Int.self, forKey: .numLeechs)
+        category = try c.decode(String.self, forKey: .category)
+        tags = try c.decode(String.self, forKey: .tags)
+        savePath = try c.decode(String.self, forKey: .savePath)
+        addedOn = try c.decode(Int64.self, forKey: .addedOn)
+        completionOn = try c.decode(Int64.self, forKey: .completionOn)
+        error = try c.decodeIfPresent(Int.self, forKey: .error) ?? 0
+        errorString = try c.decodeIfPresent(String.self, forKey: .errorString) ?? ""
+    }
+
     var statusBadge: TorrentStatus {
         TorrentStatus(rawValue: state) ?? .unknown
     }
