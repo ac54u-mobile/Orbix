@@ -577,9 +577,10 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
     final torrentUrl = (r['torrentUrl'] ?? '').toString();
     final isBookmarked = _bookmarks.contains(magnet);
 
-    showCupertinoModalPopup(
-      context: context,
-      builder: (ctx) {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (ctx) {
         final fileName = (r['fileName'] ?? '').toString();
         final rawDesc = (r['description'] ?? '') as String?;
         final hasDesc = rawDesc != null && rawDesc.isNotEmpty;
@@ -720,8 +721,9 @@ class _SearchScreenState extends State<SearchScreen> with TickerProviderStateMix
           },
         );
       },
-    );
-  }
+    ),
+  );
+}
 
   Widget _metaChip(IconData icon, String text) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
