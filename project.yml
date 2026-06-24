@@ -21,8 +21,7 @@ targets:
     platform: iOS
     sources:
       - path: ios/Orbix
-    info:
-      path: ios/Orbix/Info.plist
+        type: group
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.orbix
       INFOPLIST_FILE: ios/Orbix/Info.plist
