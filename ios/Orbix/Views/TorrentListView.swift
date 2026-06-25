@@ -354,9 +354,8 @@ private struct TorrentRow: View {
     let torrent: TorrentInfo
 
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
+        HStack(alignment: .top, spacing: 10) {
             StatusIcon(status: torrent.statusBadge)
-                .padding(.top, 2)
             
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .top) {
@@ -374,8 +373,8 @@ private struct TorrentRow: View {
                             .foregroundColor(AppColors.secondaryLabel)
                         if torrent.ratio > 0 {
                             HStack(spacing: 3) {
-                                Image(systemName: "arrow.up.arrow.down")
-                                    .font(.system(size: 10))
+                                Image(systemName: "chart.line.uptrend.xyaxis")
+                                    .font(.system(size: 10, weight: .medium))
                                 Text(String(format: "%.2f", torrent.ratio))
                                     .font(.system(size: 13, design: .monospaced))
                             }
@@ -460,10 +459,10 @@ private struct StatusIcon: View {
         ZStack {
             Circle()
                 .fill(backgroundColor)
-                .frame(width: 36, height: 36)
+                .frame(width: 28, height: 28)
 
             Image(systemName: iconName)
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundColor(iconColor)
         }
     }
