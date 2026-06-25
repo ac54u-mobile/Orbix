@@ -52,7 +52,9 @@ struct AddTorrentView: View {
                 allowedContentTypes: [.data, UTType(filenameExtension: "torrent")].compactMap { $0 },
                 allowsMultipleSelection: false
             ) { result in
-                handleFileSelection(result)
+                Task { @MainActor in
+                    handleFileSelection(result)
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -183,19 +185,19 @@ struct AddTorrentView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 120)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(AppColors.card.opacity(0.5))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .strokeBorder(
-                                        style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
-                                    )
-                                    .foregroundColor(AppColors.tertiaryLabel)
-                            )
-                    )
                 }
-                .buttonStyle(.plain)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(AppColors.card.opacity(0.5))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .strokeBorder(
+                                    style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
+                                )
+                                .foregroundColor(AppColors.tertiaryLabel)
+                        )
+                )
+                .contentShape(Rectangle())
             }
         }
     }
