@@ -174,6 +174,7 @@ struct SearchView: View {
             }
         }
         .refreshable { await refreshSearch() }
+        .animation(.none, value: results.count)
         .gesture(pinchToZoom)
     }
 
@@ -253,12 +254,16 @@ struct SearchView: View {
             await MainActor.run {
                 let existingCodes = Set(results.map(\.code))
                 let newItems = items.filter { !existingCodes.contains($0.code) }
-                if !newItems.isEmpty {
-                    results = newItems + results
-                    allResults = newItems + allResults
+                var t = Transaction()
+                t.disablesAnimations = true
+                withTransaction(t) {
+                    if !newItems.isEmpty {
+                        results = newItems + results
+                        allResults = newItems + allResults
+                    }
+                    currentPage = 5
+                    hasMorePages = true
                 }
-                currentPage = 5
-                hasMorePages = true
             }
         } catch {}
     }
