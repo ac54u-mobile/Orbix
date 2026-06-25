@@ -16,8 +16,6 @@ struct SearchView: View {
     enum SearchState { case idle, loading, results, empty, error(String) }
 
     @State private var searchTask: Task<Void, Never>?
-    @State private var searchIconTapCount = 0
-    @State private var showEasterEgg = false
 
     var body: some View {
         NavigationStack {
@@ -34,7 +32,6 @@ struct SearchView: View {
             .navigationTitle("搜索")
             .onAppear { loadBookmarks(); if allResults.isEmpty { loadLatest() } }
             .sheet(item: $selectedTorrent) { TorrentDetailSheet(torrent: $0, bookmarks: $bookmarks, onChanged: saveBookmarks) }
-            .fullScreenCover(isPresented: $showEasterEgg) { EasterEggView() }
             .fullScreenCover(isPresented: $showMediaViewer) {
                 let imgs = results.map { $0.thumbnail ?? "" }.filter { !$0.isEmpty }
                 if !imgs.isEmpty {
@@ -52,14 +49,6 @@ struct SearchView: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(AppColors.placeholder)
-                        .onTapGesture {
-                            searchIconTapCount += 1
-                            if searchIconTapCount >= 3 {
-                                searchIconTapCount = 0
-                                showEasterEgg = true
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { searchIconTapCount = 0 }
-                        }
                     TextField("搜索 torrent...", text: $query)
                         .bodyFont()
                         .autocapitalization(.none)
@@ -506,56 +495,4 @@ private struct TorrentDetailSheet: View {
     }
 }
 
-// MARK: - Easter Egg
-private struct EasterEggView: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var results: [ScrapedTorrent] = []
-    @State private var isLoading = true
 
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                AppColors.mainBg.ignoresSafeArea()
-                if isLoading {
-                    VStack(spacing: 10) {
-                        SkeletonBar(height: 80)
-                        SkeletonBar(height: 80)
-                        SkeletonBar(height: 80)
-                    }
-                    .padding(.horizontal, 20).padding(.top, 20)
-                } else if results.isEmpty {
-                    VStack(spacing: 10) {
-                        Image(systemName: "antenna.radiowaves.left.and.right")
-                            .font(.system(size: 48)).foregroundColor(AppColors.placeholder)
-                        Text("没有抓到数据").foregroundColor(AppColors.secondaryLabel)
-                    }
-                } else {
-                    ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 170), spacing: 10)], spacing: 10) {
-                            ForEach(results) { torrent in
-                                TorrentCard(torrent: torrent, isBookmarked: false)
-                            }
-                        }
-                        .padding(.horizontal, 16).padding(.top, 8)
-                        VStack(spacing: 4) {
-                            Text("TorrentSearchService 正在工作").font(.caption).foregroundColor(AppColors.secondaryLabel)
-                            Text("141ppv · 共 \(results.count) 条").font(.caption2).foregroundColor(AppColors.tertiaryLabel)
-                        }
-                        .padding(.vertical, 20)
-                    }
-                }
-            }
-            .navigationTitle("🔍 秘密探索")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("关闭") { dismiss() } }
-            }
-        }
-        .task {
-            do {
-                let scraped = try await TorrentSearchService.shared.trending(pages: 2)
-                await MainActor.run { results = scraped; isLoading = false }
-            } catch { await MainActor.run { isLoading = false } }
-        }
-    }
-}
