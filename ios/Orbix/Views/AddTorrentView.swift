@@ -47,13 +47,18 @@ struct AddTorrentView: View {
             }
             .navigationTitle("添加种子")
             .navigationBarTitleDisplayMode(.inline)
-            .fileImporter(
-                isPresented: $showFilePicker,
-                allowedContentTypes: [.data],
-                allowsMultipleSelection: false
-            ) { result in
-                Task { @MainActor in
-                    handleFileSelection(result)
+            .sheet(isPresented: $showFilePicker) {
+                DocumentPickerView { url in
+                    if let data = try? Data(contentsOf: url) {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedFileURL = url
+                            selectedFileData = data
+                        }
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    }
+                    showFilePicker = false
+                } onDismiss: {
+                    showFilePicker = false
                 }
             }
             .toolbar {
@@ -280,26 +285,41 @@ struct AddTorrentView: View {
         impact.impactOccurred()
         showFilePicker = true
     }
+}
 
-    private func handleFileSelection(_ result: Result<[URL], Error>) {
-        switch result {
-        case .success(let urls):
+import UIKit
+
+struct DocumentPickerView: UIViewControllerRepresentable {
+    let onPick: (URL) -> Void
+    let onDismiss: () -> Void
+
+    func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.data], asCopy: true)
+        picker.delegate = context.coordinator
+        picker.allowsMultipleSelection = false
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(onPick: onPick, onDismiss: onDismiss) }
+
+    class Coordinator: NSObject, UIDocumentPickerDelegate {
+        let onPick: (URL) -> Void
+        let onDismiss: () -> Void
+
+        init(onPick: @escaping (URL) -> Void, onDismiss: @escaping () -> Void) {
+            self.onPick = onPick
+            self.onDismiss = onDismiss
+        }
+
+        func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             guard let url = urls.first else { return }
-            let accessing = url.startAccessingSecurityScopedResource()
-            defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+            DispatchQueue.main.async { self.onPick(url) }
+        }
 
-            if let data = try? Data(contentsOf: url) {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    selectedFileURL = url
-                    selectedFileData = data
-                }
-                let impact = UINotificationFeedbackGenerator()
-                impact.notificationOccurred(.success)
-            }
-        case .failure(let error):
-            print(error.localizedDescription)
-            let impact = UINotificationFeedbackGenerator()
-            impact.notificationOccurred(.error)
+        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+            DispatchQueue.main.async { self.onDismiss() }
         }
     }
 }
