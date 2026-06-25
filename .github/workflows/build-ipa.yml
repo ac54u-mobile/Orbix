@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build-ios:
-    runs-on: macos-26
+    runs-on: macos-15
 
     steps:
       - name: Checkout Repository
@@ -34,6 +34,16 @@ jobs:
 
       - name: Build iOS (Unsigned)
         run: |
+          set -o pipefail
+          xcodebuild build \
+            -project Orbix.xcodeproj \
+            -scheme Orbix \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_ALLOWED="NO" \
+            CODE_SIGNING_REQUIRED="NO" \
+            -derivedDataPath build 2>&1 | xcpretty --simple 2>/dev/null || \
           xcodebuild build \
             -project Orbix.xcodeproj \
             -scheme Orbix \
