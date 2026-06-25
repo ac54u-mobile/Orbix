@@ -61,11 +61,13 @@ struct TorrentListView: View {
                     .environment(\.defaultMinListRowHeight, 10)
                 }
             }
-            .overlay(alignment: .bottom) {
+            .safeAreaInset(edge: .bottom) {
                 if globalDlSpeed > 0 || globalUpSpeed > 0 {
                     GlobalSpeedPill(dl: globalDlSpeed, up: globalUpSpeed)
-                        .padding(.bottom, 24)
+                        .padding(.bottom, 16)
                         .transition(.move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.9)))
+                } else {
+                    Color.clear.frame(height: 0)
                 }
             }
             .animation(.interpolatingSpring(stiffness: 300, damping: 25), value: globalDlSpeed > 0 || globalUpSpeed > 0)
@@ -277,9 +279,9 @@ private struct TorrentRow: View {
     private var statusColor: Color {
         switch torrent.statusBadge {
         case .uploading, .stalledUP, .forcedUP: return AppColors.success
-        case .downloading, .metaDL, .forcedDL: return AppColors.accent
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent
         case .error, .missingFiles: return AppColors.danger
-        case .pausedDL, .pausedUP: return AppColors.secondaryLabel
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.secondaryLabel
         default: return AppColors.secondaryLabel
         }
     }
@@ -308,14 +310,14 @@ private struct StatusIcon: View {
 
     private var iconName: String {
         switch status {
-        case .downloading: return "arrow.down"
-        case .uploading: return "arrow.up"
-        case .pausedDL, .pausedUP: return "pause.fill"
+        case .downloading, .stalledDL, .forcedDL: return "arrow.down"
+        case .uploading, .stalledUP, .forcedUP: return "arrow.up"
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP: return "pause.fill"
+        case .queuedDL, .queuedUP: return "clock.fill"
         case .error, .missingFiles: return "exclamationmark.triangle.fill"
         case .checkingDL, .checkingUP, .checkingResumeData, .allocating: return "arrow.triangle.2.circlepath"
         case .metaDL: return "doc.text.magnifyingglass"
-        case .forcedUP: return "arrow.up"
-        case .forcedDL: return "arrow.down"
+        case .moving: return "folder.fill"
         default: return "questionmark"
         }
     }
@@ -323,9 +325,9 @@ private struct StatusIcon: View {
     private var backgroundColor: Color {
         switch status {
         case .uploading, .stalledUP, .forcedUP: return AppColors.success.opacity(0.15)
-        case .downloading, .metaDL, .forcedDL: return AppColors.accent.opacity(0.15)
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent.opacity(0.15)
         case .error, .missingFiles: return AppColors.danger.opacity(0.15)
-        case .pausedDL, .pausedUP: return AppColors.tertiaryLabel.opacity(0.15)
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.tertiaryLabel.opacity(0.15)
         default: return AppColors.separator.opacity(0.3)
         }
     }
@@ -333,9 +335,9 @@ private struct StatusIcon: View {
     private var iconColor: Color {
         switch status {
         case .uploading, .stalledUP, .forcedUP: return AppColors.success
-        case .downloading, .metaDL, .forcedDL: return AppColors.accent
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent
         case .error, .missingFiles: return AppColors.danger
-        case .pausedDL, .pausedUP: return AppColors.secondaryLabel
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.secondaryLabel
         default: return AppColors.secondaryLabel
         }
     }

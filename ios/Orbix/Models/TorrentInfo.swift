@@ -100,6 +100,8 @@ enum TorrentStatus: String {
     case stalledUP = "stalledUP"
     case pausedDL = "pausedDL"
     case pausedUP = "pausedUP"
+    case stoppedDL = "stoppedDL"
+    case stoppedUP = "stoppedUP"
     case queuedDL = "queuedDL"
     case queuedUP = "queuedUP"
     case checkingDL = "checkingDL"
@@ -126,7 +128,7 @@ enum TorrentStatus: String {
     }
 
     var isPaused: Bool {
-        self == .pausedDL || self == .pausedUP
+        self == .pausedDL || self == .pausedUP || self == .stoppedDL || self == .stoppedUP
     }
 
     var isError: Bool {
@@ -139,8 +141,8 @@ enum TorrentStatus: String {
         case .uploading: "Seeding"
         case .stalledDL: "Stalled (DL)"
         case .stalledUP: "Stalled (UP)"
-        case .pausedDL: "Paused"
-        case .pausedUP: "Completed"
+        case .pausedDL, .stoppedDL: "Paused"
+        case .pausedUP, .stoppedUP: "Completed"
         case .queuedDL: "Queued (DL)"
         case .queuedUP: "Queued (UP)"
         case .checkingDL, .checkingUP, .checkingResumeData: "Checking"
