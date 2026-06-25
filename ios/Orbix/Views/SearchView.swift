@@ -61,11 +61,15 @@ struct SearchView: View {
             .onChange(of: query) { _ in debounceSearch() }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button { loadBookmarks() } label: {
+                Button {
+                    let impact = UIImpactFeedbackGenerator(style: .light)
+                    impact.impactOccurred()
+                    loadBookmarks()
+                } label: {
                     Image(systemName: bookmarks.isEmpty ? "heart" : "heart.fill")
                         .foregroundColor(AppColors.accent)
                 }
-                .id("bookmark_\(bookmarks.count)")
+                .id("bookmark_\(bookmarks.hashValue)")
             }
         }
             .onAppear { loadBookmarks(); if allResults.isEmpty { loadLatest() } }
@@ -249,22 +253,20 @@ struct SearchView: View {
         let q = query.trimmingCharacters(in: .whitespaces)
         do {
             let items: [ScrapedTorrent]
-            let page: Int
             if q.isEmpty {
                 items = try await TorrentSearchService.shared.newTorrents(pages: 5, startPage: 1)
-                page = 5
             } else {
                 items = try await TorrentSearchService.shared.search(query: q, pages: 5, startPage: 1)
-                page = 5
             }
             await MainActor.run {
-                withAnimation(.none) {
-                    allResults = items
-                    results = items
-                    currentPage = page
-                    hasMorePages = true
-                    state = items.isEmpty ? .empty : .results
+                let existingCodes = Set(results.map(\.code))
+                let newItems = items.filter { !existingCodes.contains($0.code) }
+                if !newItems.isEmpty {
+                    results = newItems + results
+                    allResults = newItems + allResults
                 }
+                currentPage = 5
+                hasMorePages = true
             }
         } catch {}
     }
