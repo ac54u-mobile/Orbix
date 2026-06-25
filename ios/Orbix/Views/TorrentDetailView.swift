@@ -337,21 +337,6 @@ struct TorrentDetailView: View {
         }
     }
 
-    private func iconForFile(filename: String) -> String {
-        let ext = (filename as NSString).pathExtension.lowercased()
-        switch ext {
-        case "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "ts": return "film.fill"
-        case "mp3", "flac", "wav", "aac", "m4a", "ogg": return "music.note"
-        case "jpg", "jpeg", "png", "gif", "webp", "heic": return "photo.fill"
-        case "zip", "rar", "7z", "tar", "gz": return "doc.zipper"
-        case "txt", "md", "csv", "json", "xml", "nfo": return "doc.text.fill"
-        case "pdf": return "doc.richtext.fill"
-        case "exe", "msi", "dmg", "pkg", "apk", "ipa": return "app.badge.fill"
-        case "iso": return "opticaldisc"
-        default: return "doc.fill"
-        }
-    }
-
     // MARK: - Time Section
     private func timeSection(_ props: TorrentProperties) -> some View {
         VStack(spacing: 0) {
