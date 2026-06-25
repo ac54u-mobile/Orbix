@@ -10,6 +10,7 @@ struct TorrentDetailView: View {
     @State private var showDeleteConfirmation = false
     @State private var isLoading = true
     @State private var processingAction: ActionType? = nil
+    @State private var lastAnnounceAt: Date? = nil
 
     enum ActionType {
         case pause, force, recheck, announce
@@ -408,7 +409,17 @@ struct TorrentDetailView: View {
 
     private func performAction(_ type: ActionType, torrent: TorrentInfo) {
         guard processingAction == nil else { return }
+
+        // Announce cooldown: prevent hammering the tracker
+        if type == .announce, let last = lastAnnounceAt, Date().timeIntervalSince(last) < 2.0 {
+            return
+        }
+
         processingAction = type
+        let oldState = torrent.state
+        let oldDlspeed = torrent.dlspeed
+        let oldUpspeed = torrent.upspeed
+        let oldProgress = torrent.progress
 
         Task {
             do {
@@ -425,12 +436,44 @@ struct TorrentDetailView: View {
                     try await QBitApi.shared.recheckTorrent(hash)
                 case .announce:
                     try await QBitApi.shared.reannounceTorrent(hash)
+                    await MainActor.run { lastAnnounceAt = Date() }
                 }
 
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.success)
 
-                await manualRefresh()
+                // Smart polling with exponential backoff + state diffing
+                var interval: UInt64 = 300_000_000
+                let maxInterval: UInt64 = 1_200_000_000
+                var attempt = 0
+
+                while attempt < 6 {
+                    try? await Task.sleep(nanoseconds: interval)
+                    attempt += 1
+
+                    if let newTorrent = try? await QBitApi.shared.getTorrentByHash(hash) {
+                        let stateChanged = newTorrent.state != oldState
+                        let speedChanged = abs(newTorrent.dlspeed - oldDlspeed) > 1024
+                            || abs(newTorrent.upspeed - oldUpspeed) > 1024
+                        let progressChanged = abs(newTorrent.progress - oldProgress) > 0.001
+
+                        if stateChanged || speedChanged || progressChanged || attempt >= 6 {
+                            await MainActor.run { self.torrent = newTorrent }
+                            break
+                        }
+                    }
+
+                    interval = min(maxInterval, interval * 13 / 8)
+                }
+
+                // Final sync for properties & files
+                let p = try? await QBitApi.shared.getProperties(hash)
+                let f = try? await QBitApi.shared.getTorrentFiles(hash)
+                await MainActor.run {
+                    if let p = p { properties = p }
+                    if let f = f { files = f }
+                }
+
             } catch {
                 let generator = UINotificationFeedbackGenerator()
                 generator.notificationOccurred(.error)
