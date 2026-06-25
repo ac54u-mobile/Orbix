@@ -432,19 +432,13 @@ private struct EasterEggView: View {
                     }
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 12) {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160, maximum: 170))], spacing: 12) {
                             ForEach(results) { torrent in
-                                ScrapedTorrentRow(torrent: torrent)
-                                    .padding(.vertical, 14)
-                                    .padding(.horizontal, 16)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                            .fill(AppColors.card)
-                                    )
+                                TorrentCard(torrent: torrent, isBookmarked: false)
                             }
                         }
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 20)
+                        .padding(.horizontal, 12)
+                        .padding(.top, 8)
 
                         VStack(spacing: 4) {
                             Text("TorrentSearchService 正在工作")
@@ -475,64 +469,6 @@ private struct EasterEggView: View {
                 }
             } catch {
                 await MainActor.run { isLoading = false }
-            }
-        }
-    }
-}
-
-private struct ScrapedTorrentRow: View {
-    let torrent: ScrapedTorrent
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            AsyncImage(url: URL(string: torrent.thumbnail ?? "")) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                case .failure, .empty:
-                    ZStack {
-                        Rectangle()
-                            .fill(AppColors.elevated)
-                        Image(systemName: "photo")
-                            .foregroundColor(AppColors.placeholder)
-                    }
-                @unknown default:
-                    Rectangle().fill(AppColors.elevated)
-                }
-            }
-            .frame(width: 60, height: 60)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .top) {
-                    Text(torrent.code)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(AppColors.label)
-                        .lineLimit(1)
-
-                    Spacer(minLength: 0)
-
-                    Text(torrent.size)
-                        .font(.system(size: 14, weight: .medium, design: .monospaced))
-                        .foregroundColor(AppColors.secondaryLabel)
-                }
-
-                if let desc = torrent.description, !desc.isEmpty {
-                    Text(desc)
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(AppColors.tertiaryLabel)
-                        .lineLimit(2)
-                }
-
-                HStack(spacing: 6) {
-                    Image(systemName: "calendar")
-                        .font(.system(size: 10))
-                    Text(torrent.date.isEmpty ? "N/A" : torrent.date)
-                        .font(.system(size: 12, design: .monospaced))
-                }
-                .foregroundColor(AppColors.secondaryLabel)
             }
         }
     }
