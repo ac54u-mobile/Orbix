@@ -347,6 +347,19 @@ struct TorrentDetailView: View {
     }
 
     private func iconForFile(filename: String) -> String {
+        let ext = (filename as NSString).pathExtension.lowercased()
+        switch ext {
+        case "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "ts": return "film.fill"
+        case "mp3", "flac", "wav", "aac", "m4a", "ogg": return "music.note"
+        case "jpg", "jpeg", "png", "gif", "webp", "heic": return "photo.fill"
+        case "zip", "rar", "7z", "tar", "gz": return "doc.zipper"
+        case "txt", "md", "csv", "json", "xml", "nfo": return "doc.text.fill"
+        case "pdf": return "doc.richtext.fill"
+        case "exe", "msi", "dmg", "pkg", "apk", "ipa": return "app.badge.fill"
+        case "iso": return "opticaldisc"
+        default: return "doc.fill"
+        }
+    }
 
     // MARK: - Time Section
     private func timeSection(_ props: TorrentProperties) -> some View {
@@ -451,21 +464,6 @@ struct TorrentDetailView: View {
         }
     }
 
-    private func iconForFile(filename: String) -> String {
-        let ext = (filename as NSString).pathExtension.lowercased()
-        switch ext {
-        case "mp4", "mkv", "avi", "mov", "wmv", "flv", "webm", "ts": return "film.fill"
-        case "mp3", "flac", "wav", "aac", "m4a", "ogg": return "music.note"
-        case "jpg", "jpeg", "png", "gif", "webp", "heic": return "photo.fill"
-        case "zip", "rar", "7z", "tar", "gz": return "doc.zipper"
-        case "txt", "md", "csv", "json", "xml", "nfo": return "doc.text.fill"
-        case "pdf": return "doc.richtext.fill"
-        case "exe", "msi", "dmg", "pkg", "apk", "ipa": return "app.badge.fill"
-        case "iso": return "opticaldisc"
-        default: return "doc.fill"
-        }
-    }
-
     private func errorHint(_ message: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
@@ -563,19 +561,18 @@ struct TorrentDetailView: View {
     }
 
     @Sendable private func manualRefresh() async {
-        async let t = QBitApi.shared.getTorrentByHash(hash)
-        async let p = QBitApi.shared.getProperties(hash)
-        async let f = QBitApi.shared.getTorrentFiles(hash)
-        async let tr = QBitApi.shared.getTorrentTrackers(hash)
-        async let pe = QBitApi.shared.getTorrentPeers(hash)
-        let (torrent, properties, files, trackers, peers) = try? await (t, p, f, tr, pe) ?? (nil, nil, [], [], [])
+        let t = try? await QBitApi.shared.getTorrentByHash(hash)
+        let p = try? await QBitApi.shared.getProperties(hash)
+        let f = (try? await QBitApi.shared.getTorrentFiles(hash)) ?? []
+        let tr = (try? await QBitApi.shared.getTorrentTrackers(hash)) ?? []
+        let pe = (try? await QBitApi.shared.getTorrentPeers(hash)) ?? []
         await MainActor.run {
-            if let t = torrent { self.torrent = t }
-            if let p = properties { self.properties = p }
-            if !files.isEmpty { self.files = files }
-            if !trackers.isEmpty { self.trackers = trackers }
-            if !peers.isEmpty { self.peers = peers }
-            if torrent != nil { self.trackers = trackers; self.peers = peers; loadError = nil }
+            if let t = t { self.torrent = t }
+            if let p = p { self.properties = p }
+            self.files = f
+            self.trackers = tr
+            self.peers = pe
+            if t != nil { loadError = nil }
         }
     }
 
