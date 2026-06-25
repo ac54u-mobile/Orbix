@@ -12,7 +12,25 @@ actor TorrentSearchService {
         try await withThrowingTaskGroup(of: [ScrapedTorrent].self) { group in
             for page in 1...pages {
                 group.addTask {
-                    try await self.fetchSearchPage(page, query: "a")
+                    try await self.fetchNewPage(page)
+                }
+            }
+
+            for try await results in group {
+                allResults.append(contentsOf: results)
+            }
+        }
+
+        return allResults
+    }
+
+    func newTorrents(pages: Int = 1, startPage: Int = 1) async throws -> [ScrapedTorrent] {
+        var allResults: [ScrapedTorrent] = []
+
+        try await withThrowingTaskGroup(of: [ScrapedTorrent].self) { group in
+            for page in startPage..<(startPage + pages) {
+                group.addTask {
+                    try await self.fetchNewPage(page)
                 }
             }
 
@@ -48,6 +66,14 @@ actor TorrentSearchService {
         }
 
         return allResults
+    }
+
+    private func fetchNewPage(_ page: Int) async throws -> [ScrapedTorrent] {
+        let urlStr = "https://www.141ppv.com/new?page=\(page)"
+        guard let url = URL(string: urlStr) else { return [] }
+        let (data, _) = try await session.data(from: url)
+        guard let html = String(data: data, encoding: .utf8) else { return [] }
+        return parseList(html)
     }
 
     private func fetchSearchPage(_ page: Int, query: String) async throws -> [ScrapedTorrent] {

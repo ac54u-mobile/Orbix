@@ -208,7 +208,7 @@ struct SearchView: View {
             currentPage = 1
             hasMorePages = true
             do {
-                let items = try await TorrentSearchService.shared.search(query: "a", pages: 1, startPage: 1)
+                let items = try await TorrentSearchService.shared.newTorrents(pages: 1, startPage: 1)
                 await MainActor.run {
                     allResults = items
                     results = items
@@ -252,7 +252,7 @@ struct SearchView: View {
             let items: [ScrapedTorrent]
             let page: Int
             if q.isEmpty {
-                items = try await TorrentSearchService.shared.search(query: "a", pages: 1, startPage: 1)
+                items = try await TorrentSearchService.shared.newTorrents(pages: 1, startPage: 1)
                 page = 1
             } else {
                 items = try await TorrentSearchService.shared.search(query: q, pages: 3, startPage: 1)
@@ -272,11 +272,16 @@ struct SearchView: View {
         guard !isLoadingMore, hasMorePages else { return }
         isLoadingMore = true
         let q = query.trimmingCharacters(in: .whitespaces)
-        let searchQuery = q.isEmpty ? "a" : q
+        let searchQuery = q.isEmpty ? "" : q
         let nextPage = currentPage + 1
         Task {
             do {
-                let items = try await TorrentSearchService.shared.search(query: searchQuery, pages: 1, startPage: nextPage)
+                let items: [ScrapedTorrent]
+                if searchQuery.isEmpty {
+                    items = try await TorrentSearchService.shared.newTorrents(pages: 1, startPage: nextPage)
+                } else {
+                    items = try await TorrentSearchService.shared.search(query: searchQuery, pages: 1, startPage: nextPage)
+                }
                 await MainActor.run {
                     if items.isEmpty {
                         hasMorePages = false
