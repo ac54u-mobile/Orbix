@@ -7,6 +7,10 @@ struct TorrentListView: View {
     @State private var globalUpSpeed: Int64 = 0
     @State private var showAddTorrent = false
     @State private var isLoading = true
+    @State private var showSpeedPanel = false
+    @State private var gDlLimitStr = ""
+    @State private var gUlLimitStr = ""
+    @State private var altSpeedEnabled = false
 
     enum TorrentFilter: String, CaseIterable {
         case all = "全部"
@@ -47,9 +51,103 @@ struct TorrentListView: View {
                             ForEach(filteredTorrents) { torrent in
                                 SwipeableTorrentCard(torrent: torrent) {
                                     executeDelete(torrent)
+        }
+    }
+
+    // MARK: - Global Speed Control Panel
+    private var speedPanel: some View {
+        NavigationStack {
+            List {
+                Section {
+                    HStack {
+                        Label("备用限速模式", systemImage: "tortoise")
+                            .foregroundColor(AppColors.label)
+                        Spacer()
+                        Toggle("", isOn: $altSpeedEnabled)
+                            .labelsHidden()
+                            .tint(AppColors.warning)
+                            .onChange(of: altSpeedEnabled) { _, _ in
+                                Task {
+                                    try? await QBitApi.shared.toggleSpeedLimitsMode()
+                                    UINotificationFeedbackGenerator().notificationOccurred(.success)
                                 }
                             }
+                    }
+                } header: {
+                    Text("模式")
+                } footer: {
+                    Text("开启后使用备用限速方案，适合夜间或低优先级下载")
+                }
+
+                Section {
+                    HStack {
+                        Text("下载限速")
+                            .foregroundColor(AppColors.secondaryLabel)
+                        Spacer()
+                        TextField("不限", text: $gDlLimitStr)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .foregroundColor(AppColors.label)
+                        Text("KB/s")
+                            .font(.system(size: 12))
+                            .foregroundColor(AppColors.tertiaryLabel)
+                    }
+
+                    HStack {
+                        Text("上传限速")
+                            .foregroundColor(AppColors.secondaryLabel)
+                        Spacer()
+                        TextField("不限", text: $gUlLimitStr)
+                            .keyboardType(.numberPad)
+                            .multilineTextAlignment(.trailing)
+                            .foregroundColor(AppColors.label)
+                        Text("KB/s")
+                            .font(.system(size: 12))
+                            .foregroundColor(AppColors.tertiaryLabel)
+                    }
+
+                    Button {
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
+                        Task {
+                            let dl = Int64(gDlLimitStr) ?? -1
+                            let ul = Int64(gUlLimitStr) ?? -1
+                            if dl >= 0 { try? await QBitApi.shared.setGlobalDownloadLimit(dl > 0 ? dl * 1024 : 0) }
+                            if ul >= 0 { try? await QBitApi.shared.setGlobalUploadLimit(ul > 0 ? ul * 1024 : 0) }
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
                         }
+                    } label: {
+                        Text("应用限速")
+                            .font(.system(size: 14, weight: .medium))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(AppColors.accent)
+                            )
+                            .foregroundColor(.white)
+                    }
+                } header: {
+                    Text("全局速度限制")
+                } footer: {
+                    Text("空或 0 表示不限制")
+                }
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(AppColors.mainBg)
+            .navigationTitle("全局控制")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成") { showSpeedPanel = false }
+                        .fontWeight(.medium)
+                        .foregroundColor(AppColors.accent)
+                }
+            }
+        }
+    }
+}
                         .padding(.vertical, 16)
                         .padding(.horizontal, 20)
                         Color.clear.frame(height: 80)
@@ -73,6 +171,14 @@ struct TorrentListView: View {
             .navigationTitle("种子")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        showSpeedPanel = true
+                    } label: {
+                        Image(systemName: altSpeedEnabled ? "tortoise.fill" : "speedometer")
+                            .foregroundColor(altSpeedEnabled ? AppColors.warning : AppColors.accent)
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         showAddTorrent = true
@@ -85,6 +191,11 @@ struct TorrentListView: View {
             .onReceive(timer) { _ in refresh() }
             .sheet(isPresented: $showAddTorrent) {
                 AddTorrentView()
+            }
+            .sheet(isPresented: $showSpeedPanel) {
+                speedPanel
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.visible)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 filterBar
@@ -145,11 +256,21 @@ struct TorrentListView: View {
         Task {
             let list = (try? await QBitApi.shared.getTorrents()) ?? torrents
             let transfer = try? await QBitApi.shared.getTransferInfo()
+            let prefs = try? await QBitApi.shared.getPreferences()
 
             await MainActor.run {
                 self.torrents = list
                 self.globalDlSpeed = transfer?.dlInfoSpeed ?? 0
                 self.globalUpSpeed = transfer?.upInfoSpeed ?? 0
+                if let p = prefs {
+                    self.altSpeedEnabled = p["alt_speed_limit_enabled"] as? Bool ?? false
+                    if gDlLimitStr.isEmpty, let dl = p["dl_limit"] as? Int64, dl > 0 {
+                        gDlLimitStr = "\(dl / 1024)"
+                    }
+                    if gUlLimitStr.isEmpty, let ul = p["up_limit"] as? Int64, ul > 0 {
+                        gUlLimitStr = "\(ul / 1024)"
+                    }
+                }
                 self.isLoading = false
             }
         }
