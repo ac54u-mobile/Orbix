@@ -557,10 +557,7 @@ struct TorrentDetailView: View {
             Button("重试") {
                 loadError = nil
                 isLoading = true
-                Task {
-                    await refreshInfoPeers()
-                    await refreshFilesTrackers()
-                }
+                Task { await manualRefresh() }
             }
             .buttonStyle(.borderedProminent)
         }
@@ -665,11 +662,15 @@ struct TorrentDetailView: View {
         let tr = (try? await QBitApi.shared.getTorrentTrackers(hash)) ?? []
         let (pe, rid) = (try? await QBitApi.shared.getTorrentPeers(hash, rid: 0)) ?? ([], 0)
         await MainActor.run {
-            if let t = t { self.torrent = t }
+            if let t = t {
+                self.torrent = t; loadError = nil
+            } else if self.torrent == nil {
+                loadError = "无法加载种子信息"
+            }
             if let p = p { self.properties = p }
             self.files = f; self.trackers = tr; self.peers = pe
             self.peersRid = rid; self.syncRid = 0
-            if t != nil { loadError = nil }
+            isLoading = false
         }
     }
 
