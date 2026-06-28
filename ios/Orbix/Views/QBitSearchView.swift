@@ -51,7 +51,6 @@ struct QBitSearchView: View {
     @State private var rootFolders: [RadarrApi.RootFolder] = []
     @State private var selectedQualityId = 0
     @State private var selectedRootPath = ""
-    @State private var radarrMonitored = true
 
     @ObservedObject private var creds = CredentialsManager.shared
 
@@ -129,68 +128,118 @@ struct QBitSearchView: View {
     // MARK: - Radarr 添加弹窗
     private var radarrAddSheet: some View {
         NavigationStack {
-            List {
-                if let item = radarrResult {
-                    Section {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(item.fileName)
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(AppColors.label)
-                        }
-                        .padding(.vertical, 6)
-                    } header: {
-                        Text("电影信息")
-                    }
-                }
+            ScrollView {
+                VStack(spacing: 16) {
+                    // Header — poster + info
+                    if let item = radarrResult {
+                        HStack(alignment: .top, spacing: 14) {
+                            AsyncImage(url: URL(string: item.siteUrl)) { phase in
+                                switch phase {
+                                case .success(let img):
+                                    img.resizable().aspectRatio(contentMode: .fill)
+                                default:
+                                    ZStack {
+                                        Color(uiColor: .secondarySystemBackground)
+                                        Image(systemName: "film").foregroundColor(.gray.opacity(0.3))
+                                    }
+                                }
+                            }
+                            .frame(width: 80, height: 120)
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
-                Section {
-                    if qualityProfiles.isEmpty {
-                        HStack {
-                            Text("质量配置").foregroundColor(AppColors.secondaryLabel)
-                            Spacer()
-                            ProgressView().controlSize(.mini)
-                        }
-                    } else {
-                        Picker("质量配置", selection: $selectedQualityId) {
-                            ForEach(qualityProfiles) { p in
-                                Text(p.name).tag(p.id)
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(item.fileName)
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(AppColors.label)
+                                Text("TMDB ID: \(item.num)")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(AppColors.tertiaryLabel)
                             }
                         }
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(AppColors.card)
+                        )
                     }
 
-                    if rootFolders.isEmpty {
-                        HStack {
-                            Text("存储路径").foregroundColor(AppColors.secondaryLabel)
-                            Spacer()
-                            ProgressView().controlSize(.mini)
-                        }
-                    } else {
-                        Picker("存储路径", selection: $selectedRootPath) {
-                            ForEach(rootFolders) { f in
-                                Text(f.path).tag(f.path)
+                    // Config — quality + root folder
+                    VStack(spacing: 0) {
+                        if qualityProfiles.isEmpty {
+                            HStack {
+                                Text("质量配置").font(.system(size: 14)).foregroundColor(AppColors.secondaryLabel)
+                                Spacer()
+                                ProgressView().controlSize(.mini)
                             }
+                            .padding(.horizontal, 16).padding(.vertical, 10)
+                        } else {
+                            HStack {
+                                Text("质量配置").font(.system(size: 14)).foregroundColor(AppColors.secondaryLabel)
+                                Spacer()
+                                Picker("", selection: $selectedQualityId) {
+                                    ForEach(qualityProfiles) { p in
+                                        Text(p.name).tag(p.id)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 2)
+                        }
+
+                        Divider().background(AppColors.separator)
+
+                        if rootFolders.isEmpty {
+                            HStack {
+                                Text("存储路径").font(.system(size: 14)).foregroundColor(AppColors.secondaryLabel)
+                                Spacer()
+                                ProgressView().controlSize(.mini)
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 10)
+                        } else {
+                            HStack {
+                                Text("存储路径").font(.system(size: 14)).foregroundColor(AppColors.secondaryLabel)
+                                Spacer()
+                                Picker("", selection: $selectedRootPath) {
+                                    ForEach(rootFolders) { f in
+                                        Text(f.path).tag(f.path)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 16).padding(.vertical, 2)
                         }
                     }
-                } header: {
-                    Text("下载配置")
-                }
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(AppColors.card)
+                    )
 
-                Section {
-                    Toggle(isOn: $radarrMonitored) {
+                    // Add button
+                    Button {
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
+                        confirmRadarrAdd()
+                    } label: {
                         HStack(spacing: 6) {
-                            Image(systemName: "magnifyingglass")
-                                .foregroundColor(AppColors.accent)
-                            Text("立即监控并搜索")
-                                .foregroundColor(AppColors.label)
+                            Image(systemName: "plus.circle.fill")
+                            Text("添加并自动搜刮")
                         }
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .fill(AppColors.accent)
+                        )
                     }
-                    .tint(AppColors.accent)
-                } footer: {
-                    Text("开启后将自动搜索并下载电影")
+                    .padding(.top, 4)
+
+                    Text("电影添加到库后将自动搜索并开始下载")
+                        .font(.system(size: 12))
+                        .foregroundColor(AppColors.tertiaryLabel)
+                        .multilineTextAlignment(.center)
                 }
+                .padding(16)
             }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
             .background(AppColors.mainBg)
             .navigationTitle("添加到 Radarr")
             .navigationBarTitleDisplayMode(.inline)
@@ -198,11 +247,6 @@ struct QBitSearchView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("取消") { showRadarrSheet = false }
                         .foregroundColor(AppColors.secondaryLabel)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("添加") { confirmRadarrAdd() }
-                        .fontWeight(.bold)
-                        .foregroundColor(AppColors.accent)
                 }
             }
         }
@@ -213,7 +257,6 @@ struct QBitSearchView: View {
         let name = item.fileName
         let title: String
         let year: Int
-        // Parse "Movie Name (2024)" format
         if let paren = name.lastIndex(of: "("), let close = name.lastIndex(of: ")"), paren < close {
             let yearStr = String(name[name.index(after: paren)..<close])
             title = String(name[..<paren]).trimmingCharacters(in: .whitespaces)
@@ -230,7 +273,8 @@ struct QBitSearchView: View {
                     year: year,
                     qualityProfileId: selectedQualityId,
                     rootFolderPath: selectedRootPath,
-                    monitored: radarrMonitored
+                    monitored: true,
+                    searchOnAdd: true
                 )
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 await MainActor.run { showRadarrSheet = false }
