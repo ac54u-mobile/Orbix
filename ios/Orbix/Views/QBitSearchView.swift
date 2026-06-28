@@ -1,5 +1,12 @@
 import SwiftUI
 
+// MARK: - 下载配置
+struct AddTorrentOptions {
+    let result: SearchResult
+    var category: String = ""
+    var savePath: String = ""
+}
+
 struct QBitSearchView: View {
     @State private var query = ""
     @State private var plugins: [SearchPlugin] = []
@@ -9,6 +16,10 @@ struct QBitSearchView: View {
     @State private var status: String?
     @State private var isLoading = false
     @State private var searchTask: Task<Void, Never>?
+
+    @State private var categories: [String] = []
+    @State private var addOptions: AddTorrentOptions?
+    @State private var showDownloadSheet = false
 
     var body: some View {
         NavigationStack {
@@ -48,7 +59,96 @@ struct QBitSearchView: View {
             .navigationTitle("探索")
             .searchable(text: $query, placement: .automatic, prompt: "输入关键字或 Hash...")
             .onChange(of: query) { _, _ in debounceSearch() }
-            .onAppear { loadPlugins() }
+            .onAppear {
+                loadPlugins()
+                loadCategories()
+            }
+            .sheet(isPresented: $showDownloadSheet) {
+                if let options = addOptions {
+                    downloadSheet(options: options)
+                        .presentationDetents([.medium, .large])
+                        .presentationDragIndicator(.visible)
+                }
+            }
+        }
+    }
+
+    // MARK: - 半屏下载弹窗
+    private func downloadSheet(options: AddTorrentOptions) -> some View {
+        let categoryBinding = Binding(
+            get: { self.addOptions?.category ?? "" },
+            set: { self.addOptions?.category = $0 }
+        )
+        let pathBinding = Binding(
+            get: { self.addOptions?.savePath ?? "" },
+            set: { self.addOptions?.savePath = $0 }
+        )
+
+        return NavigationStack {
+            List {
+                Section {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(options.result.fileName)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(AppColors.label)
+                            .lineLimit(2)
+                        Text(formatBytes(Int64(options.result.fileSize)))
+                            .font(.system(size: 13))
+                            .foregroundColor(AppColors.secondaryLabel)
+                    }
+                    .padding(.vertical, 6)
+                } header: {
+                    Text("种子信息")
+                }
+
+                Section {
+                    if categories.isEmpty {
+                        HStack {
+                            Text("下载分类")
+                                .foregroundColor(AppColors.secondaryLabel)
+                            Spacer()
+                            Text("无可用分类")
+                                .foregroundColor(AppColors.tertiaryLabel)
+                        }
+                    } else {
+                        Picker("下载分类", selection: categoryBinding) {
+                            Text("无分类").tag("")
+                            ForEach(categories, id: \.self) { cat in
+                                Text(cat).tag(cat)
+                            }
+                        }
+                    }
+
+                    HStack {
+                        Text("保存路径")
+                            .foregroundColor(AppColors.secondaryLabel)
+                        Spacer()
+                        TextField("默认路径", text: pathBinding)
+                            .multilineTextAlignment(.trailing)
+                            .foregroundColor(AppColors.tertiaryLabel)
+                    }
+                } header: {
+                    Text("下载设置")
+                } footer: {
+                    Text("留空则使用 qBittorrent 默认下载路径")
+                }
+            }
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(AppColors.mainBg)
+            .navigationTitle("添加任务")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("取消") { showDownloadSheet = false }
+                        .foregroundColor(AppColors.secondaryLabel)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("确定下载") { confirmDownload() }
+                        .fontWeight(.bold)
+                        .foregroundColor(AppColors.accent)
+                }
+            }
         }
     }
 
@@ -57,7 +157,6 @@ struct QBitSearchView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
                 pluginChip("all", label: "全部")
-
                 ForEach(plugins) { plugin in
                     if plugin.enabled {
                         pluginChip(plugin.id, label: plugin.name)
@@ -150,10 +249,10 @@ struct QBitSearchView: View {
                 Spacer()
 
                 Button {
-                    Task {
-                        _ = try? await QBitApi.shared.addMagnet([item.descr])
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    }
+                    let impact = UIImpactFeedbackGenerator(style: .medium)
+                    impact.impactOccurred()
+                    addOptions = AddTorrentOptions(result: item)
+                    showDownloadSheet = true
                 } label: {
                     Image(systemName: "icloud.and.arrow.down")
                         .font(.system(size: 16, weight: .semibold))
@@ -184,7 +283,7 @@ struct QBitSearchView: View {
         )
     }
 
-    // MARK: - 搜索逻辑
+    // MARK: - 数据加载
     private func loadPlugins() {
         Task {
             if let list = try? await QBitApi.shared.getSearchPlugins() {
@@ -193,6 +292,32 @@ struct QBitSearchView: View {
         }
     }
 
+    private func loadCategories() {
+        Task {
+            if let cats = try? await QBitApi.shared.getCategories() {
+                await MainActor.run { categories = cats }
+            }
+        }
+    }
+
+    private func confirmDownload() {
+        guard let options = addOptions else { return }
+        Task {
+            do {
+                _ = try await QBitApi.shared.addMagnet(
+                    [options.result.descr],
+                    category: options.category.isEmpty ? nil : options.category,
+                    savePath: options.savePath.isEmpty ? nil : options.savePath
+                )
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                await MainActor.run { showDownloadSheet = false }
+            } catch {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+            }
+        }
+    }
+
+    // MARK: - 搜索逻辑
     private func debounceSearch() {
         searchTask?.cancel()
         guard !query.trimmingCharacters(in: .whitespaces).isEmpty else {
@@ -226,7 +351,6 @@ struct QBitSearchView: View {
                 guard !Task.isCancelled else { return }
                 attempts += 1
 
-                // 轮询期间实时拉取结果，瀑布流式更新
                 if let items = try? await QBitApi.shared.getSearchResults(id: id) {
                     await MainActor.run {
                         self.results = items.sorted { $0.nbSeeders > $1.nbSeeders }

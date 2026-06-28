@@ -251,6 +251,12 @@ actor QBitApi {
         return wrapper?.peers.map { $0.value } ?? []
     }
 
+    func getCategories() async throws -> [String] {
+        let data = try await authedGetData("/api/v2/torrents/categories")
+        let json = try? JSONSerialization.jsonObject(with: data) as? [String: [String: String]]
+        return json?.keys.sorted() ?? []
+    }
+
     // MARK: - Torrent Actions
     func startTorrent(_ hash: String) async throws {
         let _ = try await authedPost("/api/v2/torrents/start", body: ["hashes": hash])
