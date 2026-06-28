@@ -16,6 +16,9 @@ struct AddServiceView: View {
     @State private var https: Bool = false
     @State private var showApiKey: Bool = false
     @State private var showPassword: Bool = false
+    @State private var isTesting = false
+    @State private var showAlert = false
+    @State private var alertMessage = ""
 
     init(existing: ServiceCredential? = nil, onSave: @escaping (ServiceCredential) -> Void) {
         self.existing = existing
@@ -164,46 +167,63 @@ struct AddServiceView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("取消") { dismiss() }
                         .foregroundColor(AppColors.secondaryLabel)
+                        .disabled(isTesting)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("保存") { save() }
-                        .fontWeight(.bold)
-                        .foregroundColor(host.isEmpty ? AppColors.secondaryLabel : AppColors.accent)
-                        .disabled(host.isEmpty)
+                    if isTesting {
+                        ProgressView().tint(AppColors.accent)
+                    } else {
+                        Button("保存") { Task { await testAndSave() } }
+                            .fontWeight(.bold)
+                            .foregroundColor(host.isEmpty ? AppColors.secondaryLabel : AppColors.accent)
+                            .disabled(host.isEmpty)
+                    }
                 }
+            }
+            .alert("连接测试", isPresented: $showAlert) {
+                Button("确定", role: .cancel) {}
+            } message: {
+                Text(alertMessage)
             }
         }
     }
 
-    private var oldDefaultPort: String {
-        // Track the old default so we can change it when kind changes
-        "8080"
+    private func testAndSave() async {
+        guard !host.isEmpty else { return }
+        let portValue = Int(port) ?? (https ? 443 : 80)
+        isTesting = true
+
+        let result = await CredentialsManager.testConnection(
+            kind: kind, host: host, port: portValue, https: https,
+            apiKey: apiKey, username: username, password: password
+        )
+
+        if result.isSuccess {
+            saveCredential(port: portValue)
+            await MainActor.run { dismiss() }
+        } else {
+            await MainActor.run {
+                isTesting = false
+                alertMessage = result.message
+                showAlert = true
+            }
+        }
     }
 
-    private func save() {
+    private func saveCredential(port portValue: Int) {
         var cred = ServiceCredential(
-            kind: kind,
-            name: name.isEmpty ? kind.rawValue : name,
-            host: host,
-            port: Int(port) ?? (https ? 443 : 80),
-            https: https,
-            apiKey: apiKey,
-            username: username,
-            password: password
+            kind: kind, name: name.isEmpty ? kind.rawValue : name,
+            host: host, port: portValue, https: https,
+            apiKey: apiKey, username: username, password: password
         )
         if let existing = existing {
             cred = ServiceCredential(
-                kind: kind,
-                name: name.isEmpty ? existing.name : name,
-                host: host,
-                port: Int(port) ?? existing.port,
-                https: https,
+                kind: kind, name: name.isEmpty ? existing.name : name,
+                host: host, port: portValue, https: https,
                 apiKey: apiKey.isEmpty ? existing.apiKey : apiKey,
-                username: username,
-                password: password
+                username: username, password: password
             )
         }
         onSave(cred)
-        dismiss()
     }
 }
