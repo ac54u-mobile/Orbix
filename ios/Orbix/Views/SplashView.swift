@@ -57,6 +57,17 @@ struct SplashView: View {
             return
         }
 
+        // Sync CredentialsManager → QBitApi so connection works
+        if let qbitCred = CredentialsManager.shared.qBittorrent {
+            let config = ServerConfig(
+                name: qbitCred.name, host: qbitCred.host, port: qbitCred.port,
+                username: qbitCred.username, password: qbitCred.password,
+                https: qbitCred.https
+            )
+            await QBitApi.shared.setActiveServer(config)
+            _ = await QBitApi.shared.upsertServer(config)
+        }
+
         // 2. qBittorrent configured → try connect
         let servers = await QBitApi.shared.loadServers()
         if !servers.isEmpty, let active = await QBitApi.shared.loadSavedConfig() {

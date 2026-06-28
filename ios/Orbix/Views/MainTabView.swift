@@ -10,7 +10,7 @@ struct MainTabView: View {
     let onLogout: () -> Void
 
     @State private var selectedTab = 0
-    @StateObject private var searchMode = SearchModeState.shared
+    @ObservedObject private var searchMode = SearchModeState.shared
 
     var body: some View {
         TabView(selection: $selectedTab) {

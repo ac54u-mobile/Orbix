@@ -639,22 +639,22 @@ struct TorrentDetailView: View {
         }
 
         // Parallel loops: info/peers every 2s, files/trackers every 8s
-        Task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 2_000_000_000)
-                guard !Task.isCancelled else { break }
-                await refreshInfoPeers()
+        // TaskGroup ensures inner loops cancel when parent .task is cancelled
+        await withTaskGroup(of: Void.self) { group in
+            group.addTask {
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    guard !Task.isCancelled else { break }
+                    await refreshInfoPeers()
+                }
             }
-        }
-        Task {
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 8_000_000_000)
-                guard !Task.isCancelled else { break }
-                await refreshFilesTrackers()
+            group.addTask {
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 8_000_000_000)
+                    guard !Task.isCancelled else { break }
+                    await refreshFilesTrackers()
+                }
             }
-        }
-        while !Task.isCancelled {
-            try? await Task.sleep(nanoseconds: 60_000_000_000)
         }
     }
 

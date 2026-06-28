@@ -200,6 +200,7 @@ struct AddServiceView: View {
         )
 
         if result.isSuccess {
+            isTesting = false
             saveCredential(port: portValue)
             await MainActor.run { dismiss() }
         } else {

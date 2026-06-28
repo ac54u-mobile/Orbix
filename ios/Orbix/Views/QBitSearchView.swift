@@ -45,7 +45,7 @@ struct QBitSearchView: View {
     @State private var showDownloadSheet = false
     @State private var searchSource: SearchSource = .qBittorrent
     @State private var searchError: String?
-    @StateObject private var searchMode = SearchModeState.shared
+    @ObservedObject private var searchMode = SearchModeState.shared
 
     @State private var showRadarrSheet = false
     @State private var radarrResult: SearchResult?
