@@ -629,6 +629,13 @@ struct TorrentDetailView: View {
                 torrent = t; properties = p; files = f; trackers = tr; peers = pe; peersRid = rid
                 isLoading = false
             }
+        } else {
+            // Initial load failed — show error but keep page open
+            await MainActor.run {
+                isLoading = false
+                loadError = "无法加载种子信息"
+            }
+            return
         }
 
         // Parallel loops: info/peers every 2s, files/trackers every 8s
@@ -646,7 +653,6 @@ struct TorrentDetailView: View {
                 await refreshFilesTrackers()
             }
         }
-        // Keep this task alive until view disappears
         while !Task.isCancelled {
             try? await Task.sleep(nanoseconds: 60_000_000_000)
         }
