@@ -1,0 +1,74 @@
+import Foundation
+
+// MARK: - Prowlarr API
+actor ProwlarrApi {
+    static let shared = ProwlarrApi()
+    private let session = URLSession(configuration: .ephemeral)
+    private let decoder = JSONDecoder()
+
+    private var credential: ServiceCredential? {
+        CredentialsManager.shared.prowlarr
+    }
+
+    // MARK: - Search
+    struct ProwlarrSearchResult: Codable, Identifiable {
+        let id: Int
+        let title: String
+        let indexer: String?
+        let size: Int64
+        let seeders: Int
+        let leechers: Int
+        let downloadUrl: String?
+        let publishDate: String?
+
+        enum CodingKeys: String, CodingKey {
+            case id, title, indexer, size, seeders, leechers
+            case downloadUrl = "downloadUrl"
+            case publishDate = "publishDate"
+        }
+    }
+
+    func search(query: String, indexerIds: [Int] = []) async throws -> [SearchResult] {
+        guard let cred = credential, !cred.apiKey.isEmpty else { return [] }
+        var urlStr = "\(cred.apiURL)/search?query=\(query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query)&type=search"
+        if !indexerIds.isEmpty {
+            urlStr += "&indexerIds=\(indexerIds.map(String.init).joined(separator: ","))"
+        }
+        guard let url = URL(string: urlStr) else { return [] }
+
+        var req = URLRequest(url: url)
+        req.setValue(cred.apiKey, forHTTPHeaderField: "X-Api-Key")
+        let (data, _) = try await session.data(for: req)
+        let results = (try? decoder.decode([ProwlarrSearchResult].self, from: data)) ?? []
+        return results.map(\.toUnified)
+    }
+
+    /// List available indexers
+    func getIndexers() async throws -> [(id: Int, name: String)] {
+        guard let cred = credential, !cred.apiKey.isEmpty else { return [] }
+        guard let url = URL(string: "\(cred.apiURL)/indexer") else { return [] }
+        var req = URLRequest(url: url)
+        req.setValue(cred.apiKey, forHTTPHeaderField: "X-Api-Key")
+        let (data, _) = try await session.data(for: req)
+        let json = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+        return json?.compactMap { item in
+            guard let id = item["id"] as? Int, let name = item["name"] as? String else { return nil }
+            return (id, name)
+        } ?? []
+    }
+}
+
+// MARK: - Adapter
+private extension ProwlarrApi.ProwlarrSearchResult {
+    var toUnified: SearchResult {
+        SearchResult(
+            num: id,
+            descr: downloadUrl ?? "",
+            fileName: title,
+            fileSize: Int(size),
+            nbLeechers: leechers,
+            nbSeeders: seeders,
+            siteUrl: indexer ?? ""
+        )
+    }
+}

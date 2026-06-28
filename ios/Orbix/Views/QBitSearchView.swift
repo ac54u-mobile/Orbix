@@ -1,5 +1,28 @@
 import SwiftUI
 
+// MARK: - 搜索数据源
+enum SearchSource: String, CaseIterable {
+    case qBittorrent = "qB"
+    case prowlarr = "Prowlarr"
+    case radarr = "Radarr"
+
+    var label: String {
+        switch self {
+        case .qBittorrent: return "内置搜索"
+        case .prowlarr: return "Prowlarr"
+        case .radarr: return "Radarr"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .qBittorrent: return "arrow.down.circle"
+        case .prowlarr: return "antenna.radiowaves.left.and.right"
+        case .radarr: return "film"
+        }
+    }
+}
+
 // MARK: - 下载配置
 struct AddTorrentOptions {
     let result: SearchResult
@@ -20,6 +43,17 @@ struct QBitSearchView: View {
     @State private var categories: [String] = []
     @State private var addOptions: AddTorrentOptions?
     @State private var showDownloadSheet = false
+    @State private var searchSource: SearchSource = .qBittorrent
+
+    @ObservedObject private var creds = CredentialsManager.shared
+
+    private var availableSources: [SearchSource] {
+        var sources: [SearchSource] = []
+        if creds.qBittorrent != nil { sources.append(.qBittorrent) }
+        if creds.prowlarr != nil { sources.append(.prowlarr) }
+        if creds.radarr != nil { sources.append(.radarr) }
+        return sources.isEmpty ? [.qBittorrent] : sources
+    }
 
     var body: some View {
         NavigationStack {
@@ -27,8 +61,14 @@ struct QBitSearchView: View {
                 AppColors.mainBg.ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    pluginBar
-                        .padding(.vertical, 12)
+                    if availableSources.count > 1 {
+                        sourceBar
+                            .padding(.vertical, 8)
+                    }
+                    if searchSource == .qBittorrent {
+                        pluginBar
+                            .padding(.vertical, 8)
+                    }
 
                     if isLoading && results.isEmpty {
                         VStack(spacing: 16) {
@@ -149,6 +189,36 @@ struct QBitSearchView: View {
                         .foregroundColor(AppColors.accent)
                 }
             }
+        }
+    }
+
+    // MARK: - 数据源选择
+    private var sourceBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(availableSources, id: \.self) { source in
+                    Button {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        searchSource = source
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: source.icon)
+                                .font(.system(size: 12))
+                            Text(source.label)
+                                .font(.system(size: 13, weight: searchSource == source ? .semibold : .medium))
+                        }
+                        .foregroundColor(searchSource == source ? .white : AppColors.secondaryLabel)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background(
+                            Capsule()
+                                .fill(searchSource == source ? AppColors.accent : AppColors.elevated)
+                        )
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
         }
     }
 
@@ -335,6 +405,17 @@ struct QBitSearchView: View {
 
     private func runSearch() async {
         await MainActor.run { isLoading = true; results = [] }
+        switch searchSource {
+        case .qBittorrent:
+            await runQBitSearch()
+        case .prowlarr:
+            await runProwlarrSearch()
+        case .radarr:
+            await runRadarrSearch()
+        }
+    }
+
+    private func runQBitSearch() async {
         do {
             let pList = selectedPlugins.contains("all")
                 ? ["all"]
@@ -364,6 +445,30 @@ struct QBitSearchView: View {
                 }
             }
             await MainActor.run { isLoading = false }
+        } catch {
+            await MainActor.run { isLoading = false }
+        }
+    }
+
+    private func runProwlarrSearch() async {
+        do {
+            let items = try await ProwlarrApi.shared.search(query: query)
+            await MainActor.run {
+                self.results = items.sorted { $0.nbSeeders > $1.nbSeeders }
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run { isLoading = false }
+        }
+    }
+
+    private func runRadarrSearch() async {
+        do {
+            let items = try await RadarrApi.shared.lookup(query: query)
+            await MainActor.run {
+                self.results = items
+                self.isLoading = false
+            }
         } catch {
             await MainActor.run { isLoading = false }
         }
