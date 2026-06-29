@@ -13,6 +13,8 @@ struct StatusIcon: View {
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(iconColor)
         }
+        .accessibilityLabel(status.displayName)
+        .accessibilityAddTraits(.isImage)
     }
 
     private var iconName: String {

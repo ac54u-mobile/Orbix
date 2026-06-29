@@ -94,7 +94,7 @@ struct TorrentDetailSheet: View {
                             Task { _ = try? await QBitApi.shared.addMagnet([torrent.magnet]); dismiss() }
                         } label: {
                             Label(OrbixStrings.btnAddToQueue, systemImage: "square.and.arrow.down")
-                                .bodyFont(.white).frame(maxWidth: .infinity).padding(.vertical, 14)
+                                .bodyFont(AppColors.label).frame(maxWidth: .infinity).padding(.vertical, 14)
                                 .background(RoundedRectangle(cornerRadius: 14).fill(AppColors.accent))
                         }
 

@@ -38,10 +38,10 @@ struct LoginView: View {
                         VStack(spacing: 6) {
                             Text("Orbix")
                                 .font(.system(size: 22, weight: .bold, design: .rounded))
-                                .foregroundColor(.primary)
+                                .foregroundColor(AppColors.label)
                             Text(OrbixStrings.infoConfigHint)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppColors.secondaryLabel)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -61,7 +61,7 @@ struct LoginView: View {
                             .keyboardType(.URL)
                     }
                     FormRow(icon: "network", title: OrbixStrings.miscPort) {
-                        TextField("8080", text: $port)
+                        TextField(OrbixStrings.phPort, text: $port)
                             .keyboardType(.numberPad)
                     }
                 } header: {
@@ -70,7 +70,7 @@ struct LoginView: View {
 
                 Section {
                     FormRow(icon: "person.fill", title: OrbixStrings.miscUsername) {
-                        TextField("admin", text: $username)
+                        TextField(OrbixStrings.phUsername, text: $username)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                     }
@@ -86,7 +86,7 @@ struct LoginView: View {
                                 showPassword.toggle()
                             } label: {
                                 Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .foregroundColor(.secondary)
+                                    .foregroundColor(AppColors.secondaryLabel)
                             }
                             .buttonStyle(.plain)
                         }
@@ -98,7 +98,7 @@ struct LoginView: View {
                 Section {
                     HStack {
                         Image(systemName: "lock.shield.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppColors.secondaryLabel)
                             .frame(width: 28, alignment: .leading)
                         Toggle(OrbixStrings.miscEnableHTTPS, isOn: $https)
                             .tint(AppColors.accent)
@@ -201,29 +201,3 @@ struct LoginView: View {
 }
 #endif
 
-private struct FormRow<Content: View>: View {
-    let icon: String
-    let title: String
-    let content: Content
-
-    init(icon: String, title: String, @ViewBuilder content: () -> Content) {
-        self.icon = icon
-        self.title = title
-        self.content = content()
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(.secondary)
-                .frame(width: 24, alignment: .center)
-
-            VStack(alignment: .leading, spacing: 0) {
-                    content
-                        .font(.system(size: 15))
-            }
-        }
-        .padding(.vertical, 1)
-    }
-}

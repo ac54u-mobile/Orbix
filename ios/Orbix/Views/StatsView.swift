@@ -4,6 +4,7 @@ struct StatsView: View {
     @State private var transfer: TransferInfo?
     @State private var torrents: [TorrentInfo] = []
     @State private var isLoading = true
+    @Environment(\.scenePhase) private var scenePhase
 
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
@@ -22,7 +23,7 @@ struct StatsView: View {
                     .padding(.top, 20)
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 12) {
+                        VStack(spacing: 12) {
                         Text(OrbixStrings.statsCurrSpeed).sectionHeader()
                             .frame(maxWidth: .infinity, alignment: .leading)
                         heroSpeedCard
@@ -58,7 +59,10 @@ struct StatsView: View {
             }
             .navigationTitle(OrbixStrings.navTransferStats)
             .onAppear { refresh() }
-            .onReceive(timer) { _ in refresh() }
+            .onReceive(timer) { _ in
+                guard scenePhase == .active else { return }
+                refresh()
+            }
         }
     }
 
@@ -105,6 +109,8 @@ struct StatsView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(AppColors.card)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(formattedHeroSpeed) B/s")
     }
 
     // MARK: - Transfer Volume Card
@@ -208,6 +214,7 @@ struct StatsView: View {
                 .foregroundColor(AppColors.label)
         }
         .padding(.vertical, 10)
+        .accessibilityLabel("\(label): \(value)")
     }
 
     private func connectionStatusRow(status: String) -> some View {

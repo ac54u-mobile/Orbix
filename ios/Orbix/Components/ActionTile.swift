@@ -39,6 +39,7 @@ struct ActionTile: View {
             )
         }
         .buttonStyle(ScaleButtonStyle())
+        .accessibilityLabel(label)
         .disabled(isLoading)
     }
 }

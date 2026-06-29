@@ -267,6 +267,20 @@ enum OrbixStrings {
     static let connServerReturn = String(localized: "服务器返回 %d：%@", comment: "Server returned %d: %@")
     static let connUnableConnect = String(localized: "无法连接 %@\n%@", comment: "Cannot connect %@: %@")
 
+    // MARK: - Placeholders (extended)
+    static let phPort = String(localized: "8080", comment: "Port placeholder")
+    static let phUsername = String(localized: "admin", comment: "Username placeholder")
+    static let phIP = String(localized: "192.168.1.100", comment: "IP address placeholder")
+
+    // MARK: - Labels
+    static let labelMagnetURL = String(localized: "Magnet / URL", comment: "Magnet/URL input label")
+    static let labelHash = String(localized: "Hash", comment: "Hash label")
+    static let labelAPIKey = String(localized: "API Key", comment: "API Key label")
+    static let labelHTTPS = String(localized: "HTTPS", comment: "HTTPS label")
+    static let labelTrackersCount = String(localized: "Trackers (%d)", comment: "Trackers count header")
+    static let labelPeersCount = String(localized: "Peers (%d)", comment: "Peers count header")
+    static let labelTMDBID = String(localized: "TMDB ID: %d", comment: "TMDB ID label")
+
     // MARK: - Welcome tiles
     static let welcomeSubtitle1 = String(localized: "配置你的 qBittorrent 服务器地址", comment: "Configure server address")
     static let welcomeSubtitle2 = String(localized: "快速连接到远程或本地服务器", comment: "Quick connect to server")

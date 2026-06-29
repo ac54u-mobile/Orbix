@@ -38,7 +38,7 @@ struct TorrentDetailAdvancedSheet: View {
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(newLocation.isEmpty ? AppColors.elevated : AppColors.accent)
                             )
-                            .foregroundColor(newLocation.isEmpty ? AppColors.secondaryLabel : .white)
+                            .foregroundColor(newLocation.isEmpty ? AppColors.secondaryLabel : AppColors.label)
                     }
                     .disabled(newLocation.isEmpty)
                 } header: {
@@ -65,43 +65,19 @@ struct TorrentDetailAdvancedSheet: View {
                                 RoundedRectangle(cornerRadius: 8)
                                     .fill(newName.isEmpty ? AppColors.elevated : AppColors.accent)
                             )
-                            .foregroundColor(newName.isEmpty ? AppColors.secondaryLabel : .white)
+                            .foregroundColor(newName.isEmpty ? AppColors.secondaryLabel : AppColors.label)
                     }
                     .disabled(newName.isEmpty)
                 } header: {
                     Text(OrbixStrings.sectionRename)
                 }
 
-                Section {
-                    HStack {
-                        Text(OrbixStrings.labelDownloadLimit)
-                            .foregroundColor(AppColors.secondaryLabel)
-                        Spacer()
-                        TextField(OrbixStrings.phUnlimited, text: $dlLimitStr)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.label)
-                        Text("KB/s")
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.tertiaryLabel)
-                    }
-
-                    HStack {
-                        Text(OrbixStrings.labelUploadLimit)
-                            .foregroundColor(AppColors.secondaryLabel)
-                        Spacer()
-                        TextField(OrbixStrings.phUnlimited, text: $ulLimitStr)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.label)
-                        Text("KB/s")
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.tertiaryLabel)
-                    }
-
-                    Button {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
+                SpeedLimitSection(
+                    sectionTitle: OrbixStrings.sectionSpeedLimit,
+                    footerText: OrbixStrings.infoEmptyZeroHint,
+                    dlLimitStr: $dlLimitStr,
+                    ulLimitStr: $ulLimitStr,
+                    onApply: {
                         Task {
                             let dl = (Int64(dlLimitStr) ?? -1)
                             let ul = (Int64(ulLimitStr) ?? -1)
@@ -111,22 +87,8 @@ struct TorrentDetailAdvancedSheet: View {
                             else if ul == 0 { try? await QBitApi.shared.setTorrentUploadLimit(hash, limit: 0) }
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                         }
-                    } label: {
-                        Text(OrbixStrings.btnApplyLimit)
-                            .font(.system(size: 14, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(AppColors.accent)
-                            )
-                            .foregroundColor(.white)
                     }
-                } header: {
-                    Text(OrbixStrings.sectionSpeedLimit)
-                } footer: {
-                    Text(OrbixStrings.infoEmptyZeroHint)
-                }
+                )
 
                 Section {
                     Button {

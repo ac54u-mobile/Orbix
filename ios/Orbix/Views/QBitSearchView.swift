@@ -175,7 +175,7 @@ struct QBitSearchView: View {
                             Text(source.label)
                                 .font(.system(size: 13, weight: searchSource == source ? .semibold : .medium))
                         }
-                        .foregroundColor(searchSource == source ? .white : AppColors.secondaryLabel)
+                        .foregroundColor(searchSource == source ? AppColors.label : AppColors.secondaryLabel)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 7)
                         .background(
@@ -183,6 +183,7 @@ struct QBitSearchView: View {
                                 .fill(searchSource == source ? AppColors.accent : AppColors.elevated)
                         )
                     }
+                    .accessibilityLabel(source.label)
                 }
             }
             .padding(.horizontal, 16)
@@ -218,7 +219,7 @@ struct QBitSearchView: View {
         } label: {
             Text(label)
                 .font(.system(size: 14, weight: selected ? .semibold : .medium))
-                .foregroundColor(selected ? .white : AppColors.label)
+                .foregroundColor(selected ? AppColors.label : AppColors.label)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(

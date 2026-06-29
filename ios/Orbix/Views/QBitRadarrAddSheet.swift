@@ -31,7 +31,7 @@ struct QBitRadarrAddSheet: View {
                             Text(item.fileName)
                                 .font(.system(size: 17, weight: .semibold))
                                 .foregroundColor(AppColors.label)
-                            Text("TMDB ID: \(item.num)")
+                            Text(String(format: OrbixStrings.labelTMDBID, item.num))
                                 .font(.system(size: 13))
                                 .foregroundColor(AppColors.tertiaryLabel)
                         }
@@ -100,7 +100,7 @@ struct QBitRadarrAddSheet: View {
                             Text(OrbixStrings.btnAddAndSearch)
                         }
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(AppColors.label)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(

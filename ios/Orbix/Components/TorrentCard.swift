@@ -21,14 +21,14 @@ struct TorrentCard: View {
                     AppColors.card
                     Image(systemName: "photo")
                         .font(.system(size: 20))
-                        .foregroundColor(.gray.opacity(0.3))
+                        .foregroundColor(AppColors.placeholder)
                 }
             }
 
             if !torrent.size.isEmpty {
                 Text(torrent.size)
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
+                    .foregroundColor(AppColors.label)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 2)
                     .background(RoundedRectangle(cornerRadius: 4).fill(.black.opacity(0.65)))

@@ -4,6 +4,7 @@ struct TorrentDetailView: View {
     let hash: String
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var torrent: TorrentInfo?
     @State private var properties: TorrentProperties?
     @State private var files: [TorrentFile] = []
@@ -42,6 +43,7 @@ struct TorrentDetailView: View {
                     SkeletonBar(height: 200)
                 }
                 .padding(20)
+                .frame(maxWidth: horizontalSizeClass == .regular ? 640 : nil)
             } else if let err = loadError {
                 errorStateView(err)
             } else if let torrent = torrent {
@@ -81,6 +83,7 @@ struct TorrentDetailView: View {
                 .refreshable {
                     await manualRefresh()
                 }
+                .frame(maxWidth: horizontalSizeClass == .regular ? 640 : nil)
             }
         }
         .navigationTitle(OrbixStrings.navDetails)
@@ -99,6 +102,7 @@ struct TorrentDetailView: View {
                     Image(systemName: "slider.horizontal.3")
                         .foregroundColor(AppColors.accent)
                 }
+                .accessibilityLabel(OrbixStrings.navAdvancedControl)
             }
             ToolbarItem(placement: .destructiveAction) {
                 Button(role: .destructive) {
@@ -107,6 +111,7 @@ struct TorrentDetailView: View {
                     Image(systemName: "trash")
                         .foregroundColor(AppColors.danger)
                 }
+                .accessibilityLabel(OrbixStrings.btnDelete)
             }
         }
         .alert(OrbixStrings.miscDeleteTorrentTitle, isPresented: $showDeleteConfirmation) {
@@ -162,18 +167,18 @@ struct TorrentDetailView: View {
             HStack(alignment: .bottom) {
                 Text("\(torrent.progressPercent)%")
                     .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .foregroundColor(progressColor(torrent))
+                    .foregroundColor(torrent.progressColor)
 
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
                     HStack(spacing: 4) {
                         Circle()
-                            .fill(statusColor(torrent))
+                            .fill(torrent.statusBadge.statusColor)
                             .frame(width: 8, height: 8)
                         Text(torrent.statusBadge.displayName)
                             .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(statusColor(torrent))
+                            .foregroundColor(torrent.statusBadge.statusColor)
                     }
 
                     if torrent.dlspeed > 0 {
@@ -193,7 +198,7 @@ struct TorrentDetailView: View {
                     Capsule()
                         .fill(AppColors.separator.opacity(0.5))
                     Capsule()
-                        .fill(progressColor(torrent))
+                        .fill(torrent.progressColor)
                         .frame(width: max(0, geometry.size.width * CGFloat(torrent.progress)))
                 }
             }
@@ -207,7 +212,7 @@ struct TorrentDetailView: View {
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(
                             LinearGradient(
-                                colors: [progressColor(torrent).opacity(0.4), .clear],
+                                colors: [torrent.progressColor.opacity(0.4), .clear],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -321,7 +326,7 @@ struct TorrentDetailView: View {
                             .font(.system(size: 16))
                             .foregroundColor(AppColors.secondaryLabel)
                             .frame(width: 24)
-                        Text("Hash")
+                        Text(OrbixStrings.labelHash)
                             .font(.system(size: 15))
                             .foregroundColor(AppColors.label)
                         Spacer()
@@ -425,7 +430,7 @@ struct TorrentDetailView: View {
     private var trackersSection: some View {
         VStack(spacing: 0) {
             HStack {
-                SectionHeader(title: "Trackers (\(trackers.count))")
+                SectionHeader(title: String(format: OrbixStrings.labelTrackersCount, trackers.count))
                 Spacer()
                 Button {
                     showTrackerSheet = true
@@ -442,11 +447,11 @@ struct TorrentDetailView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
                             Circle()
-                                .fill(trackerStatusColor(tracker.status))
+                                .fill(tracker.statusColor)
                                 .frame(width: 8, height: 8)
                             Text(tracker.statusText)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(trackerStatusColor(tracker.status))
+                                .foregroundColor(tracker.statusColor)
                             Spacer()
                         }
                         Text("\(OrbixStrings.miscSeedsPrefix)：\(tracker.numSeeds) • 下载：\(tracker.numLeeches)")
@@ -476,7 +481,7 @@ struct TorrentDetailView: View {
     // MARK: - Peers Section
     private var peersSection: some View {
         VStack(spacing: 0) {
-            SectionHeader(title: "Peers (\(peers.count))")
+            SectionHeader(title: String(format: OrbixStrings.labelPeersCount, peers.count))
             VStack(spacing: 0) {
                 ForEach(peers.indices, id: \.self) { index in
                     let peer = peers[index]
@@ -521,15 +526,6 @@ struct TorrentDetailView: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(.ultraThinMaterial)
             )
-        }
-    }
-
-    private func trackerStatusColor(_ status: Int) -> Color {
-        switch status {
-        case 0, 1: return AppColors.danger
-        case 2, 4: return AppColors.success
-        case 3: return AppColors.warning
-        default: return AppColors.secondaryLabel
         }
     }
 
@@ -581,7 +577,7 @@ struct TorrentDetailView: View {
                 Task { await manualRefresh() }
             }
             .font(.system(size: 15, weight: .medium))
-            .foregroundColor(.white)
+            .foregroundColor(AppColors.label)
             .padding(.horizontal, 24)
             .padding(.vertical, 10)
             .background(
@@ -591,21 +587,6 @@ struct TorrentDetailView: View {
             .buttonStyle(ScaleButtonStyle())
         }
         .padding(40)
-    }
-
-    private func statusColor(_ torrent: TorrentInfo) -> Color {
-        switch torrent.statusBadge {
-        case .uploading, .stalledUP, .forcedUP: return AppColors.success
-        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent
-        case .error, .missingFiles: return AppColors.danger
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.secondaryLabel
-        default: return AppColors.secondaryLabel
-        }
-    }
-
-    private func progressColor(_ torrent: TorrentInfo) -> Color {
-        if torrent.statusBadge.isError { return AppColors.danger }
-        return torrent.isCompleted ? AppColors.success : AppColors.accent
     }
 
     // MARK: - Tiered Refresh Strategy

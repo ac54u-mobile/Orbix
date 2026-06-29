@@ -72,7 +72,7 @@ struct AddServiceView: View {
                     HStack {
                         Text(OrbixStrings.sectionHost).foregroundColor(AppColors.secondaryLabel)
                         Spacer()
-                        TextField("192.168.1.100", text: $host)
+                        TextField(OrbixStrings.phIP, text: $host)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.URL)
                             .autocapitalization(.none)
@@ -89,7 +89,7 @@ struct AddServiceView: View {
                     }
 
                     Toggle(isOn: $https) {
-                        Text("HTTPS").foregroundColor(AppColors.secondaryLabel)
+                        Text(OrbixStrings.labelHTTPS).foregroundColor(AppColors.secondaryLabel)
                     }
                     .tint(AppColors.accent)
                 } header: {
@@ -101,7 +101,7 @@ struct AddServiceView: View {
                         HStack {
                             Text(OrbixStrings.miscUsername).foregroundColor(AppColors.secondaryLabel)
                             Spacer()
-                            TextField("admin", text: $username)
+                            TextField(OrbixStrings.phUsername, text: $username)
                                 .multilineTextAlignment(.trailing)
                                 .autocapitalization(.none)
                                 .foregroundColor(AppColors.label)
@@ -132,7 +132,7 @@ struct AddServiceView: View {
                 } else {
                     Section {
                         HStack {
-                            Text("API Key").foregroundColor(AppColors.secondaryLabel)
+                            Text(OrbixStrings.labelAPIKey).foregroundColor(AppColors.secondaryLabel)
                             Spacer()
                             Group {
                                 if showApiKey {

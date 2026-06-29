@@ -69,7 +69,7 @@ struct TorrentRow: View {
                             .fill(AppColors.separator.opacity(0.5))
                         
                         RoundedRectangle(cornerRadius: 1, style: .continuous)
-                            .fill(progressColor)
+                            .fill(torrent.progressColor)
                             .frame(width: max(0, geometry.size.width * CGFloat(torrent.progress)))
                     }
                 }
@@ -82,25 +82,9 @@ struct TorrentRow: View {
     private var statusBadge: some View {
         Text(torrent.statusBadge.displayName)
             .font(.system(size: 12, weight: .medium))
-            .foregroundColor(statusColor)
+            .foregroundColor(torrent.statusBadge.statusColor)
     }
 
-    private var statusColor: Color {
-        switch torrent.statusBadge {
-        case .uploading, .stalledUP, .forcedUP: return AppColors.success
-        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent
-        case .error, .missingFiles: return AppColors.danger
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.secondaryLabel
-        default: return AppColors.secondaryLabel
-        }
-    }
-
-    private var progressColor: Color {
-        if torrent.statusBadge.isError { return AppColors.danger }
-        if torrent.isCompleted { return AppColors.success }
-        return AppColors.accent
-    }
-}
 
 #if DEBUG
 #Preview {

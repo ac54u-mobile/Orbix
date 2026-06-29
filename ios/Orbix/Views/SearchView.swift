@@ -76,6 +76,7 @@ struct SearchView: View {
                     Image(systemName: showingBookmarks ? "heart.fill" : (bookmarks.isEmpty ? "heart" : "heart.fill"))
                         .foregroundColor(AppColors.accent)
                 }
+                .accessibilityLabel(OrbixStrings.navSearch)
                 .id("bookmark_\(bookmarks.hashValue)_\(showingBookmarks)")
             }
         }
@@ -178,7 +179,7 @@ struct SearchView: View {
                             Spacer()
                             Text(section.date)
                                 .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                .foregroundColor(.white)
+                                .foregroundColor(AppColors.label)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 3)
                                 .background(

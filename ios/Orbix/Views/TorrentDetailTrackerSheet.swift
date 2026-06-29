@@ -41,11 +41,11 @@ struct TorrentDetailTrackerSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 Circle()
-                                    .fill(trackerStatusColor(tracker.status))
+                                    .fill(tracker.statusColor)
                                     .frame(width: 8, height: 8)
                                 Text(tracker.statusText)
                                     .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(trackerStatusColor(tracker.status))
+                                    .foregroundColor(tracker.statusColor)
                                 Spacer()
                                 Text("\(OrbixStrings.miscSeedsPrefix)\(tracker.numSeeds)")
                                     .font(.system(size: 11))
@@ -88,15 +88,8 @@ struct TorrentDetailTrackerSheet: View {
                 }
             }
         }
-    }
-
-    private func trackerStatusColor(_ status: Int) -> Color {
-        switch status {
-        case 0, 1: return AppColors.danger
-        case 2, 4: return AppColors.success
-        case 3: return AppColors.warning
-        default: return AppColors.secondaryLabel
         }
+
     }
 }
 

@@ -35,7 +35,7 @@ struct SettingsView: View {
                     .padding(.top, 20)
                 } else {
                     ScrollView {
-                        LazyVStack(spacing: 16) {
+                        VStack(spacing: 16) {
                             Text(OrbixStrings.sectionServer).sectionHeader()
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             serverCard
@@ -116,6 +116,7 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 10)
             }
+            .accessibilityLabel(OrbixStrings.btnSwitchServer)
             .padding(.horizontal, 16)
         }
         .padding(.vertical, 4)
@@ -245,6 +246,7 @@ struct SettingsView: View {
                 .padding(.vertical, 10)
                 .padding(.horizontal, 16)
             }
+            .accessibilityLabel(OrbixStrings.btnCheckUpdate)
             .disabled(isCheckingUpdate)
 
             if let check = updateCheck {
@@ -321,6 +323,7 @@ struct SettingsView: View {
         }
         .padding(.vertical, 10)
         .padding(.horizontal, 16)
+        .accessibilityLabel("\(label): \(value)")
     }
 
     private func updateReleaseCard(_ release: AppRelease) -> some View {
@@ -355,7 +358,7 @@ struct SettingsView: View {
                     Spacer()
                     Text(isDownloading ? OrbixStrings.msgDownloadingDot : OrbixStrings.btnDownloadInstall)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.white)
+                        .foregroundColor(AppColors.label)
                     Spacer()
                 }
                 .padding(.vertical, 11)
@@ -364,6 +367,7 @@ struct SettingsView: View {
                         .fill(AppColors.accent)
                 )
             }
+            .accessibilityLabel(OrbixStrings.btnDownloadInstall)
             .disabled(isDownloading)
         }
         .padding(12)

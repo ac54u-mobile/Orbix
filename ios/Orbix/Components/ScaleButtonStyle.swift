@@ -7,7 +7,7 @@ struct ScaleButtonStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.94 : 1)
             .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.5)
-            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+            .animation(AppMotion.fastAnim(), value: configuration.isPressed)
     }
 }
 

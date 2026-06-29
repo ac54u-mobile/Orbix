@@ -26,7 +26,7 @@ struct SplashView: View {
             }
         }
         .onAppear {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+            withAnimation(AppMotion.slowAnim()) {
                 isAnimating = true
             }
 

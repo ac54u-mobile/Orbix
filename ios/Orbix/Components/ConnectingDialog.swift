@@ -30,8 +30,10 @@ struct ConnectingDialog: View {
             .opacity(isVisible ? 1 : 0)
         }
         .onAppear {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+            withAnimation(AppMotion.mediumAnim()) {
                 isVisible = true
+            }
+        }
     }
 }
 
@@ -40,8 +42,6 @@ struct ConnectingDialog: View {
     ConnectingDialog(message: OrbixStrings.msgConnecting)
 }
 #endif
-    }
-}
 
 struct ConnectingDialogModifier: ViewModifier {
     @Binding var isPresented: Bool
@@ -56,7 +56,7 @@ struct ConnectingDialogModifier: ViewModifier {
                         .zIndex(100)
                 }
             }
-            .animation(.easeOut(duration: 0.25), value: isPresented)
+            .animation(AppMotion.fastAnim(), value: isPresented)
     }
 }
 

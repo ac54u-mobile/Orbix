@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 struct TorrentInfo: Codable, Identifiable {
     var id: String { hash }
@@ -122,6 +122,12 @@ struct TorrentInfo: Codable, Identifiable {
         if minutes > 0 { return "\(minutes)m \(seconds)s" }
         return "\(seconds)s"
     }
+
+    var progressColor: Color {
+        if statusBadge.isError { return AppColors.danger }
+        if isCompleted { return AppColors.success }
+        return AppColors.accent
+    }
 }
 
 enum TorrentStatus: String {
@@ -164,6 +170,16 @@ enum TorrentStatus: String {
 
     var isError: Bool {
         self == .error || self == .missingFiles
+    }
+
+    var statusColor: Color {
+        switch self {
+        case .uploading, .stalledUP, .forcedUP: return AppColors.success
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent
+        case .error, .missingFiles: return AppColors.danger
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.secondaryLabel
+        default: return AppColors.secondaryLabel
+        }
     }
 
     var displayName: String {
@@ -332,6 +348,15 @@ struct TorrentTracker: Codable, Identifiable {
         case 3: return String(localized: "更新中", comment: "Updating")
         case 4: return String(localized: "工作中", comment: "Working")
         default: return msg.isEmpty ? String(localized: "未知", comment: "Unknown") : msg
+        }
+    }
+
+    var statusColor: Color {
+        switch status {
+        case 0, 1: return AppColors.danger
+        case 2, 4: return AppColors.success
+        case 3: return AppColors.warning
+        default: return AppColors.secondaryLabel
         }
     }
 }

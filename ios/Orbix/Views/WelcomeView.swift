@@ -14,11 +14,11 @@ struct WelcomeView: View {
 
                 Text("Orbix")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
+                    .foregroundColor(AppColors.label)
 
                 Text(OrbixStrings.welcomeQBittorrent)
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AppColors.secondaryLabel)
 
                 VStack(spacing: 12) {
                     FeatureTile(
@@ -52,7 +52,7 @@ struct WelcomeView: View {
                         Text(OrbixStrings.btnStartSetup)
                             .font(.system(size: 16, weight: .bold))
                     }
-                    .foregroundColor(.white)
+                    .foregroundColor(AppColors.label)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(
@@ -97,11 +97,11 @@ private struct FeatureTile: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .foregroundColor(AppColors.label)
 
                 Text(subtitle)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(AppColors.secondaryLabel)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }

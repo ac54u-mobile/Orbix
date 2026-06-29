@@ -7,7 +7,7 @@ struct SolidCardButtonStyle: ButtonStyle {
         configuration.label
             .scaleEffect(configuration.isPressed && isEnabled ? 0.98 : 1)
             .opacity(isEnabled ? 1 : 0.5)
-            .animation(.easeOut(duration: 0.2), value: configuration.isPressed)
+            .animation(AppMotion.fastAnim(), value: configuration.isPressed)
     }
 }
 

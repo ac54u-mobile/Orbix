@@ -22,7 +22,7 @@ struct ToastView: View {
 
     var body: some View {
         Text(message)
-            .bodyFont(.white)
+            .bodyFont(AppColors.label)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .background(
@@ -33,7 +33,7 @@ struct ToastView: View {
             .opacity(isShowing ? 1 : 0)
             .scaleEffect(isShowing ? 1 : 0.85)
             .onAppear {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                withAnimation(AppMotion.mediumAnim()) {
                     isShowing = true
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {

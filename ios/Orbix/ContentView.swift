@@ -17,7 +17,7 @@ struct ContentView: View {
             switch destination {
             case .splash:
                 SplashView(onDecision: { decision in
-                    withAnimation(.smooth(duration: 0.35)) {
+                    withAnimation(AppMotion.standardCurve) {
                         destination = decision
                     }
                 })
@@ -44,7 +44,7 @@ struct ContentView: View {
                             await QBitApi.shared.setActiveServer(config)
                             _ = await QBitApi.shared.connect()
                             await MainActor.run {
-                                withAnimation(.smooth(duration: 0.35)) {
+                                withAnimation(AppMotion.standardCurve) {
                                     destination = .main
                                 }
                             }
@@ -53,20 +53,20 @@ struct ContentView: View {
                 }
             case .serverSelection:
                 ServerSelectionView(onConnected: {
-                    withAnimation(.smooth(duration: 0.35)) {
+                    withAnimation(AppMotion.standardCurve) {
                         destination = .main
                     }
                 })
             case .main:
                 MainTabView(initialTab: deepLinkTab, onLogout: {
                     deepLinkTab = nil
-                    withAnimation(.smooth(duration: 0.35)) {
+                    withAnimation(AppMotion.standardCurve) {
                         destination = .serverSelection
                     }
                 })
             }
         }
-        .animation(.smooth(duration: 0.35), value: destination)
+        .animation(AppMotion.standardCurve, value: destination)
         .onOpenURL { _ in
             deepLinkTab = 2
         }

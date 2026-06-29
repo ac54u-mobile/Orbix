@@ -12,6 +12,7 @@ struct TorrentListView: View {
     @State private var gUlLimitStr = ""
     @State private var altSpeedEnabled = false
     @State private var sortOrder: TorrentSort = .dateAdded
+    @Environment(\.scenePhase) private var scenePhase
 
     enum TorrentSort: CaseIterable {
         case dateAdded
@@ -107,7 +108,7 @@ struct TorrentListView: View {
                     .refreshable {
                         await manualRefresh()
                     }
-                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: filteredTorrents.map(\.id))
+                    .animation(AppMotion.standardCurve, value: filteredTorrents.map(\.id))
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -119,7 +120,7 @@ struct TorrentListView: View {
                     Color.clear.frame(height: 0)
                 }
             }
-            .animation(.interpolatingSpring(stiffness: 300, damping: 25), value: globalDlSpeed > 0 || globalUpSpeed > 0)
+            .animation(AppMotion.standardCurve, value: globalDlSpeed > 0 || globalUpSpeed > 0)
             .navigationTitle(OrbixStrings.tabTorrents)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -128,6 +129,7 @@ struct TorrentListView: View {
                         Image(systemName: altSpeedEnabled ? "tortoise.fill" : "speedometer")
                             .foregroundColor(altSpeedEnabled ? AppColors.warning : AppColors.accent)
                     }
+                    .accessibilityLabel(OrbixStrings.sectionGlobalSpeedLimit)
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     Menu {
@@ -147,6 +149,7 @@ struct TorrentListView: View {
                         Image(systemName: "arrow.up.arrow.down")
                             .foregroundColor(AppColors.accent)
                     }
+                    .accessibilityLabel(OrbixStrings.sortName)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -154,10 +157,14 @@ struct TorrentListView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityLabel(OrbixStrings.navAddTorrent)
                 }
             }
             .onAppear { refresh() }
-            .onReceive(timer) { _ in refresh() }
+            .onReceive(timer) { _ in
+                guard scenePhase == .active else { return }
+                refresh()
+            }
             .sheet(isPresented: $showAddTorrent) {
                 AddTorrentView()
             }
@@ -180,7 +187,7 @@ struct TorrentListView: View {
                         let impact = UISelectionFeedbackGenerator()
                         impact.selectionChanged()
                         
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                        withAnimation(AppMotion.fastAnim()) {
                             filter = f
                         }
                     } label: {
@@ -202,6 +209,7 @@ struct TorrentListView: View {
                                 }
                             )
                     }
+                    .accessibilityLabel(f.displayName)
                 }
             }
             .padding(.horizontal, 20)
@@ -269,7 +277,7 @@ struct TorrentListView: View {
             do {
                 try await QBitApi.shared.deleteTorrent(torrent.hash, deleteFiles: true)
                 await MainActor.run {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                    withAnimation(AppMotion.mediumAnim()) {
                         self.torrents.removeAll { $0.hash == torrent.hash }
                     }
                 }
@@ -307,23 +315,12 @@ struct TorrentListView: View {
                     Text(OrbixStrings.infoAltSpeedHint)
                 }
 
-                Section {
-                    HStack {
-                        Text(OrbixStrings.labelDownloadLimit).foregroundColor(AppColors.secondaryLabel)
-                        Spacer()
-                        TextField(OrbixStrings.phNoLimit, text: $gDlLimitStr)
-                            .keyboardType(.numberPad).multilineTextAlignment(.trailing)
-                        Text("KB/s").font(.system(size: 12)).foregroundColor(AppColors.tertiaryLabel)
-                    }
-                    HStack {
-                        Text(OrbixStrings.labelUploadLimit).foregroundColor(AppColors.secondaryLabel)
-                        Spacer()
-                        TextField(OrbixStrings.phNoLimit, text: $gUlLimitStr)
-                            .keyboardType(.numberPad).multilineTextAlignment(.trailing)
-                        Text("KB/s").font(.system(size: 12)).foregroundColor(AppColors.tertiaryLabel)
-                    }
-                    Button {
-                        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                SpeedLimitSection(
+                    sectionTitle: OrbixStrings.sectionGlobalSpeedLimit,
+                    footerText: OrbixStrings.infoEmptyZeroGlobalHint,
+                    dlLimitStr: $gDlLimitStr,
+                    ulLimitStr: $gUlLimitStr,
+                    onApply: {
                         Task {
                             let dl = Int64(gDlLimitStr) ?? -1
                             let ul = Int64(gUlLimitStr) ?? -1
@@ -331,18 +328,8 @@ struct TorrentListView: View {
                             if ul >= 0 { try? await QBitApi.shared.setGlobalUploadLimit(ul > 0 ? ul * 1024 : 0) }
                             UINotificationFeedbackGenerator().notificationOccurred(.success)
                         }
-                    } label: {
-                        Text(OrbixStrings.btnApplyLimit)
-                            .font(.system(size: 14, weight: .medium))
-                            .frame(maxWidth: .infinity).padding(.vertical, 8)
-                            .background(RoundedRectangle(cornerRadius: 8).fill(AppColors.accent))
-                            .foregroundColor(.white)
                     }
-                } header: {
-                    Text(OrbixStrings.sectionGlobalSpeedLimit)
-                } footer: {
-                    Text(OrbixStrings.infoEmptyZeroGlobalHint)
-                }
+                )
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)

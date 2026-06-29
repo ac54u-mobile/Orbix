@@ -26,7 +26,7 @@ struct ServerManagementView: View {
                             showLogin = true
                         } label: {
                             Text(OrbixStrings.navAddServer)
-                                .bodyFont(.white)
+                                .bodyFont(AppColors.label)
                                 .padding(.horizontal, 32)
                                 .padding(.vertical, 12)
                                 .background(

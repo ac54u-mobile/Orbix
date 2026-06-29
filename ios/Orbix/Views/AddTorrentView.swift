@@ -25,6 +25,8 @@ struct AddTorrentView: View {
     @State private var savePath = ""
     @State private var isSubmitting = false
     @State private var showFilePicker = false
+    @State private var showError = false
+    @State private var lastError = ""
 
     var body: some View {
         NavigationStack {
@@ -57,7 +59,7 @@ struct AddTorrentView: View {
             .sheet(isPresented: $showFilePicker) {
                 DocumentPickerView { url in
                     if let data = try? Data(contentsOf: url) {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        withAnimation(AppMotion.mediumAnim()) {
                             selectedFileURL = url
                             selectedFileData = data
                         }
@@ -90,11 +92,12 @@ struct AddTorrentView: View {
                     ConnectingDialog(message: OrbixStrings.msgAdding)
                 }
             }
+            .toast(isPresented: $showError, type: .error, message: lastError)
         }
     }
 
     private var modePicker: some View {
-        Picker(OrbixStrings.sectionAddMethod, selection: $mode.animation(.spring(response: 0.3, dampingFraction: 0.75))) {
+        Picker(OrbixStrings.sectionAddMethod, selection: $mode.animation(AppMotion.mediumAnim())) {
             ForEach(AddMode.allCases, id: \.self) { m in
                 Text(m.displayName).tag(m)
             }
@@ -105,7 +108,7 @@ struct AddTorrentView: View {
 
     private var linkInputSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Magnet / URL")
+            Text(OrbixStrings.labelMagnetURL)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(AppColors.secondaryLabel)
                 .textCase(.uppercase)
@@ -164,7 +167,7 @@ struct AddTorrentView: View {
                     Button {
                         let impact = UIImpactFeedbackGenerator(style: .light)
                         impact.impactOccurred()
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        withAnimation(AppMotion.mediumAnim()) {
                             selectedFileURL = nil
                             selectedFileData = nil
                         }
@@ -282,7 +285,11 @@ struct AddTorrentView: View {
                 let errorImpact = UINotificationFeedbackGenerator()
                 errorImpact.notificationOccurred(.error)
 
-                await MainActor.run { isSubmitting = false }
+                await MainActor.run {
+                    isSubmitting = false
+                    lastError = error.localizedDescription
+                    showError = true
+                }
             }
         }
     }
@@ -338,28 +345,4 @@ struct DocumentPickerView: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - 辅助组件
 
-private struct IconTextFieldRow: View {
-    let icon: String
-    let placeholder: String
-    @Binding var text: String
-    var disableAutocap: Bool = false
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(AppColors.secondaryLabel)
-                .frame(width: 24)
-
-            TextField(placeholder, text: $text)
-                .font(.system(size: 15))
-                .foregroundColor(AppColors.label)
-                .textInputAutocapitalization(disableAutocap ? .never : .sentences)
-                .disableAutocorrection(disableAutocap)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-    }
-}

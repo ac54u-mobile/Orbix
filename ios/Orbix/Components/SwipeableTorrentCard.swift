@@ -21,11 +21,11 @@ struct SwipeableTorrentCard: View {
                         .overlay(alignment: .trailing) {
                             Image(systemName: "trash.fill")
                                 .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.white)
+                                .foregroundColor(AppColors.label)
                                 .padding(.trailing, 16)
                                 .scaleEffect(offset < -50 ? 1.2 : 0.9)
                                 .opacity(offset < -20 ? 1 : 0)
-                                .animation(.easeOut(duration: 0.2), value: offset)
+                                .animation(AppMotion.fastAnim(), value: offset)
                         }
                         .onTapGesture {
                             autoDismissTask?.cancel()
@@ -33,7 +33,7 @@ struct SwipeableTorrentCard: View {
                             isDeleting = true
                             let impact = UIImpactFeedbackGenerator(style: .heavy)
                             impact.impactOccurred()
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            withAnimation(AppMotion.mediumAnim()) {
                                 offset = -geometry.size.width
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
@@ -46,7 +46,7 @@ struct SwipeableTorrentCard: View {
                     autoDismissTask?.cancel()
                     guard !isDragging else { return }
                     if offset < 0 {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        withAnimation(AppMotion.mediumAnim()) {
                             offset = 0
                         }
                     } else {
@@ -62,6 +62,8 @@ struct SwipeableTorrentCard: View {
                         )
                 }
                 .buttonStyle(SolidCardButtonStyle())
+                .accessibilityLabel("\(torrent.name), \(torrent.statusBadge.displayName), \(torrent.progressPercent)%")
+                .accessibilityHint(String(localized: "轻点查看详情，向左滑动删除", comment: "Tap to view details, swipe left to delete"))
                 .offset(x: offset)
                 .navigationDestination(isPresented: $navigateToDetail) {
                     TorrentDetailView(hash: torrent.hash)
@@ -83,7 +85,7 @@ struct SwipeableTorrentCard: View {
                         isDragging = false
                         return
                     }
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    withAnimation(AppMotion.mediumAnim()) {
                         if value.translation.width < -50 {
                             offset = -72
                         } else {
@@ -102,7 +104,7 @@ struct SwipeableTorrentCard: View {
                     try? await Task.sleep(nanoseconds: 3_000_000_000)
                     guard !Task.isCancelled, !isDeleting else { return }
                     await MainActor.run {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        withAnimation(AppMotion.mediumAnim()) {
                             offset = 0
                         }
                     }
