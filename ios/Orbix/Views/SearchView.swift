@@ -146,7 +146,7 @@ struct SearchView: View {
             if dict[item.date] == nil { order.append(item.date) }
             dict[item.date, default: []].append(item)
         }
-        return order.map { ($0, dict[$0]!) }
+        return order.compactMap { date in dict[date].map { (date, $0) } }
     }
 
     private var resultsView: some View {
@@ -301,8 +301,11 @@ struct SearchView: View {
                     hasMorePages = true
                 }
             }
-        } catch {}
-    }
+        } catch {
+#if DEBUG
+            print("[SearchView] refreshSearch error: \(error)")
+#endif
+        }
 
     private func loadMore() {
         guard !isLoadingMore, hasMorePages else { return }

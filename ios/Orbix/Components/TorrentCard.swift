@@ -52,8 +52,11 @@ struct TorrentCard: View {
                     ImageCache.shared.set(url.absoluteString, image: img)
                     loadedImage = img
                 }
-            } catch {}
-        }
+            } catch {
+#if DEBUG
+                print("[TorrentCard] image load error: \(error)")
+#endif
+            }
     }
 }
 

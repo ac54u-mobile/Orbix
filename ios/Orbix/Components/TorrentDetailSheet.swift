@@ -159,8 +159,11 @@ struct TorrentDetailSheet: View {
                         root.present(av, animated: true)
                     }
                 }
-            } catch {}
-        }
+            } catch {
+#if DEBUG
+                print("[TorrentDetailSheet] download error: \(error)")
+#endif
+            }
     }
 }
 

@@ -671,14 +671,22 @@ struct TorrentDetailView: View {
         await withTaskGroup(of: Void.self) { group in
             group.addTask {
                 while !Task.isCancelled {
-                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    do {
+                        try await Task.sleep(nanoseconds: 2_000_000_000)
+                    } catch is CancellationError {
+                        break
+                    } catch { break }
                     guard !Task.isCancelled else { break }
                     await refreshInfoPeers()
                 }
             }
             group.addTask {
                 while !Task.isCancelled {
-                    try? await Task.sleep(nanoseconds: 8_000_000_000)
+                    do {
+                        try await Task.sleep(nanoseconds: 8_000_000_000)
+                    } catch is CancellationError {
+                        break
+                    } catch { break }
                     guard !Task.isCancelled else { break }
                     await refreshFilesTrackers()
                 }
