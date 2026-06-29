@@ -11,35 +11,58 @@ actor QBitApi {
 
     // MARK: - Server Management
     func loadSavedConfig() -> ServerConfig? {
-        guard let host = UserDefaults.standard.string(forKey: "qbit_host") else { return nil }
+        guard let host = KeychainService.loadString(forKey: "qbit_host") else {
+            guard let legacyHost = UserDefaults.standard.string(forKey: "qbit_host") else { return nil }
+            let config = ServerConfig(
+                name: UserDefaults.standard.string(forKey: "qbit_name") ?? legacyHost,
+                host: legacyHost,
+                port: UserDefaults.standard.integer(forKey: "qbit_port"),
+                username: UserDefaults.standard.string(forKey: "qbit_username") ?? "",
+                password: UserDefaults.standard.string(forKey: "qbit_password") ?? "",
+                https: UserDefaults.standard.bool(forKey: "qbit_https")
+            )
+            setActiveServer(config)
+            removeLegacyKeys()
+            return config
+        }
         return ServerConfig(
-            name: UserDefaults.standard.string(forKey: "qbit_name") ?? host,
+            name: KeychainService.loadString(forKey: "qbit_name") ?? host,
             host: host,
-            port: UserDefaults.standard.integer(forKey: "qbit_port"),
-            username: UserDefaults.standard.string(forKey: "qbit_username") ?? "",
-            password: UserDefaults.standard.string(forKey: "qbit_password") ?? "",
-            https: UserDefaults.standard.bool(forKey: "qbit_https")
+            port: Int(KeychainService.loadString(forKey: "qbit_port") ?? "") ?? 0,
+            username: KeychainService.loadString(forKey: "qbit_username") ?? "",
+            password: KeychainService.loadString(forKey: "qbit_password") ?? "",
+            https: KeychainService.loadString(forKey: "qbit_https") == "true"
         )
     }
+
     func setActiveServer(_ config: ServerConfig) {
         activeServer = config
-        UserDefaults.standard.set(config.name, forKey: "qbit_name")
-        UserDefaults.standard.set(config.host, forKey: "qbit_host")
-        UserDefaults.standard.set(config.port, forKey: "qbit_port")
-        UserDefaults.standard.set(config.username, forKey: "qbit_username")
-        UserDefaults.standard.set(config.password, forKey: "qbit_password")
-        UserDefaults.standard.set(config.https, forKey: "qbit_https")
+        KeychainService.saveString(config.name, forKey: "qbit_name")
+        KeychainService.saveString(config.host, forKey: "qbit_host")
+        KeychainService.saveString(String(config.port), forKey: "qbit_port")
+        KeychainService.saveString(config.username, forKey: "qbit_username")
+        KeychainService.saveString(config.password, forKey: "qbit_password")
+        KeychainService.saveString(config.https ? "true" : "false", forKey: "qbit_https")
+        removeLegacyKeys()
     }
 
     func loadServers() -> [ServerConfig] {
-        guard let data = UserDefaults.standard.data(forKey: "qbit_servers"),
-              let servers = try? JSONDecoder().decode([ServerConfig].self, from: data) else {
-            if let legacy = legacyServerConfig() {
-                return [legacy]
-            }
-            return []
+        if let data = KeychainService.load(key: "qbit_servers"),
+           let servers = try? JSONDecoder().decode([ServerConfig].self, from: data) {
+            return servers
         }
-        return servers
+        if let data = UserDefaults.standard.data(forKey: "qbit_servers"),
+           let servers = try? JSONDecoder().decode([ServerConfig].self, from: data) {
+            if let encoded = try? JSONEncoder().encode(servers) {
+                _ = KeychainService.save(key: "qbit_servers", data: encoded)
+            }
+            UserDefaults.standard.removeObject(forKey: "qbit_servers")
+            return servers
+        }
+        if let legacy = legacyServerConfig() {
+            return [legacy]
+        }
+        return []
     }
 
     func upsertServer(_ server: ServerConfig) {
@@ -60,20 +83,39 @@ actor QBitApi {
 
     private func saveServers(_ servers: [ServerConfig]) {
         guard let data = try? JSONEncoder().encode(servers) else { return }
-        UserDefaults.standard.set(data, forKey: "qbit_servers")
+        _ = KeychainService.save(key: "qbit_servers", data: data)
+        UserDefaults.standard.removeObject(forKey: "qbit_servers")
+    }
+
+    private func removeLegacyKeys() {
+        let keys = ["qbit_name", "qbit_host", "qbit_port", "qbit_username", "qbit_password", "qbit_https"]
+        for key in keys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
     }
 
     private func legacyServerConfig() -> ServerConfig? {
-        guard let host = UserDefaults.standard.string(forKey: "qbit_host"),
-              let username = UserDefaults.standard.string(forKey: "qbit_username") else { return nil }
-        return ServerConfig(
-            name: UserDefaults.standard.string(forKey: "qbit_name") ?? "Default",
+        guard let host = KeychainService.loadString(forKey: "qbit_host") ??
+                UserDefaults.standard.string(forKey: "qbit_host") else { return nil }
+        let port: Int = Int(KeychainService.loadString(forKey: "qbit_port") ?? "") ?? UserDefaults.standard.integer(forKey: "qbit_port")
+        let username = KeychainService.loadString(forKey: "qbit_username") ?? UserDefaults.standard.string(forKey: "qbit_username") ?? ""
+        let password = KeychainService.loadString(forKey: "qbit_password") ?? UserDefaults.standard.string(forKey: "qbit_password") ?? ""
+        let https: Bool = KeychainService.loadString(forKey: "qbit_https").map { $0 == "true" } ?? UserDefaults.standard.bool(forKey: "qbit_https")
+
+        guard !username.isEmpty else { return nil }
+
+        let config = ServerConfig(
+            name: KeychainService.loadString(forKey: "qbit_name") ?? UserDefaults.standard.string(forKey: "qbit_name") ?? "Default",
             host: host,
-            port: UserDefaults.standard.integer(forKey: "qbit_port"),
+            port: port,
             username: username,
-            password: UserDefaults.standard.string(forKey: "qbit_password") ?? "",
-            https: UserDefaults.standard.bool(forKey: "qbit_https")
+            password: password,
+            https: https
         )
+
+        setActiveServer(config)
+        removeLegacyKeys()
+        return config
     }
 
     // MARK: - URL Building

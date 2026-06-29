@@ -25,7 +25,7 @@ struct QBitRadarrAddSheet: View {
                             }
                         }
                         .frame(width: 80, height: 120)
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
 
                         VStack(alignment: .leading, spacing: 6) {
                         Text(item.fileName)
@@ -37,7 +37,7 @@ struct QBitRadarrAddSheet: View {
                     }
                     .padding(16)
                     .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                             .fill(AppColors.card)
                     )
 
@@ -85,7 +85,7 @@ struct QBitRadarrAddSheet: View {
                         }
                     }
                     .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                             .fill(AppColors.card)
                     )
 

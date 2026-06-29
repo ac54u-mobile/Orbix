@@ -24,7 +24,7 @@ struct QBitResultCard: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(
-                            RoundedRectangle(cornerRadius: 4)
+                            RoundedRectangle(cornerRadius: AppRadius.xs)
                                 .fill(AppColors.success.opacity(0.12))
                         )
                 }
@@ -78,7 +78,7 @@ struct QBitResultCard: View {
                             showDownloadSheet = true
                         }
                     } label: {
-                        Image(systemName: "icloud.and.arrow.down")
+                        Image(systemName: "icloud.and.arrow.down.fill")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(AppColors.accent)
                             .padding(8)
@@ -98,10 +98,10 @@ struct QBitResultCard: View {
         }
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .fill(.ultraThinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                         .stroke(Color.white.opacity(0.05), lineWidth: 0.5)
                 )
                 .shadow(color: .black.opacity(0.03), radius: 8, x: 0, y: 4)

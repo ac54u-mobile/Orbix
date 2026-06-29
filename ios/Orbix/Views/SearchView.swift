@@ -180,7 +180,7 @@ struct SearchView: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 3)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 4)
+                                    RoundedRectangle(cornerRadius: AppRadius.xs)
                                         .fill(.black.opacity(0.65))
                                 )
                                 .padding(.trailing, 4)

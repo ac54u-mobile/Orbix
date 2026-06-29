@@ -50,14 +50,13 @@ final class CredentialsManager: ObservableObject {
     @Published var prowlarr: ServiceCredential?
     @Published var radarr: ServiceCredential?
 
-    private let defaults = UserDefaults.standard
     private let key = "service_credentials"
 
     private init() { loadAll() }
 
     // MARK: - Load / Save
     private func loadAll() {
-        guard let data = defaults.data(forKey: key),
+        guard let data = KeychainService.load(key: key),
               let list = try? JSONDecoder().decode([ServiceCredential].self, from: data)
         else { return }
         for cred in list {
@@ -112,7 +111,7 @@ final class CredentialsManager: ObservableObject {
 
     private func persist(_ list: [ServiceCredential]) {
         guard let data = try? JSONEncoder().encode(list) else { return }
-        defaults.set(data, forKey: key)
+        _ = KeychainService.save(key: key, data: data)
     }
 
     // MARK: - Connection Test

@@ -17,7 +17,7 @@ struct TorrentDetailSheet: View {
                             switch phase {
                             case .success(let img):
                                 img.resizable().aspectRatio(contentMode: .fit).frame(maxHeight: 250)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .clipShape(RoundedRectangle(cornerRadius: AppRadius.md))
                                     .onTapGesture { showMediaViewer = true }
                             default:
                                 Rectangle().fill(AppColors.card).frame(height: 200)
@@ -31,7 +31,7 @@ struct TorrentDetailSheet: View {
                     }
 
                     HStack(spacing: 16) {
-                        Label(torrent.size, systemImage: "doc").caption()
+                        Label(torrent.size, systemImage: "doc.fill").caption()
                         Label(torrent.date, systemImage: "calendar").caption()
                     }
 
@@ -67,7 +67,7 @@ struct TorrentDetailSheet: View {
                             }
                         }
                         .padding(10)
-                        .background(RoundedRectangle(cornerRadius: 8).fill(AppColors.card))
+                        .background(RoundedRectangle(cornerRadius: AppRadius.sm).fill(AppColors.card))
 
                         if let pageUrl = torrent.pageUrl {
                             VStack(spacing: 4) {
@@ -85,7 +85,7 @@ struct TorrentDetailSheet: View {
                                 }
                             }
                             .padding(10)
-                            .background(RoundedRectangle(cornerRadius: 8).fill(AppColors.card))
+                            .background(RoundedRectangle(cornerRadius: AppRadius.sm).fill(AppColors.card))
                         }
                     }
 

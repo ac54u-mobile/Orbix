@@ -26,3 +26,15 @@ targets:
       PRODUCT_BUNDLE_IDENTIFIER: com.orbix
       INFOPLIST_FILE: ios/Orbix/Info.plist
       PRODUCT_NAME: Orbix
+
+  OrbixTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: ios/OrbixTests
+        type: group
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.orbix.tests
+      INFOPLIST_FILE: ""
+    dependencies:
+      - target: Orbix

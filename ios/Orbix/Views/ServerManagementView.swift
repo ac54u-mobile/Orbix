@@ -124,32 +124,3 @@ struct ServerManagementView: View {
     ServerManagementView(onSelected: { _ in })
 }
 #endif
-
-private struct ServerRow: View {
-    let server: ServerConfig
-
-    var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(server.name)
-                        .bodyFont()
-                    Image(systemName: server.https ? "lock.fill" : "lock.open")
-                        .font(.caption2)
-                        .foregroundColor(server.https ? AppColors.success : AppColors.secondaryLabel)
-                }
-                Text(server.url)
-                    .subtitle()
-                Text(server.username)
-                    .caption()
-            }
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundColor(AppColors.tertiaryLabel)
-        }
-        .padding(.vertical, 4)
-    }
-}

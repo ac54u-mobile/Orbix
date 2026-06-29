@@ -206,10 +206,10 @@ struct TorrentDetailView: View {
         }
         .padding(20)
         .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
                 .fill(AppColors.card)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
                         .stroke(
                             LinearGradient(
                                 colors: [torrent.progressColor.opacity(0.4), .clear],
@@ -276,7 +276,7 @@ struct TorrentDetailView: View {
                 DetailRow(icon: "person.2.fill", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelSeeds, value: "\(String(torrent.numSeeds)) / \(String(torrent.numLeechs))")
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -341,7 +341,7 @@ struct TorrentDetailView: View {
                 .padding(.vertical, 12)
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -400,7 +400,7 @@ struct TorrentDetailView: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -420,7 +420,7 @@ struct TorrentDetailView: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -471,7 +471,7 @@ struct TorrentDetailView: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -522,7 +522,7 @@ struct TorrentDetailView: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(.ultraThinMaterial)
             )
         }
@@ -549,7 +549,7 @@ struct TorrentDetailView: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
                 .fill(AppColors.danger.opacity(0.1))
         )
     }

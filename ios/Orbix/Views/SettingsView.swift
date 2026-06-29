@@ -121,7 +121,7 @@ struct SettingsView: View {
         }
         .padding(.vertical, 4)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .fill(AppColors.card)
         )
     }
@@ -155,7 +155,7 @@ struct SettingsView: View {
                 }
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -213,7 +213,7 @@ struct SettingsView: View {
         }
         .padding(.vertical, 4)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .fill(AppColors.card)
         )
     }
@@ -302,7 +302,7 @@ struct SettingsView: View {
         }
         .padding(.vertical, 4)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .fill(AppColors.card)
         )
     }
@@ -358,7 +358,7 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 11)
                 .background(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
                         .fill(AppColors.accent)
                 )
             }
@@ -367,7 +367,7 @@ struct SettingsView: View {
         }
         .padding(12)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
                 .fill(AppColors.accentSoftBg)
         )
     }

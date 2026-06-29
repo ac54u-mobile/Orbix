@@ -84,7 +84,7 @@ struct TorrentDetailFileSheet: View {
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
             .background(
-                RoundedRectangle(cornerRadius: 4)
+                RoundedRectangle(cornerRadius: AppRadius.xs)
                     .fill(color.opacity(0.12))
             )
     }

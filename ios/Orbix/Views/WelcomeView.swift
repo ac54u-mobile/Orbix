@@ -56,7 +56,7 @@ struct WelcomeView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                             .fill(AppColors.accent)
                             .shadow(color: AppColors.accent.opacity(0.3), radius: 12, x: 0, y: 6)
                     )
@@ -111,10 +111,10 @@ private struct FeatureTile: View {
         .padding(.vertical, 14)
         .padding(.horizontal, 16)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .fill(.ultraThinMaterial)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                         .stroke(Color.white.opacity(colorScheme == .dark ? 0.05 : 0), lineWidth: 0.5)
                 )
         )

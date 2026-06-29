@@ -132,7 +132,7 @@ struct AddTorrentView: View {
             }
             .padding(12)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -179,10 +179,10 @@ struct AddTorrentView: View {
                 }
                 .padding(16)
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                         .fill(AppColors.card)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                                 .stroke(AppColors.success.opacity(0.3), lineWidth: 1)
                         )
                 )
@@ -202,10 +202,10 @@ struct AddTorrentView: View {
                     .frame(height: 120)
                 }
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                         .fill(AppColors.card.opacity(0.5))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                                 .strokeBorder(
                                     style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
                                 )
@@ -233,7 +233,7 @@ struct AddTorrentView: View {
                 IconTextFieldRow(icon: "folder.fill", placeholder: OrbixStrings.phSavePathPlaceholder, text: $savePath, disableAutocap: true)
             }
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }

@@ -34,7 +34,7 @@ struct ActionTile: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }

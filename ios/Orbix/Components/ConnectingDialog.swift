@@ -22,7 +22,7 @@ struct ConnectingDialog: View {
             .padding(.horizontal, 40)
             .padding(.vertical, 32)
             .background(
-                RoundedRectangle(cornerRadius: 24)
+                    RoundedRectangle(cornerRadius: AppRadius.xxl)
                     .fill(AppColors.card)
                     .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 8)
             )

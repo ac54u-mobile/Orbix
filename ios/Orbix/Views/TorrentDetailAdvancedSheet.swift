@@ -34,7 +34,7 @@ struct TorrentDetailAdvancedSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background(
-                                RoundedRectangle(cornerRadius: 8)
+                                RoundedRectangle(cornerRadius: AppRadius.sm)
                                     .fill(newLocation.isEmpty ? AppColors.elevated : AppColors.accent)
                             )
                             .foregroundColor(newLocation.isEmpty ? AppColors.secondaryLabel : AppColors.label)
@@ -61,7 +61,7 @@ struct TorrentDetailAdvancedSheet: View {
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
                             .background(
-                                RoundedRectangle(cornerRadius: 8)
+                                RoundedRectangle(cornerRadius: AppRadius.sm)
                                     .fill(newName.isEmpty ? AppColors.elevated : AppColors.accent)
                             )
                             .foregroundColor(newName.isEmpty ? AppColors.secondaryLabel : AppColors.label)

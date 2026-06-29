@@ -30,7 +30,7 @@ struct SpeedLimitSection: View {
                 Text(OrbixStrings.btnApplyLimit)
                     .font(.system(size: 14, weight: .medium))
                     .frame(maxWidth: .infinity).padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: 8).fill(AppColors.accent))
+                    .background(RoundedRectangle(cornerRadius: AppRadius.sm).fill(AppColors.accent))
                     .foregroundColor(AppColors.label)
             }
         } header: {

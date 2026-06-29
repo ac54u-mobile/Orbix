@@ -104,7 +104,7 @@ struct StatsView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .fill(AppColors.card)
         )
         .accessibilityElement(children: .combine)
@@ -131,7 +131,7 @@ struct StatsView: View {
             .padding(.vertical, 14)
             .padding(.horizontal, 16)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -149,7 +149,7 @@ struct StatsView: View {
             .padding(.vertical, 14)
             .padding(.horizontal, 16)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -165,7 +165,7 @@ struct StatsView: View {
             .padding(.vertical, 14)
             .padding(.horizontal, 16)
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .fill(AppColors.card)
             )
         }
@@ -195,7 +195,7 @@ struct StatsView: View {
         .padding(.vertical, 14)
         .padding(.horizontal, 16)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                 .fill(AppColors.card)
         )
     }

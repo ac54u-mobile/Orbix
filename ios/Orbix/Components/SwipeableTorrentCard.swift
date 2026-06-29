@@ -1,3 +1,5 @@
+// MARK: - Deprecated: use native List + .swipeActions instead
+
 import SwiftUI
 
 struct SwipeableTorrentCard: View {
@@ -14,7 +16,7 @@ struct SwipeableTorrentCard: View {
         GeometryReader { geometry in
             ZStack(alignment: .trailing) {
                 if offset < 0 {
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
                         .fill(AppColors.danger)
                         .frame(width: 72)
                         .padding(.vertical, 4)
@@ -57,7 +59,7 @@ struct SwipeableTorrentCard: View {
                         .padding(.vertical, 14)
                         .padding(.horizontal, 16)
                         .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                                 .fill(AppColors.card)
                         )
                 }

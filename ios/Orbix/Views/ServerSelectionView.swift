@@ -47,17 +47,7 @@ struct ServerSelectionView: View {
                         Button {
                             connect(server)
                         } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(server.name)
-                                        .bodyFont()
-                                    Text(server.url)
-                                        .subtitle()
-                                }
-                                Spacer()
-                                Text(server.username)
-                                    .caption()
-                            }
+                            ServerRow(server: server, showChevron: false)
                         }
                         .listRowBackground(AppColors.card)
                     }
