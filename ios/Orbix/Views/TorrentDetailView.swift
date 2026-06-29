@@ -455,8 +455,7 @@ struct TorrentDetailView: View {
                             Spacer()
                         }
                         Text("\(OrbixStrings.miscSeedsPrefix)：\(tracker.numSeeds) • 下载：\(tracker.numLeeches)")
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.tertiaryLabel)
+                            .caption()
                         Text(tracker.url)
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundColor(AppColors.secondaryLabel)

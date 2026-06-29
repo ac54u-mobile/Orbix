@@ -86,10 +86,9 @@ struct QBitSearchView: View {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(.system(size: 40, weight: .light))
                                 .foregroundColor(AppColors.warning)
-                            Text(error)
-                                .font(.system(size: 15, weight: .regular))
-                                .foregroundColor(AppColors.secondaryLabel)
-                                .multilineTextAlignment(.center)
+                        Text(error)
+                            .subtitle()
+                            .multilineTextAlignment(.center)
                                 .padding(.horizontal, 40)
                             Spacer()
                         }
@@ -99,13 +98,11 @@ struct QBitSearchView: View {
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 40, weight: .light))
                                 .foregroundColor(AppColors.tertiaryLabel)
-                            Text(OrbixStrings.errNoResults)
-                                .font(.system(size: 15, weight: .regular))
-                                .foregroundColor(AppColors.secondaryLabel)
+                        Text(OrbixStrings.errNoResults)
+                            .subtitle()
                             if searchSource == .prowlarr {
                                 Text(OrbixStrings.infoProwlarrHint)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(AppColors.tertiaryLabel)
+                                    .caption()
                             }
                             Spacer()
                         }

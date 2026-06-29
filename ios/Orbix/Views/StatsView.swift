@@ -87,8 +87,7 @@ struct StatsView: View {
                         .font(.system(size: 14, weight: .medium, design: .monospaced))
                         .foregroundColor(AppColors.accent)
                     Text("↓")
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.tertiaryLabel)
+                        .caption()
                 }
                 HStack(spacing: 4) {
                     Circle()
@@ -98,8 +97,7 @@ struct StatsView: View {
                         .font(.system(size: 14, weight: .medium, design: .monospaced))
                         .foregroundColor(AppColors.success)
                     Text("↑")
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.tertiaryLabel)
+                        .caption()
                 }
             }
         }

@@ -148,8 +148,7 @@ struct SettingsView: View {
                 if appLock.isEnabled {
                     Divider().background(AppColors.separator)
                     Text(OrbixStrings.infoAppLockHint)
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.tertiaryLabel)
+                        .caption()
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
@@ -291,12 +290,10 @@ struct SettingsView: View {
                     .frame(height: 4)
                     HStack {
                         Text(OrbixStrings.msgDownloading)
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.tertiaryLabel)
+                            .caption()
                         Spacer()
                         Text("\(min(99, Int(downloadProgress * 100)))%")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(AppColors.accent)
+                            .caption(AppColors.accent)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -334,9 +331,8 @@ struct SettingsView: View {
                     .foregroundColor(AppColors.accent)
                 Spacer()
                 if let size = release.ipaSize {
-                    Text(formatBytes(size))
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.tertiaryLabel)
+                        Text(formatBytes(size))
+                            .caption()
                 }
             }
 
@@ -346,8 +342,7 @@ struct SettingsView: View {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if !cleanNotes.isEmpty {
                 Text(cleanNotes)
-                    .font(.system(size: 13))
-                    .foregroundColor(AppColors.secondaryLabel)
+                    .sectionHeader()
                     .lineLimit(4)
             }
 

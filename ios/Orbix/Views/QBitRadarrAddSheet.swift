@@ -28,9 +28,8 @@ struct QBitRadarrAddSheet: View {
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text(item.fileName)
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundColor(AppColors.label)
+                        Text(item.fileName)
+                            .navTitle()
                             Text(String(format: OrbixStrings.labelTMDBID, item.num))
                                 .font(.system(size: 13))
                                 .foregroundColor(AppColors.tertiaryLabel)
@@ -110,9 +109,8 @@ struct QBitRadarrAddSheet: View {
                     }
                     .padding(.top, 4)
 
-                    Text(OrbixStrings.infoRadarrHint)
-                        .font(.system(size: 12))
-                        .foregroundColor(AppColors.tertiaryLabel)
+                Text(OrbixStrings.infoRadarrHint)
+                    .caption()
                         .multilineTextAlignment(.center)
                 }
                 .padding(16)

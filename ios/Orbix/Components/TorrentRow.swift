@@ -81,8 +81,7 @@ struct TorrentRow: View {
 
     private var statusBadge: some View {
         Text(torrent.statusBadge.displayName)
-            .font(.system(size: 12, weight: .medium))
-            .foregroundColor(torrent.statusBadge.statusColor)
+            .caption(torrent.statusBadge.statusColor)
     }
 
 

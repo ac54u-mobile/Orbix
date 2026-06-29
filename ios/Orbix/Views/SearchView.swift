@@ -141,13 +141,10 @@ struct SearchView: View {
     }
 
     private var sections: [(date: String, items: [ScrapedTorrent])] {
-        var dict = [String: [ScrapedTorrent]]()
-        var order: [String] = []
-        for item in displayResults {
-            if dict[item.date] == nil { order.append(item.date) }
-            dict[item.date, default: []].append(item)
+        let grouped = Dictionary(grouping: displayResults, by: { $0.date })
+        return grouped.keys.sorted(by: >).compactMap { date in
+            grouped[date].map { (date, $0) }
         }
-        return order.compactMap { date in dict[date].map { (date, $0) } }
     }
 
     private var resultsView: some View {

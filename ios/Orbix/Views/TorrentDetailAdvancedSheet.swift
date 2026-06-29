@@ -13,9 +13,8 @@ struct TorrentDetailAdvancedSheet: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(OrbixStrings.miscModifyPath)
-                            .font(.system(size: 13))
-                            .foregroundColor(AppColors.secondaryLabel)
+                    Text(OrbixStrings.miscModifyPath)
+                        .sectionHeader()
                         TextField(OrbixStrings.phNewSavePath, text: $newLocation)
                             .font(.system(size: 14, design: .monospaced))
                             .foregroundColor(AppColors.label)

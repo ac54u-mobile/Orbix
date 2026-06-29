@@ -37,7 +37,7 @@ struct ToastView: View {
                     isShowing = true
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
-                    withAnimation(.easeOut(duration: 0.2)) {
+                    withAnimation(AppMotion.mediumAnim()) {
                         isShowing = false
                     }
                 }

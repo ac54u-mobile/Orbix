@@ -12,6 +12,7 @@ struct TorrentListView: View {
     @State private var gUlLimitStr = ""
     @State private var altSpeedEnabled = false
     @State private var sortOrder: TorrentSort = .dateAdded
+    @State private var selectedHash: String?
     @Environment(\.scenePhase) private var scenePhase
 
     enum TorrentSort: CaseIterable {
@@ -93,22 +94,34 @@ struct TorrentListView: View {
                             .foregroundColor(AppColors.secondaryLabel)
                     }
                 } else {
-                    ScrollView {
-                        LazyVStack(spacing: 12) {
-                            ForEach(filteredTorrents) { torrent in
-                                SwipeableTorrentCard(torrent: torrent) {
-                                    executeDelete(torrent)
+                    List {
+                        ForEach(filteredTorrents) { torrent in
+                            TorrentRow(torrent: torrent)
+                                .listRowBackground(AppColors.card)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        executeDelete(torrent)
+                                    } label: {
+                                        Label(OrbixStrings.btnDelete, systemImage: "trash")
+                                    }
                                 }
-                            }
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedHash = torrent.hash
+                                }
                         }
-                        .padding(.vertical, 16)
-                        .padding(.horizontal, 20)
-                        Color.clear.frame(height: 80)
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(AppColors.mainBg)
                     .refreshable {
                         await manualRefresh()
                     }
-                    .animation(AppMotion.standardCurve, value: filteredTorrents.map(\.id))
+                    .navigationDestination(item: $selectedHash) { hash in
+                        TorrentDetailView(hash: hash)
+                    }
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -193,7 +206,7 @@ struct TorrentListView: View {
                     } label: {
                         Text(f.displayName)
                             .font(.system(size: 14, weight: filter == f ? .bold : .medium))
-                            .foregroundColor(filter == f ? .white : AppColors.secondaryLabel)
+                            .foregroundColor(filter == f ? AppColors.label : AppColors.secondaryLabel)
                             .padding(.vertical, 8)
                             .padding(.horizontal, 16)
                             .background(
