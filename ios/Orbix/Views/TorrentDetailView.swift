@@ -25,7 +25,6 @@ struct TorrentDetailView: View {
     @State private var ulLimitStr = ""
     @State private var showFileSheet = false
     @State private var showTrackerSheet = false
-    @State private var newTrackerURL = ""
     @State private var selectedFileIndices: Set<Int> = []
 
     enum ActionType {
@@ -122,19 +121,32 @@ struct TorrentDetailView: View {
             Text("确定要删除此种子吗？")
         }
         .sheet(isPresented: $showAdvancedSheet) {
-            advancedSheet
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+            TorrentDetailAdvancedSheet(
+                hash: hash,
+                newLocation: $newLocation,
+                newName: $newName,
+                dlLimitStr: $dlLimitStr,
+                ulLimitStr: $ulLimitStr
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showFileSheet) {
-            filePrioritySheet
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
+            TorrentDetailFileSheet(
+                hash: hash,
+                files: files,
+                selectedFileIndices: $selectedFileIndices
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showTrackerSheet) {
-            trackerSheet
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+            TorrentDetailTrackerSheet(
+                hash: hash,
+                trackers: $trackers
+            )
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
         .task { await autoRefreshLoop() }
     }
@@ -559,7 +571,15 @@ struct TorrentDetailView: View {
                 isLoading = true
                 Task { await manualRefresh() }
             }
-            .buttonStyle(.borderedProminent)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundColor(.white)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(AppColors.accent)
+            )
+            .buttonStyle(ScaleButtonStyle())
         }
         .padding(40)
     }
@@ -764,360 +784,10 @@ struct TorrentDetailView: View {
         }
     }
 
-    // MARK: - Advanced Controls Sheet
-    private var advancedSheet: some View {
-        NavigationStack {
-            List {
-                Section {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("修改保存路径")
-                            .font(.system(size: 13))
-                            .foregroundColor(AppColors.secondaryLabel)
-                        TextField("输入新的保存路径", text: $newLocation)
-                            .font(.system(size: 14, design: .monospaced))
-                            .foregroundColor(AppColors.label)
-                    }
-                    .padding(.vertical, 4)
-
-                    Button {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
-                        Task {
-                            try? await QBitApi.shared.setTorrentLocation(hash, location: newLocation)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        }
-                    } label: {
-                        Text("应用路径")
-                            .font(.system(size: 14, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(newLocation.isEmpty ? AppColors.elevated : AppColors.accent)
-                            )
-                            .foregroundColor(newLocation.isEmpty ? AppColors.secondaryLabel : .white)
-                    }
-                    .disabled(newLocation.isEmpty)
-                } header: {
-                    Text("位置")
-                }
-
-                Section {
-                    TextField("重命名", text: $newName)
-                        .font(.system(size: 14))
-                        .foregroundColor(AppColors.label)
-
-                    Button {
-                        Task {
-                            try? await QBitApi.shared.renameTorrent(hash, name: newName)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                            showAdvancedSheet = false
-                        }
-                    } label: {
-                        Text("应用名称")
-                            .font(.system(size: 14, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(newName.isEmpty ? AppColors.elevated : AppColors.accent)
-                            )
-                            .foregroundColor(newName.isEmpty ? AppColors.secondaryLabel : .white)
-                    }
-                    .disabled(newName.isEmpty)
-                } header: {
-                    Text("重命名")
-                }
-
-                Section {
-                    HStack {
-                        Text("下载限速")
-                            .foregroundColor(AppColors.secondaryLabel)
-                        Spacer()
-                        TextField("不限速", text: $dlLimitStr)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.label)
-                        Text("KB/s")
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.tertiaryLabel)
-                    }
-
-                    HStack {
-                        Text("上传限速")
-                            .foregroundColor(AppColors.secondaryLabel)
-                        Spacer()
-                        TextField("不限速", text: $ulLimitStr)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.label)
-                        Text("KB/s")
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.tertiaryLabel)
-                    }
-
-                    Button {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
-                        Task {
-                            let dl = (Int64(dlLimitStr) ?? -1)
-                            let ul = (Int64(ulLimitStr) ?? -1)
-                            if dl > 0 { try? await QBitApi.shared.setTorrentDownloadLimit(hash, limit: dl * 1024) }
-                            else if dl == 0 { try? await QBitApi.shared.setTorrentDownloadLimit(hash, limit: 0) }
-                            if ul > 0 { try? await QBitApi.shared.setTorrentUploadLimit(hash, limit: ul * 1024) }
-                            else if ul == 0 { try? await QBitApi.shared.setTorrentUploadLimit(hash, limit: 0) }
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        }
-                    } label: {
-                        Text("应用限速")
-                            .font(.system(size: 14, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(AppColors.accent)
-                            )
-                            .foregroundColor(.white)
-                    }
-                } header: {
-                    Text("速度限制")
-                } footer: {
-                    Text("留空或填 0 表示不限速")
-                }
-
-                Section {
-                    Button {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
-                        Task {
-                            try? await QBitApi.shared.toggleSequentialDownload(hash)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        }
-                    } label: {
-                        HStack {
-                            Label("切换顺序下载", systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                                .foregroundColor(AppColors.label)
-                            Spacer()
-                            Image(systemName: "chevron.forward")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.tertiaryLabel)
-                        }
-                    }
-                } header: {
-                    Text("下载模式")
-                } footer: {
-                    Text("按文件顺序下载，适合预览媒体文件")
-                }
-            }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.mainBg)
-            .navigationTitle("高级控制")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") { showAdvancedSheet = false }
-                        .fontWeight(.medium)
-                        .foregroundColor(AppColors.accent)
-                }
-            }
-        }
-    }
-
     private func delete(_ deleteFiles: Bool) {
         Task {
             try? await QBitApi.shared.deleteTorrent(hash, deleteFiles: deleteFiles)
             dismiss()
-        }
-    }
-
-    // MARK: - File Priority Sheet
-    private var filePrioritySheet: some View {
-        NavigationStack {
-            List {
-                ForEach(files.indices, id: \.self) { index in
-                    let file = files[index]
-                    HStack(spacing: 10) {
-                        Image(systemName: selectedFileIndices.contains(index) ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(selectedFileIndices.contains(index) ? AppColors.accent : AppColors.tertiaryLabel)
-                            .onTapGesture {
-                                if selectedFileIndices.contains(index) {
-                                    selectedFileIndices.remove(index)
-                                } else {
-                                    selectedFileIndices.insert(index)
-                                }
-                            }
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(file.name)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.label)
-                                .lineLimit(2)
-                            Text(formatBytes(file.size))
-                                .font(.system(size: 12))
-                                .foregroundColor(AppColors.secondaryLabel)
-                        }
-
-                        Spacer()
-
-                        priorityBadge(file.priority)
-                    }
-                }
-            }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.mainBg)
-            .navigationTitle("文件优先级")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("取消") { showFileSheet = false; selectedFileIndices = [] }
-                        .foregroundColor(AppColors.secondaryLabel)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if !selectedFileIndices.isEmpty {
-                        Menu {
-                            Button { setPrio(0) } label: { Label("忽略", systemImage: "nosign") }
-                            Button { setPrio(1) } label: { Label("正常", systemImage: "minus") }
-                            Button { setPrio(6) } label: { Label("高", systemImage: "arrow.up") }
-                            Button { setPrio(7) } label: { Label("最高", systemImage: "arrow.up.to.line") }
-                        } label: {
-                            Text("批量 (\(selectedFileIndices.count))")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.accent)
-                        }
-                    }
-                    Button("完成") { showFileSheet = false; selectedFileIndices = [] }
-                        .fontWeight(.medium)
-                        .foregroundColor(AppColors.accent)
-                }
-            }
-        }
-    }
-
-    private func priorityBadge(_ priority: Int) -> some View {
-        let (label, color): (String, Color) = {
-            switch priority {
-            case 0: return ("忽略", AppColors.secondaryLabel)
-            case 6: return ("高", AppColors.accent)
-            case 7: return ("最高", AppColors.success)
-            default: return ("正常", AppColors.tertiaryLabel)
-            }
-        }()
-        return Text(label)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundColor(color)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(color.opacity(0.12))
-            )
-    }
-
-    private func setPrio(_ priority: Int) {
-        let indices = Array(selectedFileIndices)
-        Task {
-            try? await QBitApi.shared.setFilePriorities(hash, indices: indices, priority: priority)
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            // Refresh files
-            if let f = try? await QBitApi.shared.getTorrentFiles(hash) {
-                await MainActor.run { files = f }
-            }
-        }
-    }
-
-    // MARK: - Tracker Management Sheet
-    private var trackerSheet: some View {
-        NavigationStack {
-            List {
-                Section {
-                    HStack(spacing: 8) {
-                        TextField("输入 Tracker URL ...", text: $newTrackerURL)
-                            .font(.system(size: 14, design: .monospaced))
-                            .foregroundColor(AppColors.label)
-                        Button {
-                            guard !newTrackerURL.isEmpty else { return }
-                            let urls = newTrackerURL.components(separatedBy: "\n").filter { !$0.isEmpty }
-                            Task {
-                                try? await QBitApi.shared.addTrackers(hash, urls: urls)
-                                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                                await MainActor.run { newTrackerURL = "" }
-                                if let t = try? await QBitApi.shared.getTorrentTrackers(hash) {
-                                    await MainActor.run { trackers = t }
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 22))
-                                .foregroundColor(newTrackerURL.isEmpty ? AppColors.tertiaryLabel : AppColors.accent)
-                        }
-                        .disabled(newTrackerURL.isEmpty)
-                    }
-                } header: {
-                    Text("添加 Tracker")
-                }
-
-                Section {
-                    ForEach(trackers) { tracker in
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Circle()
-                                    .fill(trackerStatusColor(tracker.status))
-                                    .frame(width: 8, height: 8)
-                                Text(tracker.statusText)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(trackerStatusColor(tracker.status))
-                                Spacer()
-                                Text("种子 \(tracker.numSeeds)")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(AppColors.tertiaryLabel)
-                            }
-                            Text(tracker.url)
-                                .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(AppColors.secondaryLabel)
-                                .lineLimit(2)
-                        }
-                        .padding(.vertical, 4)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button(role: .destructive) {
-                                Task {
-                                    try? await QBitApi.shared.removeTrackers(hash, urls: [tracker.url])
-                                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                                    if let t = try? await QBitApi.shared.getTorrentTrackers(hash) {
-                                        await MainActor.run { trackers = t }
-                                    }
-                                }
-                            } label: {
-                                Label("删除", systemImage: "trash")
-                            }
-                        }
-                    }
-                } header: {
-                    Text("当前 Trackers (\(trackers.count))")
-                }
-            }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.mainBg)
-            .navigationTitle("Tracker 管理")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") { showTrackerSheet = false }
-                        .fontWeight(.medium)
-                        .foregroundColor(AppColors.accent)
-                }
-            }
-        }
-    }
-
-    private func trackerStatusColor(_ status: Int) -> Color {
-        switch status {
-        case 0, 1: return AppColors.danger
-        case 2, 4: return AppColors.success
-        case 3: return AppColors.warning
-        default: return AppColors.secondaryLabel
         }
     }
 
@@ -1131,114 +801,6 @@ struct TorrentDetailView: View {
     }
 }
 
-// MARK: - 辅助组件
 
-private struct SectionHeader: View {
-    let title: String
-    var body: some View {
-        Text(title)
-            .font(.system(size: 13, weight: .medium))
-            .foregroundColor(AppColors.secondaryLabel)
-            .textCase(.uppercase)
-            .padding(.leading, 16)
-            .padding(.bottom, 6)
-            .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-private struct DetailRow: View {
-    let icon: String
-    let iconColor: Color
-    let label: String
-    let value: String
-    var valueColor: Color = AppColors.secondaryLabel
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(iconColor)
-                .frame(width: 24)
-
-            Text(label)
-                .font(.system(size: 15))
-                .foregroundColor(AppColors.label)
-            Spacer()
-            Text(value)
-                .font(.system(size: 15, design: .monospaced))
-                .foregroundColor(valueColor)
-                .multilineTextAlignment(.trailing)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-    }
-}
-
-private struct CopyButton: View {
-    let textToCopy: String
-    @State private var copied = false
-
-    var body: some View {
-        Button {
-            UIPasteboard.general.string = textToCopy
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
-
-            withAnimation { copied = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                withAnimation { copied = false }
-            }
-        } label: {
-            Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
-                .font(.system(size: 14))
-                .foregroundColor(copied ? AppColors.success : AppColors.accent)
-                .padding(4)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private struct ActionTile: View {
-    let icon: String
-    let label: String
-    let color: Color
-    let isLoading: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: {
-            if !isLoading {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
-                action()
-            }
-        }) {
-            VStack(spacing: 8) {
-                if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: color))
-                        .frame(height: 20)
-                } else {
-                    Image(systemName: icon)
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(color)
-                        .frame(height: 20)
-                }
-
-                Text(label)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(AppColors.label)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(AppColors.card)
-            )
-        }
-        .buttonStyle(ScaleButtonStyle())
-        .disabled(isLoading)
-    }
-}
 
 

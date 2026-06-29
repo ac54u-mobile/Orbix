@@ -176,7 +176,7 @@ struct QBitSearchView: View {
                                     img.resizable().aspectRatio(contentMode: .fill)
                                 default:
                                     ZStack {
-                                        Color(uiColor: .secondarySystemBackground)
+                                        AppColors.card
                                         Image(systemName: "film").foregroundColor(.gray.opacity(0.3))
                                     }
                                 }
