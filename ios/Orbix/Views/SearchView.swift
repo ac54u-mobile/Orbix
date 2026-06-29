@@ -16,12 +16,15 @@ struct SearchView: View {
     @State private var showingBookmarks = false
 
     enum SearchState { case idle, loading, results, empty, error(String) }
+    enum ViewMode: String { case grid, list }
 
     @State private var searchTask: Task<Void, Never>?
 
     // MARK: - Grid Layout (pinch to zoom)
     @AppStorage("searchGridColumns") private var gridColumnCount = 4
     @State private var pinchBaseColumns: Int?
+    @AppStorage("searchViewMode") private var viewModeRaw = ViewMode.grid.rawValue
+    private var viewMode: ViewMode { ViewMode(rawValue: viewModeRaw) ?? .grid }
 
     private var gridColumns: [GridItem] {
         Array(repeating: GridItem(.flexible(), spacing: 1), count: gridColumnCount)
@@ -59,12 +62,25 @@ struct SearchView: View {
             .navigationTitle(OrbixStrings.navSearch)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        SearchModeState.shared.use141 = false
-                    } label: {
-                        Image(systemName: "antenna.radiowaves.left.and.right")
-                            .foregroundColor(AppColors.accent)
-                            .font(.system(size: 14))
+                    HStack(spacing: 16) {
+                        Button {
+                            SearchModeState.shared.use141 = false
+                        } label: {
+                            Image(systemName: "antenna.radiowaves.left.and.right")
+                                .foregroundColor(AppColors.accent)
+                                .font(.system(size: 14))
+                        }
+                        Button {
+                            let impact = UIImpactFeedbackGenerator(style: .light)
+                            impact.impactOccurred()
+                            withAnimation(AppMotion.mediumAnim()) {
+                                viewModeRaw = (viewMode == .grid ? ViewMode.list : ViewMode.grid).rawValue
+                            }
+                        } label: {
+                            Image(systemName: viewMode == .grid ? "list.bullet" : "square.grid.3x3")
+                                .foregroundColor(AppColors.accent)
+                                .font(.system(size: 15))
+                        }
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -108,7 +124,7 @@ struct SearchView: View {
 
                 if results.isEmpty {
                     gridSkeleton
-                } else {
+                } else if viewMode == .grid {
                     LazyVGrid(columns: gridColumns, spacing: 1) {
                         ForEach(results) { torrent in
                             TorrentCard(torrent: torrent)
@@ -116,11 +132,21 @@ struct SearchView: View {
                                 .contextMenu { cardContextMenu(torrent) }
                         }
                     }
+                } else {
+                    LazyVStack(spacing: AppSpacing.sm) {
+                        ForEach(results) { torrent in
+                            ScrapedTorrentRow(torrent: torrent, isBookmarked: bookmarks.contains(torrent.code))
+                                .contentShape(Rectangle())
+                                .onTapGesture { selectedTorrent = torrent }
+                                .contextMenu { cardContextMenu(torrent) }
+                        }
+                    }
+                    .padding(.horizontal, AppSpacing.lg)
                 }
             }
         }
         .refreshable { await refreshSearch() }
-        .gesture(pinchToZoom)
+        .gesture(viewMode == .grid ? pinchToZoom : nil)
     }
 
     // MARK: - Loading
@@ -161,15 +187,27 @@ struct SearchView: View {
                 .frame(maxWidth: .infinity)
             }
 
-            LazyVStack(spacing: 0, pinnedViews: .sectionHeaders) {
+            LazyVStack(spacing: 0, pinnedViews: viewMode == .grid ? .sectionHeaders : []) {
                 ForEach(sections, id: \.date) { section in
                     Section {
-                        LazyVGrid(columns: gridColumns, spacing: 1) {
-                            ForEach(section.items) { torrent in
-                                TorrentCard(torrent: torrent)
-                                    .onTapGesture { selectedTorrent = torrent }
-                                    .contextMenu { cardContextMenu(torrent) }
+                        if viewMode == .grid {
+                            LazyVGrid(columns: gridColumns, spacing: 1) {
+                                ForEach(section.items) { torrent in
+                                    TorrentCard(torrent: torrent)
+                                        .onTapGesture { selectedTorrent = torrent }
+                                        .contextMenu { cardContextMenu(torrent) }
+                                }
                             }
+                        } else {
+                            LazyVStack(spacing: AppSpacing.sm) {
+                                ForEach(section.items) { torrent in
+                                    ScrapedTorrentRow(torrent: torrent, isBookmarked: bookmarks.contains(torrent.code))
+                                        .contentShape(Rectangle())
+                                        .onTapGesture { selectedTorrent = torrent }
+                                        .contextMenu { cardContextMenu(torrent) }
+                                }
+                            }
+                            .padding(.horizontal, AppSpacing.lg)
                         }
                     } header: {
                         HStack {
@@ -186,7 +224,9 @@ struct SearchView: View {
                                 .padding(.trailing, 4)
                                 .padding(.top, 2)
                         }
+                        .padding(.bottom, viewMode == .list ? AppSpacing.sm : 0)
                     }
+                }
                 }
 
                 if !results.isEmpty, !showingBookmarks {
@@ -209,7 +249,7 @@ struct SearchView: View {
         }
         .refreshable { await refreshSearch() }
         .animation(.none, value: results.count)
-        .gesture(pinchToZoom)
+        .gesture(viewMode == .grid ? pinchToZoom : nil)
     }
 
     // MARK: - Context Menu
