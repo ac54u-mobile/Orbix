@@ -154,9 +154,10 @@ struct QBitSearchView: View {
                     )
                     .presentationDetents([.medium, .large])
                     .presentationDragIndicator(.visible)
+                }
+            }
         }
     }
-}
 
     // MARK: - 数据源选择
     private var sourceBar: some View {

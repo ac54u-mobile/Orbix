@@ -1,9 +1,6 @@
 import SwiftUI
 
 enum OrbixStrings {
-    static func localized(_ key: String.LocalizationValue) -> LocalizedStringKey {
-        LocalizedStringKey(key)
-    }
 
     // MARK: - Navigation titles
     static let navSettings = String(localized: "设置", comment: "Settings tab")

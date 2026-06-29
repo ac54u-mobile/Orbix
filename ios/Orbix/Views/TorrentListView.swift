@@ -13,14 +13,26 @@ struct TorrentListView: View {
     @State private var altSpeedEnabled = false
     @State private var sortOrder: TorrentSort = .dateAdded
 
-    enum TorrentSort: String, CaseIterable {
-        case dateAdded = OrbixStrings.sortDateAdded
-        case name = OrbixStrings.sortName
-        case progress = OrbixStrings.sortProgress
-        case size = OrbixStrings.sortSize
-        case ratio = OrbixStrings.sortRatio
-        case dlSpeed = OrbixStrings.sortDLSpeed
-        case upSpeed = OrbixStrings.sortULSpeed
+    enum TorrentSort: CaseIterable {
+        case dateAdded
+        case name
+        case progress
+        case size
+        case ratio
+        case dlSpeed
+        case upSpeed
+
+        var displayName: String {
+            switch self {
+            case .dateAdded: return OrbixStrings.sortDateAdded
+            case .name: return OrbixStrings.sortName
+            case .progress: return OrbixStrings.sortProgress
+            case .size: return OrbixStrings.sortSize
+            case .ratio: return OrbixStrings.sortRatio
+            case .dlSpeed: return OrbixStrings.sortDLSpeed
+            case .upSpeed: return OrbixStrings.sortULSpeed
+            }
+        }
 
         var icon: String {
             switch self {
@@ -35,13 +47,24 @@ struct TorrentListView: View {
         }
     }
 
-    enum TorrentFilter: String, CaseIterable {
-        case all = OrbixStrings.filterAll
-        case downloading = OrbixStrings.statsDownloading
-        case seeding = OrbixStrings.statsSeeding
-        case active = OrbixStrings.filterActive
-        case paused = OrbixStrings.statsPaused
-        case completed = OrbixStrings.filterCompleted
+    enum TorrentFilter: CaseIterable {
+        case all
+        case downloading
+        case seeding
+        case active
+        case paused
+        case completed
+
+        var displayName: String {
+            switch self {
+            case .all: return OrbixStrings.filterAll
+            case .downloading: return OrbixStrings.statsDownloading
+            case .seeding: return OrbixStrings.statsSeeding
+            case .active: return OrbixStrings.filterActive
+            case .paused: return OrbixStrings.statsPaused
+            case .completed: return OrbixStrings.filterCompleted
+            }
+        }
     }
 
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
@@ -113,7 +136,7 @@ struct TorrentListView: View {
                                 sortOrder = sort
                             } label: {
                                 HStack {
-                                    Text(sort.rawValue)
+                                    Text(sort.displayName)
                                     if sortOrder == sort {
                                         Image(systemName: "checkmark")
                                     }
@@ -161,7 +184,7 @@ struct TorrentListView: View {
                             filter = f
                         }
                     } label: {
-                        Text(f.rawValue)
+                        Text(f.displayName)
                             .font(.system(size: 14, weight: filter == f ? .bold : .medium))
                             .foregroundColor(filter == f ? .white : AppColors.secondaryLabel)
                             .padding(.vertical, 8)
