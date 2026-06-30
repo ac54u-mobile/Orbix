@@ -66,7 +66,11 @@ struct ScrapedTorrentRow: View {
                     ImageCache.shared.set(url.absoluteString, image: img)
                     loadedThumbnail = img
                 }
-            } catch {}
+            } catch {
+#if DEBUG
+                print("[ScrapedTorrentRow] thumbnail load error: \(error)")
+#endif
+            }
         }
     }
 
