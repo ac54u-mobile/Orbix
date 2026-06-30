@@ -58,9 +58,17 @@ enum ProwlarrApi {
 }
 
 private extension ProwlarrApi.ProwlarrSearchResult {
+    private var stableId: Int {
+        var h: Int = 5381
+        for byte in guid.utf8 {
+            h = ((h << 5) &+ h) &+ Int(byte)
+        }
+        return abs(h)
+    }
+
     var toUnified: SearchResult {
         SearchResult(
-            num: guid.hashValue,
+            num: stableId,
             descr: downloadUrl ?? "",
             fileName: title,
             fileSize: Int(size),

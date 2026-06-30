@@ -120,10 +120,15 @@ actor QBitApi {
 
     // MARK: - URL Building
     static func buildUrl(host: String, port: Int, https: Bool) -> String {
-        let scheme = https ? "https" : "http"
         if host.hasPrefix("http://") || host.hasPrefix("https://") {
-            return host
+            let cleaned = host
+                .replacingOccurrences(of: "http://", with: "")
+                .replacingOccurrences(of: "https://", with: "")
+                .trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+            let scheme = https ? "https" : "http"
+            return "\(scheme)://\(cleaned):\(port)"
         }
+        let scheme = https ? "https" : "http"
         return "\(scheme)://\(host):\(port)"
     }
 
@@ -146,15 +151,22 @@ actor QBitApi {
             return ConnectResult(status: .unknown, message: "Invalid URL")
         }
 
+        return await attemptLogin(url: url, server: server, remainingAttempts: 2)
+    }
+
+    private func attemptLogin(url: URL, server: ServerConfig, remainingAttempts: Int) async -> ConnectResult {
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         req.setValue(server.url, forHTTPHeaderField: "Origin")
         req.setValue("\(server.url)/", forHTTPHeaderField: "Referer")
 
-        let body = "username=\(server.username)&password=\(server.password)"
+        let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        let encUser = server.username.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+        let encPass = server.password.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+        let body = "username=\(encUser)&password=\(encPass)"
         req.httpBody = body.data(using: .utf8)
-        req.timeoutInterval = 5
+        req.timeoutInterval = NetworkTimeout.login
 
         do {
             let (_, response) = try await session.data(for: req)
@@ -170,27 +182,33 @@ actor QBitApi {
                 return ConnectResult(status: .network, message: "HTTP \(httpResp.statusCode)")
             }
         } catch {
+            if remainingAttempts > 1 {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                return await attemptLogin(url: url, server: server, remainingAttempts: remainingAttempts - 1)
+            }
             return .networkError
         }
     }
 
     // MARK: - Authenticated Request
     func authedGet<T: Decodable>(_ path: String, type: T.Type) async throws -> T? {
-        guard let url = apiUrl(path) else { throw ApiError.invalidURL }
+        try await withRetry {
+            guard let url = apiUrl(path) else { throw ApiError.invalidURL }
 
-        var req = URLRequest(url: url)
-        req.timeoutInterval = 3
+            var req = URLRequest(url: url)
+            req.timeoutInterval = NetworkTimeout.brief
 
-        let (data, response) = try await session.data(for: req)
-        try checkAuth(response: response)
-        return try? decoder.decode(T.self, from: data)
+            let (data, response) = try await session.data(for: req)
+            try checkAuth(response: response)
+            return try? decoder.decode(T.self, from: data)
+        }
     }
 
     func authedGetData(_ path: String) async throws -> Data {
         guard let url = apiUrl(path) else { throw ApiError.invalidURL }
 
         var req = URLRequest(url: url)
-        req.timeoutInterval = 3
+        req.timeoutInterval = NetworkTimeout.brief
 
         let (data, response) = try await session.data(for: req)
         try checkAuth(response: response)
@@ -207,7 +225,7 @@ actor QBitApi {
             req.setValue(server.url, forHTTPHeaderField: "Origin")
             req.setValue("\(server.url)/", forHTTPHeaderField: "Referer")
         }
-        req.timeoutInterval = 3
+        req.timeoutInterval = NetworkTimeout.brief
 
         let bodyStr = body.map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")" }.joined(separator: "&")
         req.httpBody = bodyStr.data(using: .utf8)
@@ -227,7 +245,7 @@ actor QBitApi {
             req.setValue(server.url, forHTTPHeaderField: "Origin")
             req.setValue("\(server.url)/", forHTTPHeaderField: "Referer")
         }
-        req.timeoutInterval = 30
+        req.timeoutInterval = NetworkTimeout.download
         req.httpBody = multipartData
 
         let (data, response) = try await session.data(for: req)

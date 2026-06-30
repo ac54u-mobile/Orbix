@@ -11,7 +11,7 @@ actor UpdateService {
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
 
         if let lastCheck = PersistenceService.shared.lastUpdateCheckTime,
-           Date().timeIntervalSince(lastCheck) < 1800,
+           Date().timeIntervalSince(lastCheck) < UpdateConstants.checkCacheInterval,
            let cachedTag = PersistenceService.shared.cachedUpdateTag {
             return UpdateCheck(
                 hasUpdate: cachedTag.compare(currentVersion, options: .numeric) == .orderedDescending,

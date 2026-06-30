@@ -4,6 +4,7 @@ struct SplashView: View {
     let onDecision: (ContentView.Destination) -> Void
 
     @State private var isAnimating = false
+    @State private var statusMessage: String?
 
     var body: some View {
         ZStack {
@@ -19,11 +20,21 @@ struct SplashView: View {
                     .opacity(isAnimating ? 1 : 0)
                     .offset(y: isAnimating ? 0 : 20)
 
+                if let msg = statusMessage {
+                    Text(msg)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(AppColors.warning)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 8)
+                        .opacity(isAnimating ? 1 : 0)
+                }
+
                 ProgressView()
                     .tint(AppColors.secondaryLabel)
                     .padding(.top, 40)
                     .opacity(isAnimating ? 1 : 0)
             }
+            .padding(.horizontal, 40)
         }
         .onAppear {
             withAnimation(AppMotion.slowAnim()) {
@@ -77,7 +88,8 @@ struct SplashView: View {
                 onDecision(.main)
                 return
             }
-            // qBittorrent failed → show server selection for fix
+            statusMessage = String(format: String(localized: "连接失败: %@\n请检查服务器配置", comment: "Connection failed, check server config"), result.message)
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
             onDecision(.serverSelection)
             return
         }

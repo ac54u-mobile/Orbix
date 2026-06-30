@@ -7,61 +7,42 @@ actor TorrentSearchService {
     private let session = URLSession.shared
 
     func trending(pages: Int = 2) async throws -> [ScrapedTorrent] {
-        var allResults: [ScrapedTorrent] = []
-
-        try await withThrowingTaskGroup(of: [ScrapedTorrent].self) { group in
-            for page in 1...pages {
-                group.addTask {
-                    try await self.fetchNewPage(page)
-                }
-            }
-
-            for try await results in group {
-                allResults.append(contentsOf: results)
-            }
-        }
-
-        return allResults
+        try await fetchPages(pages: pages, startPage: 1, pageFetcher: fetchNewPage)
     }
 
     func newTorrents(pages: Int = 1, startPage: Int = 1) async throws -> [ScrapedTorrent] {
-        var allResults: [ScrapedTorrent] = []
-
-        try await withThrowingTaskGroup(of: [ScrapedTorrent].self) { group in
-            for page in startPage..<(startPage + pages) {
-                group.addTask {
-                    try await self.fetchNewPage(page)
-                }
-            }
-
-            for try await results in group {
-                allResults.append(contentsOf: results)
-            }
-        }
-
-        return allResults
+        try await fetchPages(pages: pages, startPage: startPage, pageFetcher: fetchNewPage)
     }
 
     func search(query: String, pages: Int = 3, startPage: Int = 1) async throws -> [ScrapedTorrent] {
+        let results = try await fetchPages(pages: pages, startPage: startPage) { page in
+            try await self.fetchSearchPage(page, query: query)
+        }
+
+        let lowerQuery = query.lowercased()
+        guard !lowerQuery.isEmpty else { return results }
+        return results.filter {
+            $0.title.lowercased().contains(lowerQuery) ||
+            $0.code.lowercased().contains(lowerQuery)
+        }
+    }
+
+    private func fetchPages(
+        pages: Int,
+        startPage: Int,
+        pageFetcher: @escaping @Sendable (Int) async throws -> [ScrapedTorrent]
+    ) async throws -> [ScrapedTorrent] {
         var allResults: [ScrapedTorrent] = []
 
         try await withThrowingTaskGroup(of: [ScrapedTorrent].self) { group in
             for page in startPage..<(startPage + pages) {
                 group.addTask {
-                    try await self.fetchSearchPage(page, query: query)
+                    try await pageFetcher(page)
                 }
             }
 
             for try await results in group {
                 allResults.append(contentsOf: results)
-            }
-        }
-
-        let lowerQuery = query.lowercased()
-        if !lowerQuery.isEmpty {
-            allResults = allResults.filter {
-                $0.title.lowercased().contains(lowerQuery) ||
-                $0.code.lowercased().contains(lowerQuery)
             }
         }
 

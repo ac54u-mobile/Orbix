@@ -8,24 +8,26 @@ actor TorrentDetailDataService {
     }
 
     func fetchInitial() async throws -> (
-        torrent: TorrentInfo?,
+        torrent: TorrentInfo,
         properties: TorrentProperties?,
         files: [TorrentFile],
         trackers: [TorrentTracker],
         peers: [TorrentPeer],
         peersRid: Int
     ) {
-        let t = try? await QBitApi.shared.getTorrentByHash(hash)
-        let p = try? await QBitApi.shared.getProperties(hash)
-        let f = try? await QBitApi.shared.getTorrentFiles(hash)
-        let tr = try? await QBitApi.shared.getTorrentTrackers(hash)
-        let (pe, rid) = (try? await QBitApi.shared.getTorrentPeers(hash, rid: 0)) ?? ([], 0)
+        async let tTask = QBitApi.shared.getTorrentByHash(hash)
+        async let pTask = QBitApi.shared.getProperties(hash)
+        async let fTask = QBitApi.shared.getTorrentFiles(hash)
+        async let trTask = QBitApi.shared.getTorrentTrackers(hash)
+        async let peTask = QBitApi.shared.getTorrentPeers(hash, rid: 0)
 
-        guard let torrent = t else {
-            throw NSError(domain: "TorrentDetail", code: 404,
-                          userInfo: [NSLocalizedDescriptionKey: OrbixStrings.errCantLoadTorrent])
-        }
-        return (torrent, p, f ?? [], tr ?? [], pe, rid)
+        let torrent = try await tTask
+        let p = try? await pTask
+        let f = (try? await fTask) ?? []
+        let tr = (try? await trTask) ?? []
+        let (pe, rid) = (try? await peTask) ?? ([], 0)
+
+        return (torrent, p, f, tr, pe, rid)
     }
 
     func fetchHighFreq(syncRid: Int, peersRid: Int) async -> (
@@ -79,8 +81,8 @@ actor TorrentDetailDataService {
     }
 
     func pollAfterAction(oldState: String, oldDlspeed: Int64, oldUpspeed: Int64, oldProgress: Double) async -> TorrentInfo? {
-        var interval: UInt64 = 300_000_000
-        let maxInterval: UInt64 = 1_200_000_000
+        var interval: UInt64 = Polling.initialBackoffNanos
+        let maxInterval: UInt64 = Polling.maxBackoffNanos
         var attempt = 0
 
         while attempt < 6 {

@@ -43,16 +43,11 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_ALLOWED="NO" \
             CODE_SIGNING_REQUIRED="NO" \
-            -derivedDataPath build 2>&1 | xcpretty --simple 2>/dev/null || \
-          xcodebuild build \
-            -project Orbix.xcodeproj \
-            -scheme Orbix \
-            -sdk iphoneos \
-            -configuration Release \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_ALLOWED="NO" \
-            CODE_SIGNING_REQUIRED="NO" \
-            -derivedDataPath build
+            -derivedDataPath build 2>&1 | tee build.log | xcpretty --simple --color || {
+              echo "Build failed. Full log:"
+              tail -n 100 build.log
+              exit 1
+            }
 
       - name: Package Unsigned IPA
         run: |

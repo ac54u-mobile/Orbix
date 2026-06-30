@@ -17,6 +17,8 @@ struct TorrentListView: View {
     @State private var selectedHashes: Set<String> = []
     @State private var showBatchDeleteAlert = false
     @State private var processingAction: String?
+    @State private var showErrorToast = false
+    @State private var errorToastMessage = ""
     @Environment(\.scenePhase) private var scenePhase
 
     enum TorrentSort: CaseIterable {
@@ -73,7 +75,8 @@ struct TorrentListView: View {
         }
     }
 
-    private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: RefreshInterval.torrentList, on: .main, in: .common).autoconnect()
+    @State private var refreshSuppressed = false
     @Namespace private var animationNamespace
 
     var body: some View {
@@ -100,8 +103,11 @@ struct TorrentListView: View {
             .toolbar { toolbarContent }
             .onAppear { refresh() }
             .onReceive(timer) { _ in
-                guard scenePhase == .active else { return }
+                guard !refreshSuppressed else { return }
                 refresh()
+            }
+            .onChange(of: scenePhase) { _, newPhase in
+                refreshSuppressed = newPhase != .active
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 filterBar
@@ -122,6 +128,7 @@ struct TorrentListView: View {
             } message: {
                 Text(String(format: OrbixStrings.infoBatchDeleteConfirm, selectedHashes.count))
         }
+        .toast(isPresented: $showErrorToast, type: .error, message: errorToastMessage)
     }
 
     // MARK: - Torrent List
@@ -565,24 +572,32 @@ struct TorrentListView: View {
 
     private func refresh() {
         Task {
-            let list = (try? await QBitApi.shared.getTorrents()) ?? torrents
-            let transfer = try? await QBitApi.shared.getTransferInfo()
-            let prefs = try? await QBitApi.shared.getPreferences()
+            do {
+                let list = try await QBitApi.shared.getTorrents()
+                let transfer = try? await QBitApi.shared.getTransferInfo()
+                let prefs = try? await QBitApi.shared.getPreferences()
 
-            await MainActor.run {
-                self.torrents = list
-                self.globalDlSpeed = transfer?.dlInfoSpeed ?? 0
-                self.globalUpSpeed = transfer?.upInfoSpeed ?? 0
-                if let p = prefs {
-                    self.altSpeedEnabled = p["alt_speed_limit_enabled"] as? Bool ?? false
-                    if gDlLimitStr.isEmpty, let dl = p["dl_limit"] as? Int64, dl > 0 {
-                        gDlLimitStr = "\(dl / 1024)"
+                await MainActor.run {
+                    self.torrents = list
+                    self.globalDlSpeed = transfer?.dlInfoSpeed ?? 0
+                    self.globalUpSpeed = transfer?.upInfoSpeed ?? 0
+                    if let p = prefs {
+                        self.altSpeedEnabled = p["alt_speed_limit_enabled"] as? Bool ?? false
+                        if gDlLimitStr.isEmpty, let dl = p["dl_limit"] as? Int64, dl > 0 {
+                            gDlLimitStr = "\(dl / 1024)"
+                        }
+                        if gUlLimitStr.isEmpty, let ul = p["up_limit"] as? Int64, ul > 0 {
+                            gUlLimitStr = "\(ul / 1024)"
+                        }
                     }
-                    if gUlLimitStr.isEmpty, let ul = p["up_limit"] as? Int64, ul > 0 {
-                        gUlLimitStr = "\(ul / 1024)"
-                    }
+                    self.isLoading = false
                 }
-                self.isLoading = false
+            } catch {
+                await MainActor.run {
+                    self.isLoading = false
+                    self.errorToastMessage = String(format: String(localized: "获取种子列表失败: %@", comment: "Failed to fetch torrent list: error"), error.localizedDescription)
+                    self.showErrorToast = true
+                }
             }
         }
     }

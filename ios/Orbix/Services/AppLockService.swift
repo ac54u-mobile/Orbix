@@ -52,7 +52,7 @@ final class AppLockService: ObservableObject {
     @objc private func willEnterForeground() {
         guard isEnabled else { return }
 
-        if let entered = enteredBackgroundAt, Date().timeIntervalSince(entered) > 8 {
+        if let entered = enteredBackgroundAt, Date().timeIntervalSince(entered) > AppConstants.lockGracePeriod {
             isLocked = true
             authenticate()
         }
@@ -86,10 +86,6 @@ final class AppLockService: ObservableObject {
     func lock() {
         guard isEnabled else { return }
         isLocked = true
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
     }
 }
 

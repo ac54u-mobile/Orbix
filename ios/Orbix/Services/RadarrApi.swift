@@ -84,7 +84,10 @@ enum RadarrApi {
         guard let url = URL(string: "\(cred.apiURL)/movie") else { return [] }
         var req = URLRequest(url: url)
         req.setValue(cred.apiKey, forHTTPHeaderField: "X-Api-Key")
-        let (data, _) = try await session.data(for: req)
+        let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            throw NSError(domain: "Radarr", code: http.statusCode)
+        }
         return (try? decoder.decode([RadarrMovie].self, from: data)) ?? []
     }
 
@@ -95,7 +98,10 @@ enum RadarrApi {
         guard let url = URL(string: "\(cred.apiURL)/qualityprofile") else { return [] }
         var req = URLRequest(url: url)
         req.setValue(cred.apiKey, forHTTPHeaderField: "X-Api-Key")
-        let (data, _) = try await session.data(for: req)
+        let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            throw NSError(domain: "Radarr", code: http.statusCode)
+        }
         return (try? decoder.decode([QualityProfile].self, from: data)) ?? []
     }
 
@@ -105,7 +111,10 @@ enum RadarrApi {
         guard let url = URL(string: "\(cred.apiURL)/rootfolder") else { return [] }
         var req = URLRequest(url: url)
         req.setValue(cred.apiKey, forHTTPHeaderField: "X-Api-Key")
-        let (data, _) = try await session.data(for: req)
+        let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            throw NSError(domain: "Radarr", code: http.statusCode)
+        }
         return (try? decoder.decode([RootFolder].self, from: data)) ?? []
     }
 

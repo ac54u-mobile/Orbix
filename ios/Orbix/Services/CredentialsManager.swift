@@ -117,6 +117,7 @@ final class CredentialsManager: ObservableObject {
     // MARK: - Connection Test
     enum TestResult: Equatable {
         case ok
+        case okInsecure
         case invalidHost
         case authFailed
         case timeout
@@ -125,6 +126,7 @@ final class CredentialsManager: ObservableObject {
         var message: String {
             switch self {
             case .ok: return OrbixStrings.connSuccess
+            case .okInsecure: return OrbixStrings.connSuccess + "\n" + String(localized: "注意：未启用 HTTPS，凭证将以明文传输", comment: "Insecure HTTP warning")
             case .invalidHost: return OrbixStrings.connInvalidHost
             case .authFailed: return OrbixStrings.connAuthFailed
             case .timeout: return OrbixStrings.connTimeout
@@ -132,7 +134,7 @@ final class CredentialsManager: ObservableObject {
             }
         }
 
-        var isSuccess: Bool { self == .ok }
+        var isSuccess: Bool { self == .ok || self == .okInsecure }
     }
 
     static func testConnection(
@@ -152,16 +154,21 @@ final class CredentialsManager: ObservableObject {
         let base = "\(scheme)://\(cleanHost):\(port)"
 
         let endpoint: String
+        var httpMethod = "GET"
         var headers: [String: String] = [:]
+        var body: Data?
 
         switch kind {
         case .qBittorrent:
-            endpoint = "\(base)/api/v2/app/version"
-            if !username.isEmpty {
-                let loginStr = "\(username):\(password)"
-                let encoded = Data(loginStr.utf8).base64EncodedString()
-                headers["Authorization"] = "Basic \(encoded)"
-            }
+            httpMethod = "POST"
+            endpoint = "\(base)/api/v2/auth/login"
+            headers["Content-Type"] = "application/x-www-form-urlencoded"
+            let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+            let encUser = username.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+            let encPass = password.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+            headers["Origin"] = base
+            headers["Referer"] = "\(base)/"
+            body = "username=\(encUser)&password=\(encPass)".data(using: .utf8)
         case .prowlarr:
             endpoint = "\(base)/api/v1/system/status"
             headers["X-Api-Key"] = apiKey
@@ -173,13 +180,18 @@ final class CredentialsManager: ObservableObject {
         guard let url = URL(string: endpoint) else { return .invalidHost }
 
         var req = URLRequest(url: url)
-        req.timeoutInterval = 8
+        req.httpMethod = httpMethod
+        req.timeoutInterval = NetworkTimeout.login
         for (k, v) in headers { req.setValue(v, forHTTPHeaderField: k) }
+        req.httpBody = body
 
         do {
             let (_, response) = try await URLSession.shared.data(for: req)
             guard let http = response as? HTTPURLResponse else { return .unknown(OrbixStrings.connUnknown) }
-            if http.statusCode == 200 { return .ok }
+            if http.statusCode == 200 {
+                if kind == .qBittorrent && !https { return .okInsecure }
+                return .ok
+            }
             if http.statusCode == 401 { return .authFailed }
             return .unknown(String(format: OrbixStrings.connServerReturn, http.statusCode, endpoint))
         } catch let err as URLError {

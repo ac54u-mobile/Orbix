@@ -28,7 +28,6 @@ struct ContentView: View {
                 .sheet(isPresented: $showLoginFromWelcome) {
                     LoginView { config in
                         showLoginFromWelcome = false
-                        // Also sync to CredentialsManager so it survives app restart
                         let cred = ServiceCredential(
                             kind: .qBittorrent,
                             name: config.name,
@@ -67,17 +66,17 @@ struct ContentView: View {
             }
         }
         .animation(AppMotion.standardCurve, value: destination)
-        .onOpenURL { _ in
-            deepLinkTab = 2
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .openSearch)) { _ in
-            deepLinkTab = 2
-        }
+        .onOpenURL { _ in navigateToSearch() }
+        .onReceive(NotificationCenter.default.publisher(for: .openSearch)) { _ in navigateToSearch() }
         .onAppear {
             if AppDelegate.pendingShortcut == "search" {
                 AppDelegate.pendingShortcut = nil
-                deepLinkTab = 2
+                navigateToSearch()
             }
         }
+    }
+
+    private func navigateToSearch() {
+        deepLinkTab = 2
     }
 }
