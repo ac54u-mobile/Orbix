@@ -5,7 +5,7 @@ actor QBitApi {
     private init() {}
 
     // MARK: - State
-    private var activeServer: ServerConfig?
+    var activeServer: ServerConfig?
     let session = URLSession(configuration: .ephemeral)
     let decoder = JSONDecoder()
 
