@@ -249,11 +249,7 @@ struct SettingsView: View {
     }
 
     private func serviceColor(_ kind: ServiceKind) -> Color {
-        switch kind {
-        case .qBittorrent: return AppColors.accent
-        case .prowlarr: return AppColors.warning
-        case .radarr: return Color(hex: "#8B5CF6")
-        }
+        AppColors.accent
     }
 
     // MARK: - Update

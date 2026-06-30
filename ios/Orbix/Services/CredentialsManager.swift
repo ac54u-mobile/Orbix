@@ -3,15 +3,9 @@ import Foundation
 // MARK: - Service Kinds
 enum ServiceKind: String, Codable, CaseIterable {
     case qBittorrent = "qBittorrent"
-    case prowlarr = "Prowlarr"
-    case radarr = "Radarr"
 
     var icon: String {
-        switch self {
-        case .qBittorrent: return "arrow.down.circle"
-        case .prowlarr: return "antenna.radiowaves.left.and.right"
-        case .radarr: return "film"
-        }
+        "arrow.down.circle"
     }
 }
 
@@ -32,13 +26,7 @@ struct ServiceCredential: Codable, Identifiable, Equatable {
         return "\(scheme)://\(host):\(port)"
     }
 
-    var apiURL: String {
-        switch kind {
-        case .qBittorrent: return baseURL
-        case .prowlarr: return "\(baseURL)/api/v1"
-        case .radarr: return "\(baseURL)/api/v3"
-        }
-    }
+    var apiURL: String { baseURL }
 }
 
 // MARK: - Credentials Manager
@@ -47,8 +35,6 @@ final class CredentialsManager: ObservableObject {
     static let shared = CredentialsManager()
 
     @Published var qBittorrent: ServiceCredential?
-    @Published var prowlarr: ServiceCredential?
-    @Published var radarr: ServiceCredential?
 
     private let key = "service_credentials"
 
@@ -62,8 +48,6 @@ final class CredentialsManager: ObservableObject {
         for cred in list {
             switch cred.kind {
             case .qBittorrent: qBittorrent = cred
-            case .prowlarr: prowlarr = cred
-            case .radarr: radarr = cred
             }
         }
     }
@@ -76,8 +60,6 @@ final class CredentialsManager: ObservableObject {
 
         switch credential.kind {
         case .qBittorrent: qBittorrent = credential
-        case .prowlarr: prowlarr = credential
-        case .radarr: radarr = credential
         }
     }
 
@@ -88,13 +70,11 @@ final class CredentialsManager: ObservableObject {
 
         switch kind {
         case .qBittorrent: qBittorrent = nil
-        case .prowlarr: prowlarr = nil
-        case .radarr: radarr = nil
         }
     }
 
     var allCredentials: [ServiceCredential] {
-        [qBittorrent, prowlarr, radarr].compactMap { $0 }
+        [qBittorrent].compactMap { $0 }
     }
 
     var activeServices: [ServiceKind] {
@@ -104,8 +84,6 @@ final class CredentialsManager: ObservableObject {
     func credential(for kind: ServiceKind) -> ServiceCredential? {
         switch kind {
         case .qBittorrent: return qBittorrent
-        case .prowlarr: return prowlarr
-        case .radarr: return radarr
         }
     }
 
@@ -153,29 +131,16 @@ final class CredentialsManager: ObservableObject {
         let scheme = https ? "https" : "http"
         let base = "\(scheme)://\(cleanHost):\(port)"
 
-        let endpoint: String
-        var httpMethod = "GET"
+        let endpoint = "\(base)/api/v2/auth/login"
+        let httpMethod = "POST"
         var headers: [String: String] = [:]
-        var body: Data?
-
-        switch kind {
-        case .qBittorrent:
-            httpMethod = "POST"
-            endpoint = "\(base)/api/v2/auth/login"
-            headers["Content-Type"] = "application/x-www-form-urlencoded"
-            let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-            let encUser = username.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
-            let encPass = password.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
-            headers["Origin"] = base
-            headers["Referer"] = "\(base)/"
-            body = "username=\(encUser)&password=\(encPass)".data(using: .utf8)
-        case .prowlarr:
-            endpoint = "\(base)/api/v1/system/status"
-            headers["X-Api-Key"] = apiKey
-        case .radarr:
-            endpoint = "\(base)/api/v3/system/status"
-            headers["X-Api-Key"] = apiKey
-        }
+        headers["Content-Type"] = "application/x-www-form-urlencoded"
+        let allowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        let encUser = username.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+        let encPass = password.addingPercentEncoding(withAllowedCharacters: allowed) ?? ""
+        headers["Origin"] = base
+        headers["Referer"] = "\(base)/"
+        let body = "username=\(encUser)&password=\(encPass)".data(using: .utf8)
 
         guard let url = URL(string: endpoint) else { return .invalidHost }
 
@@ -189,8 +154,7 @@ final class CredentialsManager: ObservableObject {
             let (_, response) = try await URLSession.shared.data(for: req)
             guard let http = response as? HTTPURLResponse else { return .unknown(OrbixStrings.connUnknown) }
             if http.statusCode == 200 {
-                if kind == .qBittorrent && !https { return .okInsecure }
-                return .ok
+                return https ? .ok : .okInsecure
             }
             if http.statusCode == 401 || http.statusCode == 403 { return .authFailed }
             return .unknown(String(format: OrbixStrings.connServerReturn, http.statusCode, endpoint))

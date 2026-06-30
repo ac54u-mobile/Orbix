@@ -34,13 +34,7 @@ struct AddServiceView: View {
         _https = State(initialValue: cred?.https ?? false)
     }
 
-    private var defaultPort: String {
-        switch kind {
-        case .qBittorrent: return "8080"
-        case .prowlarr: return "9696"
-        case .radarr: return "7878"
-        }
-    }
+    private var defaultPort: String { "8080" }
 
     var body: some View {
         NavigationStack {

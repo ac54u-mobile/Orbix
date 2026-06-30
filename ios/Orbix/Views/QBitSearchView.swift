@@ -1,28 +1,5 @@
 import SwiftUI
 
-// MARK: - 搜索数据源
-enum SearchSource: String, CaseIterable {
-    case qBittorrent = "qB"
-    case prowlarr = "Prowlarr"
-    case radarr = "Radarr"
-
-    var label: String {
-        switch self {
-        case .qBittorrent: return OrbixStrings.miscBuiltInSearch
-        case .prowlarr: return "Prowlarr"
-        case .radarr: return "Radarr"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .qBittorrent: return "arrow.down.circle"
-        case .prowlarr: return "antenna.radiowaves.left.and.right"
-        case .radarr: return "film"
-        }
-    }
-}
-
 struct QBitSearchView: View {
     @State private var query = ""
     @State private var plugins: [SearchPlugin] = []
@@ -33,27 +10,10 @@ struct QBitSearchView: View {
     @State private var isLoading = false
     @State private var searchTask: Task<Void, Never>?
 
-    @State private var categories: [String] = []
-    @State private var showDownloadSheet = false
-    @State private var searchSource: SearchSource = .qBittorrent
     @State private var searchError: String?
     @ObservedObject private var searchMode = SearchModeState.shared
 
-    @State private var selectedResult: SearchResult?
-    @State private var showRadarrSheet = false
-    @State private var radarrResult: SearchResult?
-    @State private var qualityProfiles: [RadarrApi.QualityProfile] = []
-    @State private var rootFolders: [RadarrApi.RootFolder] = []
-
-    @ObservedObject private var creds = CredentialsManager.shared
-
-    private var availableSources: [SearchSource] {
-        var sources: [SearchSource] = []
-        if creds.qBittorrent != nil { sources.append(.qBittorrent) }
-        if creds.prowlarr != nil { sources.append(.prowlarr) }
-        if creds.radarr != nil { sources.append(.radarr) }
-        return sources.isEmpty ? [.qBittorrent] : sources
-    }
+    @State private var downloadingNum: Int?
 
     var body: some View {
         NavigationStack {
@@ -61,14 +21,8 @@ struct QBitSearchView: View {
                 AppColors.mainBg.ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    if availableSources.count > 1 {
-                        sourceBar
-                            .padding(.vertical, 8)
-                    }
-                    if searchSource == .qBittorrent {
-                        pluginBar
-                            .padding(.vertical, 8)
-                    }
+                    pluginBar
+                        .padding(.vertical, 8)
 
                     if isLoading && results.isEmpty {
                         VStack(spacing: 16) {
@@ -100,14 +54,6 @@ struct QBitSearchView: View {
                                 .foregroundColor(AppColors.tertiaryLabel)
                         Text(OrbixStrings.errNoResults)
                             .subtitle()
-                            if searchSource == .prowlarr {
-                                Text(OrbixStrings.infoProwlarrHint)
-                                    .caption()
-                            }
-                            if searchSource == .radarr {
-                                Text(OrbixStrings.infoRadarrSearchHint)
-                                    .caption()
-                            }
                             Spacer()
                         }
                     } else {
@@ -129,67 +75,18 @@ struct QBitSearchView: View {
             }
             .searchable(text: $query, placement: .automatic, prompt: OrbixStrings.phSearchKeyword)
             .onChange(of: query) { _, _ in debounceSearch() }
-            .onAppear {
-                loadPlugins()
-                loadCategories()
-            }
+            .onAppear { loadPlugins() }
             .onDisappear {
                 searchTask?.cancel()
                 if let sid = searchId {
                     Task { try? await QBitApi.shared.stopSearch(id: sid) }
                 }
             }
-            .sheet(isPresented: $showDownloadSheet) {
-                if let result = selectedResult {
-                    QBitDownloadSheet(result: result, categories: categories, isFromProwlarr: searchSource == .prowlarr)
-                        .presentationDetents([.medium, .large])
-                        .presentationDragIndicator(.visible)
-                }
-            }
-            .sheet(isPresented: $showRadarrSheet) {
-                if let item = radarrResult {
-                    RadarrMovieSheet(
-                        item: item,
-                        qualityProfiles: qualityProfiles,
-                        rootFolders: rootFolders
-                    )
-                }
-            }
         }
     }
 
-    // MARK: - 数据源选择
-    private var sourceBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(availableSources, id: \.self) { source in
-                    Button {
-                        let impact = UIImpactFeedbackGenerator(style: .light)
-                        impact.impactOccurred()
-                        searchSource = source
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: source.icon)
-                                .font(.system(size: 12))
-                            Text(source.label)
-                                .font(.system(size: 13, weight: searchSource == source ? .semibold : .medium))
-                        }
-                        .foregroundColor(searchSource == source ? AppColors.label : AppColors.secondaryLabel)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background(
-                            Capsule()
-                                .fill(searchSource == source ? AppColors.accent : AppColors.elevated)
-                        )
-                    }
-                    .accessibilityLabel(source.label)
-                }
-            }
-            .padding(.horizontal, 16)
-        }
-    }
+    // MARK: - Plugin Bar
 
-    // MARK: - 极简插件栏
     private var pluginBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 10) {
@@ -232,7 +129,8 @@ struct QBitSearchView: View {
         }
     }
 
-    // MARK: - 结果列表
+    // MARK: - Results List
+
     private var resultsList: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
@@ -254,16 +152,7 @@ struct QBitSearchView: View {
                 }
 
                 ForEach(results) { item in
-                    QBitResultCard(
-                        item: item,
-                        searchSource: searchSource,
-                        selectedResult: $selectedResult,
-                        radarrResult: $radarrResult,
-                        qualityProfiles: $qualityProfiles,
-                        rootFolders: $rootFolders,
-                        showRadarrSheet: $showRadarrSheet,
-                        showDownloadSheet: $showDownloadSheet
-                    )
+                    resultRow(item)
                 }
             }
             .padding(.horizontal, 16)
@@ -271,7 +160,76 @@ struct QBitSearchView: View {
         }
     }
 
-    // MARK: - 数据加载
+    private func resultRow(_ item: SearchResult) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 6) {
+                Text(item.fileName)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundColor(AppColors.label)
+                    .lineLimit(2)
+            }
+
+            HStack(spacing: 16) {
+                Label(formatBytes(Int64(item.fileSize)), systemImage: "internaldrive")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(AppColors.secondaryLabel)
+
+                if item.nbSeeders > 0 {
+                    Label("\(item.nbSeeders)", systemImage: "arrow.up.circle.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(AppColors.success)
+                }
+
+                if item.nbLeechers > 0 {
+                    Label("\(item.nbLeechers)", systemImage: "arrow.down.circle.fill")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(AppColors.danger)
+                }
+
+                Spacer()
+
+                Button {
+                    download(result: item)
+                } label: {
+                    if downloadingNum == item.num {
+                        ProgressView()
+                            .controlSize(.mini)
+                            .tint(AppColors.accent)
+                            .padding(8)
+                    } else {
+                        Image(systemName: "icloud.and.arrow.down.fill")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(AppColors.accent)
+                            .padding(8)
+                            .background(
+                                Circle().fill(AppColors.accent.opacity(0.1))
+                            )
+                    }
+                }
+                .disabled(downloadingNum != nil)
+            }
+
+            if !item.siteUrl.isEmpty {
+                Text(item.siteUrl)
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundColor(AppColors.tertiaryLabel)
+                    .lineLimit(1)
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                        .stroke(AppColors.glassBorder, lineWidth: 0.5)
+                )
+                .shadow(color: .black.opacity(0.03), radius: 8, x: 0, y: 4)
+        )
+    }
+
+    // MARK: - Data Loading
+
     private func loadPlugins() {
         Task {
             if let list = try? await QBitApi.shared.getSearchPlugins() {
@@ -280,15 +238,8 @@ struct QBitSearchView: View {
         }
     }
 
-    private func loadCategories() {
-        Task {
-            if let cats = try? await QBitApi.shared.getCategories() {
-                await MainActor.run { categories = cats }
-            }
-        }
-    }
+    // MARK: - Search
 
-    // MARK: - 搜索逻辑
     private func debounceSearch() {
         if let sid = searchId {
             let oldId = sid
@@ -311,17 +262,6 @@ struct QBitSearchView: View {
 
     private func runSearch() async {
         await MainActor.run { isLoading = true; results = []; searchError = nil }
-        switch searchSource {
-        case .qBittorrent:
-            await runQBitSearch()
-        case .prowlarr:
-            await runProwlarrSearch()
-        case .radarr:
-            await runRadarrSearch()
-        }
-    }
-
-    private func runQBitSearch() async {
         do {
             let pList = selectedPlugins.contains("all")
                 ? ["all"]
@@ -359,42 +299,28 @@ struct QBitSearchView: View {
         }
     }
 
-    private func runProwlarrSearch() async {
-        do {
-            let items: [SearchResult]
-            if creds.radarr != nil {
-                let movies = (try? await RadarrApi.lookup(query: query)) ?? []
-                if let first = movies.first, first.num > 0 {
-                    items = try await ProwlarrApi.searchMovie(tmdbId: first.num)
-                } else {
-                    items = try await ProwlarrApi.search(query: query)
-                }
-            } else {
-                items = try await ProwlarrApi.search(query: query)
-            }
-            await MainActor.run {
-                self.results = items.sorted { $0.nbSeeders > $1.nbSeeders }
-                self.isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                isLoading = false
-                searchError = OrbixStrings.errProwlarrFailed + ": " + error.localizedDescription
-            }
-        }
-    }
+    // MARK: - Download
 
-    private func runRadarrSearch() async {
-        do {
-            let items = try await RadarrApi.lookup(query: query)
-            await MainActor.run {
-                self.results = items
-                self.isLoading = false
-            }
-        } catch {
-            await MainActor.run {
-                isLoading = false
-                searchError = OrbixStrings.errRadarrFailed + ": " + error.localizedDescription
+    private func download(result: SearchResult) {
+        downloadingNum = result.num
+        let impact = UIImpactFeedbackGenerator(style: .medium)
+        impact.impactOccurred()
+        Task {
+            do {
+                if !result.descr.isEmpty {
+                    try await QBitApi.shared.addMagnet([result.descr])
+                }
+                await MainActor.run {
+                    downloadingNum = nil
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    ToastManager.shared.show(String(format: String(localized: "已添加: %@"), result.fileName))
+                }
+            } catch {
+                await MainActor.run {
+                    downloadingNum = nil
+                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    ToastManager.shared.show(String(format: String(localized: "添加失败: %@"), error.localizedDescription))
+                }
             }
         }
     }
