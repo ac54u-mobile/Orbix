@@ -118,6 +118,75 @@ enum RadarrApi {
         return (try? decoder.decode([RootFolder].self, from: data)) ?? []
     }
 
+    // MARK: - Releases
+
+    @MainActor
+    static func lookupReleases(movieId: Int) async throws -> [MovieRelease] {
+        guard let cred = CredentialsManager.shared.radarr, !cred.apiKey.isEmpty else {
+            throw ApiError.unauthorized
+        }
+        guard let url = URL(string: "\(cred.apiURL)/release?movieId=\(movieId)") else {
+            throw ApiError.invalidURL
+        }
+
+        var req = URLRequest(url: url)
+        req.setValue(cred.apiKey, forHTTPHeaderField: "X-Api-Key")
+        req.timeoutInterval = 60
+        let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            throw NSError(domain: "Radarr", code: http.statusCode)
+        }
+        let releases = (try? decoder.decode([MovieRelease].self, from: data)) ?? []
+        return releases
+    }
+
+    @MainActor
+    static func downloadRelease(guid: String, indexerId: Int, movieId: Int?) async throws {
+        guard let cred = CredentialsManager.shared.radarr, !cred.apiKey.isEmpty else {
+            throw ApiError.unauthorized
+        }
+        guard let url = URL(string: "\(cred.apiURL)/release") else {
+            throw ApiError.invalidURL
+        }
+
+        var body: [String: Any] = [
+            "guid": guid,
+            "indexerId": indexerId
+        ]
+        if let movieId { body["movieId"] = movieId }
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue(cred.apiKey, forHTTPHeaderField: "X-Api-Key")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        req.timeoutInterval = 15
+        let (_, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode != 200, http.statusCode != 201 {
+            throw NSError(domain: "Radarr", code: http.statusCode)
+        }
+    }
+
+    @MainActor
+    static func fetchQueue() async throws -> [MovieReleaseQueueItem] {
+        guard let cred = CredentialsManager.shared.radarr, !cred.apiKey.isEmpty else {
+            throw ApiError.unauthorized
+        }
+        guard let url = URL(string: "\(cred.apiURL)/queue?includeMovie=true&pageSize=50") else {
+            throw ApiError.invalidURL
+        }
+
+        var req = URLRequest(url: url)
+        req.setValue(cred.apiKey, forHTTPHeaderField: "X-Api-Key")
+        let (data, response) = try await session.data(for: req)
+        if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+            throw NSError(domain: "Radarr", code: http.statusCode)
+        }
+        let decoder = JSONDecoder()
+        let queueResponse = (try? decoder.decode(QueueResponse.self, from: data))
+        return queueResponse?.records ?? []
+    }
+
     // MARK: - Add Movie
     @MainActor
     static func addMovie(
@@ -150,4 +219,28 @@ enum RadarrApi {
         req.httpBody = jsonData
         let _ = try await session.data(for: req)
     }
+}
+
+struct MovieReleaseQueueItem: Codable, Identifiable {
+    let id: Int
+    let size: Double
+    let sizeleft: Double
+    let title: String?
+    let status: String?
+    let trackedDownloadStatus: String?
+    let trackedDownloadState: String?
+    let timeleft: String?
+    let movieId: Int?
+
+    var progress: Double {
+        size > 0 ? 1.0 - (sizeleft / size) : 0
+    }
+
+    var progressPercent: Int {
+        Int(progress * 100)
+    }
+}
+
+struct QueueResponse: Codable {
+    let records: [MovieReleaseQueueItem]
 }

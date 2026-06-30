@@ -148,13 +148,11 @@ struct QBitSearchView: View {
             }
             .sheet(isPresented: $showRadarrSheet) {
                 if let item = radarrResult {
-                    QBitRadarrAddSheet(
+                    RadarrMovieSheet(
                         item: item,
                         qualityProfiles: qualityProfiles,
                         rootFolders: rootFolders
                     )
-                    .presentationDetents([.medium, .large])
-                    .presentationDragIndicator(.visible)
                 }
             }
         }
