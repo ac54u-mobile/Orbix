@@ -32,6 +32,19 @@ jobs:
       - name: Generate Xcode Project
         run: xcodegen generate
 
+      - name: Run Tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project Orbix.xcodeproj \
+            -scheme Orbix \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
+            -derivedDataPath build 2>&1 | tee test.log | xcpretty --simple --color || {
+              echo "Tests failed. Tail:"
+              tail -n 100 test.log
+              exit 1
+            }
+
       - name: Build iOS (Unsigned)
         run: |
           set -o pipefail
