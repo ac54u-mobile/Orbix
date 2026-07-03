@@ -93,6 +93,8 @@ enum OrbixStrings {
     static let statsDHT = String(localized: "DHT 节点", comment: "DHT nodes")
     static let statsFreeSpace = String(localized: "可用空间", comment: "Free space")
     static let statsStatus = String(localized: "状态", comment: "Status")
+    static let statsTotalConnections = String(localized: "总连接数", comment: "Total connections")
+    static let statsQueueIO = String(localized: "队列IO任务", comment: "Queue IO jobs")
     static let statsTotal = String(localized: "总计", comment: "Total")
     static let statsDownloading = String(localized: "下载中", comment: "Downloading")
     static let statsSeeding = String(localized: "做种中", comment: "Seeding")

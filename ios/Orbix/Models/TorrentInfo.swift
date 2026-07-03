@@ -255,6 +255,8 @@ struct ServerState: Codable {
     let freeSpaceOnDisk: Int64
     let queueing: Bool
     let refreshInterval: Int
+    let totalPeerConnections: Int
+    let queuedIoJobs: Int
 
     enum CodingKeys: String, CodingKey {
         case alltimeDl = "alltime_dl"
@@ -266,6 +268,8 @@ struct ServerState: Codable {
         case useAltSpeedLimits = "use_alt_speed_limits"
         case freeSpaceOnDisk = "free_space_on_disk"
         case queueing, refreshInterval = "refresh_interval"
+        case totalPeerConnections = "total_peer_connections"
+        case queuedIoJobs = "queued_io_jobs"
     }
 }
 

@@ -97,15 +97,6 @@ struct StatsView: View {
             statRow(icon: "tray.and.arrow.up", color: AppColors.success.opacity(0.7),
                     label: String(localized: "已上传", comment: "Uploaded"),
                     value: t.flatMap { formatBytes($0.upInfoData) } ?? "—")
-
-            statRow(icon: "network", color: AppColors.accent.opacity(0.6),
-                    label: "DHT",
-                    value: serverState.flatMap { "\($0.dhtNodes) " + String(localized: "节点", comment: "nodes") } ?? "—")
-
-            statRow(icon: "point.3.connected.trianglepath.dotted",
-                    color: serverState.flatMap { connectionColor($0.connectionStatus) } ?? AppColors.tertiaryLabel,
-                    label: String(localized: "连接状态", comment: "Connection status"),
-                    value: serverState?.connectionStatus.capitalized ?? "—")
         } header: {
             Text(String(localized: "当前会话", comment: "Current session").uppercased())
         }
@@ -120,9 +111,23 @@ struct StatsView: View {
                         label: String(localized: "可用磁盘空间", comment: "Free disk space"),
                         value: formatBytes(s.freeSpaceOnDisk))
 
+                statRow(icon: "point.3.connected.trianglepath.dotted",
+                        color: connectionColor(s.connectionStatus),
+                        label: String(localized: "总连接数", comment: "Total connections"),
+                        value: "\(s.totalPeerConnections)")
+
                 statRow(icon: "hourglass", color: AppColors.warning,
-                        label: String(localized: "队列状态", comment: "Queue status"),
-                        value: s.queueing ? String(localized: "排队中", comment: "Queueing") : String(localized: "正常", comment: "Normal"))
+                        label: String(localized: "队列IO任务", comment: "Queue IO jobs"),
+                        value: "\(s.queuedIoJobs)")
+
+                statRow(icon: "network", color: AppColors.accent.opacity(0.6),
+                        label: String(localized: "DHT 节点", comment: "DHT nodes"),
+                        value: "\(s.dhtNodes)")
+
+                statRow(icon: "antenna.radiowaves.left.and.right",
+                        color: connectionColor(s.connectionStatus),
+                        label: String(localized: "连接状态", comment: "Connection status"),
+                        value: connectionStatusText(s.connectionStatus))
             } header: {
                 Text(String(localized: "服务器信息", comment: "Server info").uppercased())
             }
@@ -184,6 +189,14 @@ struct StatsView: View {
         case "connected": return AppColors.success
         case "firewalled": return AppColors.warning
         default: return AppColors.danger
+        }
+    }
+
+    private func connectionStatusText(_ status: String) -> String {
+        switch status.lowercased() {
+        case "connected": return String(localized: "已连接", comment: "Connected")
+        case "firewalled": return String(localized: "防火墙", comment: "Firewalled")
+        default: return String(localized: "未连接", comment: "Disconnected")
         }
     }
 
