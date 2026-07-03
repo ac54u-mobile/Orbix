@@ -344,12 +344,12 @@ struct ServerState: Codable {
         totalWastedSession = try c.decodeInt64Flexibly(forKey: .totalWastedSession)
         dhtNodes = try c.decodeIntFlexibly(forKey: .dhtNodes)
         connectionStatus = (try? c.decode(String.self, forKey: .connectionStatus)) ?? ""
-        useAltSpeedLimits = try c.decodeBoolFlexibly(forKey: .useAltSpeedLimits)
-        freeSpaceOnDisk = try c.decodeInt64Flexibly(forKey: .freeSpaceOnDisk)
-        queueing = try c.decodeBoolFlexibly(forKey: .queueing)
-        refreshInterval = try c.decodeIntFlexibly(forKey: .refreshInterval)
-        totalPeerConnections = try c.decodeIntFlexibly(forKey: .totalPeerConnections)
-        queuedIoJobs = try c.decodeIntFlexibly(forKey: .queuedIoJobs)
+        useAltSpeedLimits = (try? c.decodeBoolFlexibly(forKey: .useAltSpeedLimits)) ?? false
+        freeSpaceOnDisk = (try? c.decodeInt64Flexibly(forKey: .freeSpaceOnDisk)) ?? 0
+        queueing = (try? c.decodeBoolFlexibly(forKey: .queueing)) ?? false
+        refreshInterval = (try? c.decodeIntFlexibly(forKey: .refreshInterval)) ?? 0
+        totalPeerConnections = (try? c.decodeIntFlexibly(forKey: .totalPeerConnections)) ?? 0
+        queuedIoJobs = (try? c.decodeIntFlexibly(forKey: .queuedIoJobs)) ?? 0
     }
 }
 
