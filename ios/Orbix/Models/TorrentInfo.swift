@@ -507,6 +507,13 @@ struct SyncMainData: Codable {
     enum CodingKeys: String, CodingKey {
         case torrents, serverState = "server_state", rid = "rid"
     }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        torrents = try? c.decode([String: TorrentInfo].self, forKey: .torrents)
+        serverState = try? c.decode(ServerState.self, forKey: .serverState)
+        rid = try? c.decode(Int.self, forKey: .rid)
+    }
 }
 
 struct Category: Codable, Identifiable {
