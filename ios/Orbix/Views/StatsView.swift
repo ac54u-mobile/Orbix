@@ -20,7 +20,6 @@ struct StatsView: View {
                     sessionSection
                     serverInfoSection
                     torrentStatusSection
-                    debugSection
                 }
             }
             .listStyle(.insetGrouped)
@@ -216,34 +215,6 @@ struct StatsView: View {
         }
     }
 
-    // MARK: - Debug (remove after fixing)
-    private var debugSection: some View {
-        Section {
-            debugRow("serverState", value: serverState != nil ? "非 nil" : "nil ⚠️")
-            debugRow("transfer", value: transfer != nil ? "非 nil" : "nil ⚠️")
-            debugRow("syncFreeSpace", value: serverState.map { "\($0.freeSpaceOnDisk)" } ?? "nil")
-            debugRow("transFreeSpace", value: transfer.flatMap { $0.freeSpaceOnDisk.map(String.init) } ?? "nil")
-            debugRow("syncTotalPeer", value: serverState.map { "\($0.totalPeerConnections)" } ?? "nil")
-            debugRow("syncQueuedIO", value: serverState.map { "\($0.queuedIoJobs)" } ?? "nil")
-            debugRow("transDHT", value: transfer.flatMap { $0.dhtNodes.map(String.init) } ?? "nil")
-            debugRow("transConn", value: transfer.flatMap { $0.connectionStatus } ?? "nil")
-        } header: {
-            Text("DEBUG 诊断".uppercased())
-        }
-    }
-
-    private func debugRow(_ label: String, value: String) -> some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 12, design: .monospaced))
-                .foregroundColor(.orange)
-            Spacer()
-            Text(value)
-                .font(.system(size: 12, design: .monospaced))
-                .foregroundColor(value.hasSuffix("⚠️") ? .red : .green)
-        }
-    }
-
     private func refresh() {
         Task {
             do {
@@ -257,18 +228,6 @@ struct StatsView: View {
                 let list = try await lTask
                 let ver = try? await vTask
 
-#if DEBUG
-                print("[StatsView] transfer.serverState = \(t?.serverState != nil ? "present" : "nil")")
-                print("[StatsView] sync = \(sync != nil ? "present" : "nil")")
-                print("[StatsView] sync.serverState = \(sync?.serverState != nil ? "present" : "nil")")
-                if let ss = sync?.serverState {
-                    print("[StatsView] freeSpaceOnDisk=\(ss.freeSpaceOnDisk) totalPeer=\(ss.totalPeerConnections) queuedIO=\(ss.queuedIoJobs)")
-                }
-                if let t = t {
-                    print("[StatsView] transfer.freeSpace=\(t.freeSpaceOnDisk ?? -1) dht=\(t.dhtNodes ?? -1) connStatus=\(t.connectionStatus ?? "nil")")
-                }
-#endif
-
                 await MainActor.run {
                     transfer = t
                     serverState = t?.serverState ?? sync?.serverState
@@ -277,9 +236,6 @@ struct StatsView: View {
                     isLoading = false
                 }
             } catch {
-#if DEBUG
-                print("[StatsView] refresh error: \(error)")
-#endif
                 await MainActor.run { isLoading = false }
             }
         }
