@@ -64,7 +64,7 @@ struct TorrentInfo: Codable, Identifiable {
         completionOn = try c.decode(Int64.self, forKey: .completionOn)
         error = try c.decodeIfPresent(Int.self, forKey: .error) ?? 0
         errorString = try c.decodeIfPresent(String.self, forKey: .errorString) ?? ""
-    }
+}
 
 #if DEBUG
     init(hash: String = "demo", name: String, state: String = "downloading", progress: Double = 0,
@@ -127,6 +127,32 @@ struct TorrentInfo: Codable, Identifiable {
         if statusBadge.isError { return AppColors.danger }
         if isCompleted { return AppColors.success }
         return AppColors.accent
+    }
+}
+
+extension KeyedDecodingContainer {
+    func decodeInt64Flexibly(forKey key: Key) throws -> Int64 {
+        if let num = try? decode(Int64.self, forKey: key) {
+            return num
+        }
+        if let str = try? decode(String.self, forKey: key), let num = Int64(str) {
+            return num
+        }
+        throw DecodingError.typeMismatch(Int64.self,
+            DecodingError.Context(codingPath: codingPath + [key],
+                debugDescription: "Expected Int64 or numeric String"))
+    }
+
+    func decodeIntFlexibly(forKey key: Key) throws -> Int {
+        if let num = try? decode(Int.self, forKey: key) {
+            return num
+        }
+        if let str = try? decode(String.self, forKey: key), let num = Int(str) {
+            return num
+        }
+        throw DecodingError.typeMismatch(Int.self,
+            DecodingError.Context(codingPath: codingPath + [key],
+                debugDescription: "Expected Int or numeric String"))
     }
 }
 
@@ -270,6 +296,22 @@ struct ServerState: Codable {
         case queueing, refreshInterval = "refresh_interval"
         case totalPeerConnections = "total_peer_connections"
         case queuedIoJobs = "queued_io_jobs"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        alltimeDl = try c.decodeInt64Flexibly(forKey: .alltimeDl)
+        alltimeUl = try c.decodeInt64Flexibly(forKey: .alltimeUl)
+        globalRatio = try c.decodeIfPresent(String.self, forKey: .globalRatio)
+        totalWastedSession = try c.decodeInt64Flexibly(forKey: .totalWastedSession)
+        dhtNodes = try c.decodeIntFlexibly(forKey: .dhtNodes)
+        connectionStatus = try c.decode(String.self, forKey: .connectionStatus)
+        useAltSpeedLimits = try c.decode(Bool.self, forKey: .useAltSpeedLimits)
+        freeSpaceOnDisk = try c.decodeInt64Flexibly(forKey: .freeSpaceOnDisk)
+        queueing = try c.decode(Bool.self, forKey: .queueing)
+        refreshInterval = try c.decodeIntFlexibly(forKey: .refreshInterval)
+        totalPeerConnections = try c.decodeIntFlexibly(forKey: .totalPeerConnections)
+        queuedIoJobs = try c.decodeIntFlexibly(forKey: .queuedIoJobs)
     }
 }
 
