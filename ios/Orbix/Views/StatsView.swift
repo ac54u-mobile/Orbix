@@ -132,8 +132,8 @@ struct StatsView: View {
     }
 
     private var freeSpaceText: String {
-        if let s = serverState, s.freeSpaceOnDisk > 0 { return formatBytes(s.freeSpaceOnDisk) }
-        if let t = transfer, let v = t.freeSpaceOnDisk, v > 0 { return formatBytes(v) }
+        if let s = serverState { return formatBytes(s.freeSpaceOnDisk) }
+        if let t = transfer, let v = t.freeSpaceOnDisk { return formatBytes(v) }
         return "—"
     }
 

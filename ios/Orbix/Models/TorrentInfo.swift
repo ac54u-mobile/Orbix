@@ -154,6 +154,24 @@ extension KeyedDecodingContainer {
             DecodingError.Context(codingPath: codingPath + [key],
                 debugDescription: "Expected Int or numeric String"))
     }
+
+    func decodeBoolFlexibly(forKey key: Key) throws -> Bool {
+        if let b = try? decode(Bool.self, forKey: key) {
+            return b
+        }
+        if let i = try? decode(Int.self, forKey: key) {
+            return i != 0
+        }
+        if let str = try? decode(String.self, forKey: key) {
+            switch str.lowercased() {
+            case "true", "1", "yes": return true
+            default: return false
+            }
+        }
+        throw DecodingError.typeMismatch(Bool.self,
+            DecodingError.Context(codingPath: codingPath + [key],
+                debugDescription: "Expected Bool, Int, or String"))
+    }
 }
 
 enum TorrentStatus: String {
@@ -325,10 +343,10 @@ struct ServerState: Codable {
         globalRatio = try c.decodeIfPresent(String.self, forKey: .globalRatio)
         totalWastedSession = try c.decodeInt64Flexibly(forKey: .totalWastedSession)
         dhtNodes = try c.decodeIntFlexibly(forKey: .dhtNodes)
-        connectionStatus = try c.decode(String.self, forKey: .connectionStatus)
-        useAltSpeedLimits = try c.decode(Bool.self, forKey: .useAltSpeedLimits)
+        connectionStatus = (try? c.decode(String.self, forKey: .connectionStatus)) ?? ""
+        useAltSpeedLimits = try c.decodeBoolFlexibly(forKey: .useAltSpeedLimits)
         freeSpaceOnDisk = try c.decodeInt64Flexibly(forKey: .freeSpaceOnDisk)
-        queueing = try c.decode(Bool.self, forKey: .queueing)
+        queueing = try c.decodeBoolFlexibly(forKey: .queueing)
         refreshInterval = try c.decodeIntFlexibly(forKey: .refreshInterval)
         totalPeerConnections = try c.decodeIntFlexibly(forKey: .totalPeerConnections)
         queuedIoJobs = try c.decodeIntFlexibly(forKey: .queuedIoJobs)
