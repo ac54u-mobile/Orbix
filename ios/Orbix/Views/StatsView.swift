@@ -20,6 +20,7 @@ struct StatsView: View {
                     sessionSection
                     serverInfoSection
                     torrentStatusSection
+                    debugSection
                 }
             }
             .listStyle(.insetGrouped)
@@ -212,6 +213,34 @@ struct StatsView: View {
         case "connected": return String(localized: "已连接", comment: "Connected")
         case "firewalled": return String(localized: "防火墙", comment: "Firewalled")
         default: return String(localized: "未连接", comment: "Disconnected")
+        }
+    }
+
+    // MARK: - Debug (remove after fixing)
+    private var debugSection: some View {
+        Section {
+            debugRow("serverState", value: serverState != nil ? "非 nil" : "nil ⚠️")
+            debugRow("transfer", value: transfer != nil ? "非 nil" : "nil ⚠️")
+            debugRow("syncFreeSpace", value: serverState.map { "\($0.freeSpaceOnDisk)" } ?? "nil")
+            debugRow("transFreeSpace", value: transfer.flatMap { $0.freeSpaceOnDisk.map(String.init) } ?? "nil")
+            debugRow("syncTotalPeer", value: serverState.map { "\($0.totalPeerConnections)" } ?? "nil")
+            debugRow("syncQueuedIO", value: serverState.map { "\($0.queuedIoJobs)" } ?? "nil")
+            debugRow("transDHT", value: transfer.flatMap { $0.dhtNodes.map(String.init) } ?? "nil")
+            debugRow("transConn", value: transfer.flatMap { $0.connectionStatus } ?? "nil")
+        } header: {
+            Text("DEBUG 诊断".uppercased())
+        }
+    }
+
+    private func debugRow(_ label: String, value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundColor(.orange)
+            Spacer()
+            Text(value)
+                .font(.system(size: 12, design: .monospaced))
+                .foregroundColor(value.hasSuffix("⚠️") ? .red : .green)
         }
     }
 
