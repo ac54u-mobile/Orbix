@@ -1,74 +1,109 @@
 import SwiftUI
 
-extension Color {
-    init(light: Color, dark: Color) {
-        self.init(uiColor: UIColor { trait in
-            trait.userInterfaceStyle == .dark ? UIColor(dark) : UIColor(light)
-        })
-    }
-}
+// MARK: - Color Palette
 
 enum AppColors {
-    static let groupedBg = Color(light: Color(hex: "#F2F2F7"), dark: Color(hex: "#000000"))
-    static let mainBg = Color(light: Color(hex: "#F2F2F7"), dark: Color(hex: "#000000"))
-    static let plainBg = Color(light: Color(hex: "#FFFFFF"), dark: Color(hex: "#1C1C1E"))
-    static let card = Color(light: Color(hex: "#FFFFFF"), dark: Color(hex: "#1C1C1E"))
-    static let elevated = Color(light: Color(hex: "#F2F2F7"), dark: Color(hex: "#2C2C2E"))
+    // Background
+    static let backgroundBase    = Color(hex: "#0A0C1F")
+    static let backgroundGradientStart = Color(hex: "#0C0F28")
+    static let backgroundGradientEnd   = Color(hex: "#161D3A")
 
-    static let label = Color(light: Color(hex: "#1C1C1E"), dark: Color(hex: "#FFFFFF"))
-    static let secondaryLabel = Color(light: Color(hex: "#6E6E73"), dark: Color(hex: "#AEAEB2"))
-    static let tertiaryLabel = Color(light: Color(hex: "#AEAEB2"), dark: Color(hex: "#6E6E73"))
+    // Surface / Card
+    static let card              = Color(hex: "#11132B")
+    static let elevated          = Color(hex: "#181B37")
 
-    static let separator = Color(light: Color(hex: "#E5E5EA"), dark: Color(hex: "#38383A"))
-    static let placeholder = Color(light: Color(hex: "#C7C7CC"), dark: Color(hex: "#545458"))
+    // Text
+    static let textPrimary       = Color(hex: "#FFFFFF")
+    static let textSecondary     = Color(hex: "#A0A0B0")
+    static let textTertiary      = Color(hex: "#6B6D7B")
 
-    static let accent = Color(light: Color(hex: "#3B82F6"), dark: Color(hex: "#60A5FA"))
-    static let accentDark = Color(light: Color(hex: "#2563EB"), dark: Color(hex: "#93BBFD"))
-    static let accentSoftBg = Color(light: Color(hex: "#EBF0FF"), dark: Color(hex: "#1E293B"))
+    // Accent
+    static let accentPrimary     = Color(hex: "#007AFF")
+    static let accentDark        = Color(hex: "#0056D6")
+    static let accentSoftBg      = Color(hex: "#1A1F3D")
 
-    static let success = Color(light: Color(hex: "#34C759"), dark: Color(hex: "#30D158"))
-    static let warning = Color(light: Color(hex: "#FF9500"), dark: Color(hex: "#FF9F0A"))
-    static let danger = Color(light: Color(hex: "#FF3B30"), dark: Color(hex: "#FF453A"))
+    // Semantic
+    static let success           = Color(hex: "#34C759")
+    static let warning           = Color(hex: "#FF9500")
+    static let danger            = Color(hex: "#FF3B30")
 
-    static let skeletonBase = Color(light: Color(hex: "#E5E5EA"), dark: Color(hex: "#2C2C2E"))
-    static let skeletonHighlight = Color(light: Color(hex: "#D1D1D6"), dark: Color(hex: "#3A3A3C"))
+    // Chart / Waveform
+    static let statsWaveform     = Color(hex: "#34C759")
+
+    // Separator / Border
+    static let separator         = Color(hex: "#2A2D45")
+    static let placeholder       = Color(hex: "#5C5E6E")
+
+    // Skeleton
+    static let skeletonBase      = Color(hex: "#181B37")
+    static let skeletonHighlight = Color(hex: "#24284A")
+
+    // Misc
+    static let glassBorder       = Color.white.opacity(0.06)
+
+    // Legacy aliases — maintain compatibility with existing code
+    static let groupedBg         = backgroundBase
+    static let mainBg            = backgroundBase
+    static let plainBg           = card
+    static let label             = textPrimary
+    static let secondaryLabel    = textSecondary
+    static let tertiaryLabel     = textTertiary
+    static let accent            = accentPrimary
+
+    // Gradients
+    static let backgroundGradient = LinearGradient(
+        colors: [backgroundGradientStart, backgroundGradientEnd],
+        startPoint: .top,
+        endPoint: .bottom
+    )
 
     static let logoGradient = LinearGradient(
-        colors: [accent, accentDark],
+        colors: [accentPrimary, accentDark],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
-
-    static let glassBorder = Color(light: Color.black.opacity(0.06), dark: Color.white.opacity(0.08))
 }
 
+// MARK: - Layout Constants
+
 enum AppRadius {
-    static let xs: CGFloat = 4
-    static let sm: CGFloat = 8
-    static let md: CGFloat = 12
-    static let lg: CGFloat = 16
-    static let xl: CGFloat = 20
+    static let xs: CGFloat  = 2
+    static let sm: CGFloat  = 6
+    static let md: CGFloat  = 10
+    static let lg: CGFloat  = 14
+    static let xl: CGFloat  = 18
     static let xxl: CGFloat = 24
 }
 
 enum AppSpacing {
-    static let xs: CGFloat = 4
-    static let sm: CGFloat = 8
-    static let md: CGFloat = 12
-    static let lg: CGFloat = 16
-    static let xl: CGFloat = 20
+    static let xs: CGFloat  = 4
+    static let sm: CGFloat  = 8
+    static let md: CGFloat  = 12
+    static let lg: CGFloat  = 16
+    static let xl: CGFloat  = 20
     static let xxl: CGFloat = 24
 }
+
+// MARK: - StatsView Specific Config
+
+enum StatsViewConfig {
+    static let containerCornerRadius: CGFloat   = 14.0
+    static let listRowHeight: CGFloat           = 72.0
+    static let elementSpacing: CGFloat          = 16.0
+    static let waveformWidthMultiplier: CGFloat = 0.8
+}
+
+// MARK: - Card Modifier
 
 struct TeslaCard: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
-                RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
-                    .fill(AppColors.card.opacity(0.7))
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                    .fill(AppColors.card.opacity(0.8))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
+                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
                     .stroke(AppColors.glassBorder, lineWidth: 1)
             )
     }

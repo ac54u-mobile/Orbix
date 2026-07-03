@@ -13,26 +13,30 @@ struct StatsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                if !isLoading {
-                    serverSection
-                    historySection
-                    sessionSection
-                    serverInfoSection
-                    torrentStatusSection
+            ZStack {
+                AppColors.backgroundGradient.ignoresSafeArea()
+
+                List {
+                    if !isLoading {
+                        serverSection
+                        historySection
+                        sessionSection
+                        serverInfoSection
+                        torrentStatusSection
+                    }
                 }
-            }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.groupedBg)
-            .navigationTitle(OrbixStrings.navTransferStats)
-            .onAppear { refresh() }
-            .onReceive(timer) { _ in
-                guard !refreshSuppressed else { return }
-                refresh()
-            }
-            .onChange(of: scenePhase) { _, phase in
-                refreshSuppressed = phase != .active
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
+                .navigationTitle(OrbixStrings.navTransferStats)
+                .onAppear { refresh() }
+                .onReceive(timer) { _ in
+                    guard !refreshSuppressed else { return }
+                    refresh()
+                }
+                .onChange(of: scenePhase) { _, phase in
+                    refreshSuppressed = phase != .active
+                }
             }
         }
     }
@@ -42,15 +46,14 @@ struct StatsView: View {
         Section {
             HStack {
                 Text("qBittorrent")
-                    .font(.system(size: 15))
-                    .foregroundColor(AppColors.label)
+                    .font(AppTypography.body())
                 Spacer()
                 Text(serverVersion.isEmpty ? "—" : serverVersion)
-                    .font(.system(size: 15, weight: .regular))
-                    .foregroundColor(AppColors.label)
+                    .font(AppTypography.body())
             }
+            .foregroundColor(AppColors.textPrimary)
         } header: {
-            Text(String(localized: "服务器", comment: "Server").uppercased())
+            sectionHeaderText(String(localized: "服务器", comment: "Server"))
         }
     }
 
@@ -71,7 +74,7 @@ struct StatsView: View {
                         label: String(localized: "分享率", comment: "Ratio"),
                         value: s.globalRatio ?? "—")
             } header: {
-                Text(String(localized: "历史统计", comment: "History stats").uppercased())
+                sectionHeaderText(String(localized: "历史统计", comment: "History stats"))
             }
         }
     }
@@ -98,14 +101,14 @@ struct StatsView: View {
                     label: String(localized: "已上传", comment: "Uploaded"),
                     value: t.flatMap { formatBytes($0.upInfoData) } ?? "—")
         } header: {
-            Text(String(localized: "当前会话", comment: "Current session").uppercased())
+            sectionHeaderText(String(localized: "当前会话", comment: "Current session"))
         }
     }
 
     // MARK: - Server Info
     private var serverInfoSection: some View {
         Section {
-            statRow(icon: "internaldrive", color: Color(hex: "#8B5CF6"),
+            statRow(icon: "internaldrive", color: AppColors.accent,
                     label: String(localized: "可用磁盘空间", comment: "Free disk space"),
                     value: freeSpaceText)
 
@@ -127,10 +130,43 @@ struct StatsView: View {
                     label: String(localized: "连接状态", comment: "Connection status"),
                     value: connectionStatus.isEmpty ? "—" : connectionStatusText(connectionStatus))
         } header: {
-            Text(String(localized: "服务器信息", comment: "Server info").uppercased())
+            sectionHeaderText(String(localized: "服务器信息", comment: "Server info"))
         }
     }
 
+    // MARK: - Torrent Status
+    private var torrentStatusSection: some View {
+        let dl = torrents.filter { $0.statusBadge == .downloading || $0.statusBadge == .metaDL }.count
+        let up = torrents.filter { $0.statusBadge == .uploading || $0.statusBadge == .stalledUP }.count
+        let paused = torrents.filter { $0.statusBadge.isPaused }.count
+        let errored = torrents.filter { $0.statusBadge.isError }.count
+
+        return Section {
+            statRow(icon: "square.stack", color: AppColors.textPrimary,
+                    label: String(localized: "种子总数", comment: "Total torrents"),
+                    value: "\(torrents.count)")
+
+            statRow(icon: "arrow.down.circle", color: AppColors.accent,
+                    label: OrbixStrings.statsDownloading,
+                    value: "\(dl)")
+
+            statRow(icon: "arrow.up.circle", color: AppColors.success,
+                    label: OrbixStrings.statsSeeding,
+                    value: "\(up)")
+
+            statRow(icon: "pause.circle", color: AppColors.textTertiary,
+                    label: OrbixStrings.statsPaused,
+                    value: "\(paused)")
+
+            statRow(icon: "exclamationmark.circle", color: AppColors.danger,
+                    label: OrbixStrings.statsError,
+                    value: "\(errored)")
+        } header: {
+            sectionHeaderText(String(localized: "种子状态", comment: "Torrent status"))
+        }
+    }
+
+    // MARK: - Computed Values
     private var freeSpaceText: String {
         if let s = serverState { return formatBytes(s.freeSpaceOnDisk) }
         if let t = transfer, let v = t.freeSpaceOnDisk { return formatBytes(v) }
@@ -149,56 +185,32 @@ struct StatsView: View {
         return ""
     }
 
-    // MARK: - Torrent Status
-    private var torrentStatusSection: some View {
-        let dl = torrents.filter { $0.statusBadge == .downloading || $0.statusBadge == .metaDL }.count
-        let up = torrents.filter { $0.statusBadge == .uploading || $0.statusBadge == .stalledUP }.count
-        let paused = torrents.filter { $0.statusBadge.isPaused }.count
-        let errored = torrents.filter { $0.statusBadge.isError }.count
-
-        return Section {
-            statRow(icon: "square.stack", color: AppColors.label,
-                    label: String(localized: "种子总数", comment: "Total torrents"),
-                    value: "\(torrents.count)")
-
-            statRow(icon: "arrow.down.circle", color: AppColors.accent,
-                    label: OrbixStrings.statsDownloading,
-                    value: "\(dl)")
-
-            statRow(icon: "arrow.up.circle", color: AppColors.success,
-                    label: OrbixStrings.statsSeeding,
-                    value: "\(up)")
-
-            statRow(icon: "pause.circle", color: AppColors.tertiaryLabel,
-                    label: OrbixStrings.statsPaused,
-                    value: "\(paused)")
-
-            statRow(icon: "exclamationmark.circle", color: AppColors.danger,
-                    label: OrbixStrings.statsError,
-                    value: "\(errored)")
-        } header: {
-            Text(String(localized: "种子状态", comment: "Torrent status").uppercased())
-        }
+    // MARK: - Helpers
+    private func sectionHeaderText(_ text: String) -> some View {
+        Text(text.uppercased())
+            .font(AppTypography.caption())
+            .foregroundColor(AppColors.textSecondary)
     }
 
-    // MARK: - Row Helper
     private func statRow(icon: String, color: Color, label: String, value: String, monospaced: Bool = false) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: StatsViewConfig.elementSpacing) {
             Image(systemName: icon)
-                .font(.system(size: 15, weight: .medium))
+                .font(.system(size: 17, weight: .medium))
                 .foregroundColor(color)
-                .frame(width: 26)
+                .frame(width: 28)
             Text(label)
-                .font(.system(size: 15))
-                .foregroundColor(AppColors.secondaryLabel)
+                .font(AppTypography.body())
+                .foregroundColor(AppColors.textSecondary)
             Spacer()
             Text(value)
-                .font(monospaced ? .system(size: 15, weight: .regular, design: .monospaced) : .system(size: 15, weight: .regular))
-                .foregroundColor(AppColors.label)
+                .font(monospaced
+                    ? .system(size: 17, weight: .regular, design: .monospaced)
+                    : AppTypography.body())
+                .foregroundColor(AppColors.textPrimary)
         }
+        .frame(minHeight: StatsViewConfig.listRowHeight)
     }
 
-    // MARK: - Data
     private func connectionColor(_ status: String) -> Color {
         switch status.lowercased() {
         case "connected": return AppColors.success
@@ -215,6 +227,7 @@ struct StatsView: View {
         }
     }
 
+    // MARK: - Data
     private func refresh() {
         Task {
             do {
