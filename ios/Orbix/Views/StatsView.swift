@@ -228,6 +228,18 @@ struct StatsView: View {
                 let list = try await lTask
                 let ver = try? await vTask
 
+#if DEBUG
+                print("[StatsView] transfer.serverState = \(t?.serverState != nil ? "present" : "nil")")
+                print("[StatsView] sync = \(sync != nil ? "present" : "nil")")
+                print("[StatsView] sync.serverState = \(sync?.serverState != nil ? "present" : "nil")")
+                if let ss = sync?.serverState {
+                    print("[StatsView] freeSpaceOnDisk=\(ss.freeSpaceOnDisk) totalPeer=\(ss.totalPeerConnections) queuedIO=\(ss.queuedIoJobs)")
+                }
+                if let t = t {
+                    print("[StatsView] transfer.freeSpace=\(t.freeSpaceOnDisk ?? -1) dht=\(t.dhtNodes ?? -1) connStatus=\(t.connectionStatus ?? "nil")")
+                }
+#endif
+
                 await MainActor.run {
                     transfer = t
                     serverState = t?.serverState ?? sync?.serverState
@@ -236,6 +248,9 @@ struct StatsView: View {
                     isLoading = false
                 }
             } catch {
+#if DEBUG
+                print("[StatsView] refresh error: \(error)")
+#endif
                 await MainActor.run { isLoading = false }
             }
         }
