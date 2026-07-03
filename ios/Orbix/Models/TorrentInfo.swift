@@ -257,6 +257,9 @@ struct TransferInfo: Codable {
     let upRateLimit: Int64
     let dlInfoData: Int64
     let upInfoData: Int64
+    let connectionStatus: String?
+    let dhtNodes: Int?
+    let freeSpaceOnDisk: Int64?
     let serverState: ServerState?
 
     enum CodingKeys: String, CodingKey {
@@ -266,7 +269,24 @@ struct TransferInfo: Codable {
         case upRateLimit = "up_rate_limit"
         case dlInfoData = "dl_info_data"
         case upInfoData = "up_info_data"
+        case connectionStatus = "connection_status"
+        case dhtNodes = "dht_nodes"
+        case freeSpaceOnDisk = "free_space_on_disk"
         case serverState = "server_state"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        dlInfoSpeed = try c.decodeInt64Flexibly(forKey: .dlInfoSpeed)
+        upInfoSpeed = try c.decodeInt64Flexibly(forKey: .upInfoSpeed)
+        dlRateLimit = try c.decodeInt64Flexibly(forKey: .dlRateLimit)
+        upRateLimit = try c.decodeInt64Flexibly(forKey: .upRateLimit)
+        dlInfoData = try c.decodeInt64Flexibly(forKey: .dlInfoData)
+        upInfoData = try c.decodeInt64Flexibly(forKey: .upInfoData)
+        connectionStatus = try c.decodeIfPresent(String.self, forKey: .connectionStatus)
+        dhtNodes = try? c.decodeIntFlexibly(forKey: .dhtNodes)
+        freeSpaceOnDisk = try? c.decodeInt64Flexibly(forKey: .freeSpaceOnDisk)
+        serverState = try c.decodeIfPresent(ServerState.self, forKey: .serverState)
     }
 }
 

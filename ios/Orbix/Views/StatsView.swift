@@ -103,35 +103,50 @@ struct StatsView: View {
     }
 
     // MARK: - Server Info
-    @ViewBuilder
     private var serverInfoSection: some View {
-        if let s = serverState {
-            Section {
-                statRow(icon: "internaldrive", color: Color(hex: "#8B5CF6"),
-                        label: String(localized: "可用磁盘空间", comment: "Free disk space"),
-                        value: formatBytes(s.freeSpaceOnDisk))
+        Section {
+            statRow(icon: "internaldrive", color: Color(hex: "#8B5CF6"),
+                    label: String(localized: "可用磁盘空间", comment: "Free disk space"),
+                    value: freeSpaceText)
 
-                statRow(icon: "point.3.connected.trianglepath.dotted",
-                        color: connectionColor(s.connectionStatus),
-                        label: String(localized: "总连接数", comment: "Total connections"),
-                        value: "\(s.totalPeerConnections)")
+            statRow(icon: "point.3.connected.trianglepath.dotted",
+                    color: connectionColor(connectionStatus),
+                    label: String(localized: "总连接数", comment: "Total connections"),
+                    value: serverState.map { "\($0.totalPeerConnections)" } ?? "—")
 
-                statRow(icon: "hourglass", color: AppColors.warning,
-                        label: String(localized: "队列IO任务", comment: "Queue IO jobs"),
-                        value: "\(s.queuedIoJobs)")
+            statRow(icon: "hourglass", color: AppColors.warning,
+                    label: String(localized: "队列IO任务", comment: "Queue IO jobs"),
+                    value: serverState.map { "\($0.queuedIoJobs)" } ?? "—")
 
-                statRow(icon: "network", color: AppColors.accent.opacity(0.6),
-                        label: String(localized: "DHT 节点", comment: "DHT nodes"),
-                        value: "\(s.dhtNodes)")
+            statRow(icon: "network", color: AppColors.accent.opacity(0.6),
+                    label: String(localized: "DHT 节点", comment: "DHT nodes"),
+                    value: dhtNodesText)
 
-                statRow(icon: "antenna.radiowaves.left.and.right",
-                        color: connectionColor(s.connectionStatus),
-                        label: String(localized: "连接状态", comment: "Connection status"),
-                        value: connectionStatusText(s.connectionStatus))
-            } header: {
-                Text(String(localized: "服务器信息", comment: "Server info").uppercased())
-            }
+            statRow(icon: "antenna.radiowaves.left.and.right",
+                    color: connectionColor(connectionStatus),
+                    label: String(localized: "连接状态", comment: "Connection status"),
+                    value: connectionStatus.isEmpty ? "—" : connectionStatusText(connectionStatus))
+        } header: {
+            Text(String(localized: "服务器信息", comment: "Server info").uppercased())
         }
+    }
+
+    private var freeSpaceText: String {
+        if let s = serverState, s.freeSpaceOnDisk > 0 { return formatBytes(s.freeSpaceOnDisk) }
+        if let t = transfer, let v = t.freeSpaceOnDisk, v > 0 { return formatBytes(v) }
+        return "—"
+    }
+
+    private var dhtNodesText: String {
+        if let s = serverState { return "\(s.dhtNodes)" }
+        if let t = transfer, let v = t.dhtNodes { return "\(v)" }
+        return "—"
+    }
+
+    private var connectionStatus: String {
+        if let s = serverState, !s.connectionStatus.isEmpty { return s.connectionStatus }
+        if let t = transfer, let v = t.connectionStatus, !v.isEmpty { return v }
+        return ""
     }
 
     // MARK: - Torrent Status
