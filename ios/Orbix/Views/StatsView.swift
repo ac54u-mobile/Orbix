@@ -14,7 +14,7 @@ struct StatsView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.backgroundGradient.ignoresSafeArea()
+                StarryBackground()
 
                 List {
                     if !isLoading {

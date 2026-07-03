@@ -4,51 +4,47 @@ import SwiftUI
 
 enum AppColors {
     // Background
-    static let backgroundBase    = Color(hex: "#0A0C1F")
-    static let backgroundGradientStart = Color(hex: "#0C0F28")
-    static let backgroundGradientEnd   = Color(hex: "#161D3A")
+    static let backgroundBase          = Color(hex: "#0A0C1F")
+    static let backgroundGradientStart = Color(hex: "#1C003D")
+    static let backgroundGradientEnd   = Color(hex: "#00122B")
 
     // Surface / Card
-    static let card              = Color(hex: "#11132B")
-    static let elevated          = Color(hex: "#181B37")
+    static let card                     = Color(hex: "#11132B")
+    static let elevated                 = Color(hex: "#181B37")
 
     // Text
-    static let textPrimary       = Color(hex: "#FFFFFF")
-    static let textSecondary     = Color(hex: "#A0A0B0")
-    static let textTertiary      = Color(hex: "#6B6D7B")
+    static let textPrimary              = Color(hex: "#FFFFFF")
+    static let textSecondary            = Color(hex: "#C0C0C8")
+    static let textTertiary             = Color(hex: "#8E8E98")
 
     // Accent
-    static let accentPrimary     = Color(hex: "#007AFF")
-    static let accentDark        = Color(hex: "#0056D6")
-    static let accentSoftBg      = Color(hex: "#1A1F3D")
+    static let accentPrimary            = Color(hex: "#007AFF")
+    static let accentDark               = Color(hex: "#0056D6")
+    static let accentSoftBg             = Color(hex: "#1A1F3D")
+
+    // Tag Backgrounds
+    static let tagBackgroundGreen       = Color(hex: "#34C759")
+    static let tagBackgroundBlue        = Color(hex: "#409CFF")
 
     // Semantic
-    static let success           = Color(hex: "#34C759")
-    static let warning           = Color(hex: "#FF9500")
-    static let danger            = Color(hex: "#FF3B30")
+    static let success                  = Color(hex: "#34C759")
+    static let warning                  = Color(hex: "#FF9500")
+    static let danger                   = Color(hex: "#FF3B30")
 
     // Chart / Waveform
-    static let statsWaveform     = Color(hex: "#34C759")
+    static let statsWaveform            = Color(hex: "#34C759")
 
-    // Separator / Border
-    static let separator         = Color(hex: "#2A2D45")
-    static let placeholder       = Color(hex: "#5C5E6E")
+    // Separator / Border / Divider
+    static let listDivider              = Color(hex: "#303038")
+    static let separator                = listDivider
+    static let placeholder              = Color(hex: "#6B6D80")
 
     // Skeleton
-    static let skeletonBase      = Color(hex: "#181B37")
-    static let skeletonHighlight = Color(hex: "#24284A")
+    static let skeletonBase             = Color(hex: "#181B37")
+    static let skeletonHighlight        = Color(hex: "#24284A")
 
-    // Misc
-    static let glassBorder       = Color.white.opacity(0.06)
-
-    // Legacy aliases — maintain compatibility with existing code
-    static let groupedBg         = backgroundBase
-    static let mainBg            = backgroundBase
-    static let plainBg           = card
-    static let label             = textPrimary
-    static let secondaryLabel    = textSecondary
-    static let tertiaryLabel     = textTertiary
-    static let accent            = accentPrimary
+    // Glass / Translucent
+    static let glassBorder              = Color.white.opacity(0.05)
 
     // Gradients
     static let backgroundGradient = LinearGradient(
@@ -62,6 +58,15 @@ enum AppColors {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+
+    // Legacy aliases
+    static let groupedBg         = backgroundBase
+    static let mainBg            = backgroundBase
+    static let plainBg           = card
+    static let label             = textPrimary
+    static let secondaryLabel    = textSecondary
+    static let tertiaryLabel     = textTertiary
+    static let accent            = accentPrimary
 }
 
 // MARK: - Layout Constants
@@ -84,7 +89,15 @@ enum AppSpacing {
     static let xxl: CGFloat = 24
 }
 
-// MARK: - StatsView Specific Config
+// MARK: - Page Layout Configs
+
+enum SettingsConfig {
+    static let containerCornerRadius: CGFloat = 14.0
+    static let listRowHeight: CGFloat         = 72.0
+    static let overallSpacing: CGFloat        = 16.0
+    static let itemContentSpacing: CGFloat    = 12.0
+    static let iconSize: CGSize               = CGSize(width: 24, height: 24)
+}
 
 enum StatsViewConfig {
     static let containerCornerRadius: CGFloat   = 14.0
@@ -100,7 +113,7 @@ struct TeslaCard: ViewModifier {
         content
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card.opacity(0.8))
+                    .fill(AppColors.card.opacity(0.85))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)

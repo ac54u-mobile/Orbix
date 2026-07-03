@@ -13,9 +13,14 @@ enum AppTypography {
         .system(size: 22, weight: .semibold)
     }
 
-    /// 17pt Semibold — 小标题 / 导航标题
+    /// 17pt Semibold — 小标题 / 列表项标题
     static func titleSmall() -> Font {
         .system(size: 17, weight: .semibold)
+    }
+
+    /// 17pt Semibold — 列表项名称 (等同 titleSmall，语义别名)
+    static func listTitleMedium() -> Font {
+        titleSmall()
     }
 
     /// 17pt Regular — 正文
@@ -23,16 +28,25 @@ enum AppTypography {
         .system(size: 17, weight: .regular)
     }
 
-    /// 12pt Regular — 辅助说明 / Caption
+    /// 13pt Regular — 描述文字
+    static func descriptionSmall() -> Font {
+        .system(size: 13, weight: .regular)
+    }
+
+    /// 12pt Regular — 辅助说明
     static func caption() -> Font {
         .system(size: 12, weight: .regular)
     }
 
+    /// 11pt Semibold — 标签文字（如 "新"、"建议"）
+    static func tagCaption() -> Font {
+        .system(size: 11, weight: .semibold)
+    }
+
     // MARK: - Extended
 
-    /// 13pt Regular — 区域标题 / Section Header
     static func sectionHeader() -> Font {
-        .system(size: 13, weight: .regular)
+        descriptionSmall()
     }
 
     // MARK: - Legacy Aliases
@@ -58,8 +72,14 @@ extension View {
     func bodyFont(_ color: Color = AppColors.textPrimary) -> some View {
         self.font(AppTypography.body()).foregroundColor(color)
     }
+    func descriptionSmall(_ color: Color = AppColors.textSecondary) -> some View {
+        self.font(AppTypography.descriptionSmall()).foregroundColor(color)
+    }
     func caption(_ color: Color = AppColors.textSecondary) -> some View {
         self.font(AppTypography.caption()).foregroundColor(color)
+    }
+    func tagCaption(_ color: Color = AppColors.textPrimary) -> some View {
+        self.font(AppTypography.tagCaption()).foregroundColor(color)
     }
     func sectionHeader(_ color: Color = AppColors.textSecondary) -> some View {
         self.font(AppTypography.sectionHeader()).foregroundColor(color)
