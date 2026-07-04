@@ -34,9 +34,9 @@ struct StatusIcon: View {
     private var backgroundColor: Color {
         switch status {
         case .uploading, .stalledUP, .forcedUP: return AppColors.success.opacity(0.15)
-        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent.opacity(0.15)
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accentPrimary.opacity(0.15)
         case .error, .missingFiles: return AppColors.danger.opacity(0.15)
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.tertiaryLabel.opacity(0.15)
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.textTertiary.opacity(0.15)
         default: return AppColors.separator.opacity(0.3)
         }
     }
@@ -44,10 +44,10 @@ struct StatusIcon: View {
     private var iconColor: Color {
         switch status {
         case .uploading, .stalledUP, .forcedUP: return AppColors.success
-        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accentPrimary
         case .error, .missingFiles: return AppColors.danger
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.secondaryLabel
-        default: return AppColors.secondaryLabel
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.textSecondary
+        default: return AppColors.textSecondary
         }
     }
 }

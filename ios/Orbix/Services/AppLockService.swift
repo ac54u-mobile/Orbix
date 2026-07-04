@@ -127,13 +127,13 @@ private struct LockScreen: View {
                 } label: {
                     Image(systemName: biometricIcon)
                         .font(.system(size: 40, weight: .regular))
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
                 .buttonStyle(ScaleButtonStyle())
 
                 Text(String(localized: "轻点以验证身份", comment: "Tap to verify identity"))
                     .font(.system(size: 15))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(AppColors.textTertiary)
             }
         }
     }

@@ -29,19 +29,19 @@ struct TorrentDetailSheet: View {
                 .padding(AppSpacing.lg)
                 .padding(.bottom, 32)
             }
-            .background(AppColors.backgroundBase)
+            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(torrent.code)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(OrbixStrings.btnClose) { dismiss() }
                         .fontWeight(.medium)
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button { toggleBookmark() } label: {
                         Image(systemName: isBookmarked ? "heart.fill" : "heart")
-                            .foregroundColor(isBookmarked ? AppColors.danger : AppColors.tertiaryLabel)
+                            .foregroundColor(isBookmarked ? AppColors.danger : AppColors.textTertiary)
                     }
                 }
             }
@@ -108,23 +108,23 @@ struct TorrentDetailSheet: View {
         VStack(alignment: .leading, spacing: AppSpacing.sm) {
             Text(torrent.code)
                 .font(.system(size: 20, weight: .bold))
-                .foregroundColor(AppColors.accent)
+                .foregroundColor(AppColors.accentPrimary)
 
             if torrent.title != torrent.code {
                 Text(torrent.title)
                     .font(.system(size: 14))
-                    .foregroundColor(AppColors.secondaryLabel)
+                    .foregroundColor(AppColors.textSecondary)
                     .lineLimit(3)
             }
 
             HStack(spacing: AppSpacing.lg) {
                 Label(torrent.size, systemImage: "internaldrive")
                     .font(.system(size: 13))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(AppColors.textTertiary)
 
                 Label(torrent.date, systemImage: "calendar")
                     .font(.system(size: 13))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(AppColors.textTertiary)
             }
             .padding(.top, AppSpacing.xs)
         }
@@ -144,12 +144,12 @@ struct TorrentDetailSheet: View {
             } label: {
                 Label(OrbixStrings.btnAddToQueue, systemImage: "square.and.arrow.down")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(AppColors.label)
+                    .foregroundColor(AppColors.textPrimary)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
                     .background(
                         RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                            .fill(AppColors.accent)
+                            .fill(AppColors.accentPrimary)
                     )
             }
             .buttonStyle(ScaleButtonStyle())
@@ -161,12 +161,12 @@ struct TorrentDetailSheet: View {
                 } label: {
                     Label(OrbixStrings.btnCopyMagnet, systemImage: "doc.on.doc")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                                .stroke(AppColors.accent, lineWidth: 1)
+                                .stroke(AppColors.accentPrimary, lineWidth: 1)
                         )
                 }
                 .buttonStyle(ScaleButtonStyle())
@@ -177,7 +177,7 @@ struct TorrentDetailSheet: View {
                 } label: {
                     Label(OrbixStrings.miscCode, systemImage: "number")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(AppColors.secondaryLabel)
+                        .foregroundColor(AppColors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
@@ -192,12 +192,12 @@ struct TorrentDetailSheet: View {
                 Button { downloadTorrent(torrentUrl) } label: {
                     Label(OrbixStrings.btnDownloadTorrent, systemImage: "arrow.down.doc")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
                         .background(
                             RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                                .stroke(AppColors.accent, lineWidth: 1)
+                                .stroke(AppColors.accentPrimary, lineWidth: 1)
                         )
                 }
                 .buttonStyle(ScaleButtonStyle())
@@ -211,15 +211,15 @@ struct TorrentDetailSheet: View {
             HStack(spacing: AppSpacing.xs) {
                 Image(systemName: "text.alignleft")
                     .font(.system(size: 11))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(AppColors.textTertiary)
                 Text(OrbixStrings.miscFilm)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(AppColors.textTertiary)
             }
 
             Text(desc)
                 .font(.system(size: 14))
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(AppColors.textSecondary)
                 .textSelection(.enabled)
 
             if translatedDescription != nil, let raw = torrent.description {
@@ -229,15 +229,15 @@ struct TorrentDetailSheet: View {
                 HStack(spacing: AppSpacing.xs) {
                     Image(systemName: "textformat")
                         .font(.system(size: 10))
-                        .foregroundColor(AppColors.tertiaryLabel)
+                        .foregroundColor(AppColors.textTertiary)
                     Text(OrbixStrings.miscOriginalJP)
                         .font(.system(size: 11))
-                        .foregroundColor(AppColors.tertiaryLabel)
+                        .foregroundColor(AppColors.textTertiary)
                 }
 
                 Text(raw)
                     .font(.system(size: 14))
-                    .foregroundColor(AppColors.secondaryLabel)
+                    .foregroundColor(AppColors.textSecondary)
                     .textSelection(.enabled)
             }
         }
@@ -263,16 +263,16 @@ struct TorrentDetailSheet: View {
         HStack(spacing: AppSpacing.md) {
             Image(systemName: icon)
                 .font(.system(size: 13))
-                .foregroundColor(AppColors.tertiaryLabel)
+                .foregroundColor(AppColors.textTertiary)
                 .frame(width: 18)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(AppColors.textTertiary)
                 Text(value)
                     .font(.system(size: monospacedSize, design: .monospaced))
-                    .foregroundColor(AppColors.label)
+                    .foregroundColor(AppColors.textPrimary)
                     .lineLimit(2)
             }
 
@@ -284,7 +284,7 @@ struct TorrentDetailSheet: View {
             } label: {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 13))
-                    .foregroundColor(AppColors.accent)
+                    .foregroundColor(AppColors.accentPrimary)
             }
         }
         .padding(AppSpacing.md)

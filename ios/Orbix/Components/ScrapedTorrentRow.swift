@@ -21,14 +21,14 @@ struct ScrapedTorrentRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(torrent.code)
                     .font(AppTypography.titleSmall())
-                    .foregroundColor(Color(.label))
+                    .foregroundColor(AppColors.textPrimary)
                     .lineLimit(1)
 
                 let subtitle = subtitleText
                 if !subtitle.isEmpty {
                     Text(subtitle)
                         .font(AppTypography.descriptionSmall())
-                        .foregroundColor(Color(.secondaryLabel))
+                        .foregroundColor(AppColors.textSecondary)
                         .lineLimit(2)
                 }
             }
@@ -37,7 +37,7 @@ struct ScrapedTorrentRow: View {
 
             Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(Color(.tertiaryLabel))
+                .foregroundColor(AppColors.textTertiary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
@@ -84,7 +84,7 @@ struct ScrapedTorrentRow: View {
                     Color(.tertiarySystemFill)
                     Image(systemName: "photo")
                         .font(.system(size: 18))
-                        .foregroundColor(Color(.tertiaryLabel))
+                        .foregroundColor(AppColors.textTertiary)
                 }
             }
         }
@@ -129,6 +129,6 @@ struct ScrapedTorrentRow: View {
     .background(Color.clear)
     .clipShape(RoundedRectangle(cornerRadius: 14))
     .padding(.horizontal, 16)
-    .background(AppColors.backgroundBase)
+    .background(AppColors.gridBackgroundGradient)
 }
 #endif

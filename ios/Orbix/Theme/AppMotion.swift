@@ -20,56 +20,79 @@ enum AppMotion {
         .timingCurve(0.2, 0.8, 0.2, 1.0, duration: slow)
     }
 
-    // 弹簧物理曲线 — 跟手、自然、符合物理直觉
     static let spring: Animation        = .spring(response: 0.4, dampingFraction: 0.8)
     static let springSnappy: Animation  = .spring(response: 0.3, dampingFraction: 0.75)
     static let springGentle: Animation  = .spring(response: 0.55, dampingFraction: 0.85)
     static let interactive: Animation   = .interactiveSpring(response: 0.28, dampingFraction: 0.86)
 
+    static let draggingCurve: Animation = .spring(response: 0.15, dampingFraction: 1.0)
+
+    static let breathingScale: Animation = .timingCurve(0.2, 0.0, 0.2, 1.0, duration: 0.15)
+
     static let skeletonCycle: TimeInterval = 1.4
+    static let shimmerDuration: TimeInterval = 1.2
 }
 
-// MARK: - 统一触觉反馈层
-// 集中管理全应用的 Haptic，保证反馈强度语义一致
+// MARK: - Scale Button Style
+
+struct ScaleButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.5)
+            .animation(AppMotion.breathingScale, value: configuration.isPressed)
+    }
+}
+
+// MARK: - Unified Haptic Feedback
 
 enum AppHaptics {
-    /// 轻触 — 选择切换、滚动吸附
     static func selection() {
         UISelectionFeedbackGenerator().selectionChanged()
     }
 
-    /// 轻击 — 次要按钮、翻页
     static func light() {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 
-    /// 中击 — 主要操作确认
     static func medium() {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 
-    /// 重击 — 破坏性操作（删除、清空）
     static func heavy() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
     }
 
-    /// 柔和 — 手势跟随过程中的阻尼提示
     static func soft() {
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
     }
 
-    /// 成功 — 操作完成
+    static func breathing() {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred(intensity: 0.3)
+    }
+
     static func success() {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
-    /// 警告 — 边界、需要注意
     static func warning() {
         UINotificationFeedbackGenerator().notificationOccurred(.warning)
     }
 
-    /// 失败 — 操作出错
     static func error() {
         UINotificationFeedbackGenerator().notificationOccurred(.error)
     }
 }
+
+#if DEBUG
+#Preview {
+    VStack(spacing: 20) {
+        Button("Tap") {}.buttonStyle(ScaleButtonStyle())
+        Button("Disabled") {}.buttonStyle(ScaleButtonStyle()).disabled(true)
+    }
+    .padding()
+}
+#endif

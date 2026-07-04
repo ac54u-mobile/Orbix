@@ -28,10 +28,10 @@ struct QBitSearchView: View {
                         VStack(spacing: 16) {
                             Spacer()
                             ProgressView()
-                                .tint(AppColors.accent)
+                                .tint(AppColors.accentPrimary)
                             Text(OrbixStrings.msgSearchingAll)
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.secondaryLabel)
+                                .foregroundColor(AppColors.textSecondary)
                             Spacer()
                         }
                     } else if let error = searchError {
@@ -41,7 +41,7 @@ struct QBitSearchView: View {
                                 .font(.system(size: 40, weight: .light))
                                 .foregroundColor(AppColors.warning)
                         Text(error)
-                            .subtitle()
+                            .descriptionSmall()
                             .multilineTextAlignment(.center)
                                 .padding(.horizontal, 40)
                             Spacer()
@@ -51,9 +51,9 @@ struct QBitSearchView: View {
                             Spacer()
                             Image(systemName: "magnifyingglass")
                                 .font(.system(size: 40, weight: .light))
-                                .foregroundColor(AppColors.tertiaryLabel)
+                                .foregroundColor(AppColors.textTertiary)
                         Text(OrbixStrings.errNoResults)
-                            .subtitle()
+                            .descriptionSmall()
                             Spacer()
                         }
                     } else {
@@ -68,7 +68,7 @@ struct QBitSearchView: View {
                         searchMode.use141.toggle()
                     } label: {
                         Image(systemName: "globe")
-                            .foregroundColor(AppColors.accent)
+                            .foregroundColor(AppColors.accentPrimary)
                             .font(.system(size: 14))
                     }
                 }
@@ -119,11 +119,11 @@ struct QBitSearchView: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(selected ? AppColors.accent : Color.clear)
+                        .fill(selected ? AppColors.accentPrimary : Color.clear)
                         .background(
                             Capsule().fill(.regularMaterial)
                         )
-                        .shadow(color: selected ? AppColors.accent.opacity(0.3) : .clear, radius: 4, y: 2)
+                        .shadow(color: selected ? AppColors.accentPrimary.opacity(0.3) : .clear, radius: 4, y: 2)
                 )
         }
     }
@@ -137,13 +137,13 @@ struct QBitSearchView: View {
                     HStack {
                         Text(String(format: OrbixStrings.miscCountResults, results.count))
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(AppColors.secondaryLabel)
+                            .foregroundColor(AppColors.textSecondary)
                             .textCase(.uppercase)
                         Spacer()
                         if status == "Running" {
                             ProgressView()
                                 .controlSize(.mini)
-                                .tint(AppColors.accent)
+                                .tint(AppColors.accentPrimary)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -164,14 +164,14 @@ struct QBitSearchView: View {
             HStack(alignment: .top, spacing: 6) {
                 Text(item.fileName)
                     .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(AppColors.label)
+                    .foregroundColor(AppColors.textPrimary)
                     .lineLimit(2)
             }
 
             HStack(spacing: 16) {
                 Label(formatBytes(Int64(item.fileSize)), systemImage: "internaldrive")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(AppColors.secondaryLabel)
+                    .foregroundColor(AppColors.textSecondary)
 
                 if item.nbSeeders > 0 {
                     Label("\(item.nbSeeders)", systemImage: "arrow.up.circle.fill")
@@ -194,15 +194,15 @@ struct QBitSearchView: View {
                     if downloadingNum == item.num {
                         ProgressView()
                             .controlSize(.mini)
-                            .tint(AppColors.accent)
+                            .tint(AppColors.accentPrimary)
                             .padding(8)
                     } else {
                         Image(systemName: "icloud.and.arrow.down.fill")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppColors.accent)
+                            .foregroundColor(AppColors.accentPrimary)
                             .padding(8)
                             .background(
-                                Circle().fill(AppColors.accent.opacity(0.1))
+                                Circle().fill(AppColors.accentPrimary.opacity(0.1))
                             )
                     }
                 }
@@ -212,7 +212,7 @@ struct QBitSearchView: View {
             if !item.siteUrl.isEmpty {
                 Text(item.siteUrl)
                     .font(.system(size: 11, weight: .regular))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(AppColors.textTertiary)
                     .lineLimit(1)
             }
         }

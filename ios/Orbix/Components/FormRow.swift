@@ -15,7 +15,7 @@ struct FormRow<Content: View>: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(AppColors.textSecondary)
                 .frame(width: 24, alignment: .center)
 
             VStack(alignment: .leading, spacing: 0) {
@@ -37,12 +37,12 @@ struct IconTextFieldRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(AppColors.textSecondary)
                 .frame(width: 24)
 
             TextField(placeholder, text: $text)
                 .font(.system(size: 15))
-                .foregroundColor(AppColors.label)
+                .foregroundColor(AppColors.textPrimary)
                 .textInputAutocapitalization(disableAutocap ? .never : .sentences)
                 .disableAutocorrection(disableAutocap)
         }

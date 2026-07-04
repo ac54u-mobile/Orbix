@@ -14,11 +14,11 @@ struct WelcomeView: View {
 
                 Text("Orbix")
                     .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(AppColors.label)
+                    .foregroundColor(AppColors.textPrimary)
 
                 Text(OrbixStrings.welcomeQBittorrent)
                     .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(AppColors.secondaryLabel)
+                    .foregroundColor(AppColors.textSecondary)
 
                 VStack(spacing: 12) {
                     FeatureTile(
@@ -56,8 +56,8 @@ struct WelcomeView: View {
                     .frame(height: 56)
                     .background(
                         RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                            .fill(AppColors.accent)
-                            .shadow(color: AppColors.accent.opacity(0.3), radius: 12, x: 0, y: 6)
+                            .fill(AppColors.accentPrimary)
+                            .shadow(color: AppColors.accentPrimary.opacity(0.3), radius: 12, x: 0, y: 6)
                     )
                 }
                 .buttonStyle(ScaleButtonStyle())
@@ -85,22 +85,22 @@ private struct FeatureTile: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(AppColors.accent.opacity(0.15))
+                    .fill(AppColors.accentPrimary.opacity(0.15))
                     .frame(width: 48, height: 48)
 
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(AppColors.accent)
+                    .foregroundColor(AppColors.accentPrimary)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(AppColors.label)
+                    .foregroundColor(AppColors.textPrimary)
 
                 Text(subtitle)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(AppColors.secondaryLabel)
+                    .foregroundColor(AppColors.textSecondary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }

@@ -38,10 +38,10 @@ struct LoginView: View {
                         VStack(spacing: 6) {
                             Text("Orbix")
                                 .font(.system(size: 22, weight: .bold, design: .rounded))
-                                .foregroundColor(AppColors.label)
+                                .foregroundColor(AppColors.textPrimary)
                             Text(OrbixStrings.infoConfigHint)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(AppColors.secondaryLabel)
+                                .foregroundColor(AppColors.textSecondary)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -86,7 +86,7 @@ struct LoginView: View {
                                 showPassword.toggle()
                             } label: {
                                 Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .foregroundColor(AppColors.secondaryLabel)
+                                    .foregroundColor(AppColors.textSecondary)
                             }
                             .buttonStyle(.plain)
                         }
@@ -98,10 +98,10 @@ struct LoginView: View {
                 Section {
                     HStack {
                         Image(systemName: "lock.shield.fill")
-                            .foregroundColor(AppColors.secondaryLabel)
+                            .foregroundColor(AppColors.textSecondary)
                             .frame(width: 28, alignment: .leading)
                         Toggle(OrbixStrings.miscEnableHTTPS, isOn: $https)
-                            .tint(AppColors.accent)
+                            .tint(AppColors.accentPrimary)
                     }
                 } footer: {
                     if https {
@@ -118,7 +118,7 @@ struct LoginView: View {
                             Spacer()
                             if isTesting {
                                 ProgressView()
-                                    .tint(AppColors.accent)
+                                    .tint(AppColors.accentPrimary)
                             } else {
                                 Text(OrbixStrings.btnTestConnection)
                                     .font(.system(size: 15, weight: .semibold))

@@ -16,7 +16,7 @@ struct SplashView: View {
                     .opacity(isAnimating ? 1 : 0)
 
                 Text("Orbix")
-                    .largeTitle()
+                    .titleLarge()
                     .opacity(isAnimating ? 1 : 0)
                     .offset(y: isAnimating ? 0 : 20)
 
@@ -30,7 +30,7 @@ struct SplashView: View {
                 }
 
                 ProgressView()
-                    .tint(AppColors.secondaryLabel)
+                    .tint(AppColors.textSecondary)
                     .padding(.top, 40)
                     .opacity(isAnimating ? 1 : 0)
             }

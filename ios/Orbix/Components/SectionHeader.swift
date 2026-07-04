@@ -1,34 +1,40 @@
 import SwiftUI
 
+// MARK: - Section Header
+
 struct SectionHeader: View {
     let title: String
-    var icon: String?
-
-    init(title: String, icon: String? = nil) {
-        self.title = title
-        self.icon = icon
-    }
+    var icon: String? = nil
+    var showDivider: Bool = false
 
     var body: some View {
-        HStack(spacing: 6) {
-            if let icon = icon {
-                Image(systemName: icon)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color(.tertiaryLabel))
+        VStack(spacing: 0) {
+            HStack(spacing: AppSpacing.xs) {
+                if let icon {
+                    Image(systemName: icon)
+                        .iconSymbol(AppColors.textTertiary)
+                }
+
+                Text(title)
+                    .descriptionSmall(AppColors.textSecondary)
+                    .fontWeight(.semibold)
+                    .textCase(.uppercase)
             }
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.secondary)
-                .textCase(.uppercase)
+            .padding(.leading, AppSpacing.lg)
+            .padding(.bottom, AppSpacing.xs)
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if showDivider {
+                Rectangle()
+                    .fill(AppColors.hairlineDivider)
+                    .frame(height: 0.5)
+            }
         }
-        .padding(.leading, 16)
-        .padding(.bottom, 6)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 #if DEBUG
 #Preview {
-    SectionHeader(title: "示例标题")
+    SectionHeader(title: "示例标题", icon: "arrow.down", showDivider: true)
 }
 #endif

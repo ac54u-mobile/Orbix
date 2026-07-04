@@ -16,7 +16,7 @@ struct CopyButton: View {
         } label: {
             Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
                 .font(.system(size: 14))
-                .foregroundColor(copied ? AppColors.success : AppColors.accent)
+                .foregroundColor(copied ? AppColors.success : AppColors.accentPrimary)
                 .padding(4)
         }
         .buttonStyle(.plain)

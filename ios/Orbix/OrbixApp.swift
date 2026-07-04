@@ -16,7 +16,7 @@ struct OrbixApp: App {
             }
             .environmentObject(appLock)
             .preferredColorScheme(.light)
-            .tint(AppColors.accent)
+            .tint(AppColors.accentPrimary)
         }
     }
 }

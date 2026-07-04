@@ -12,10 +12,10 @@ struct ServerRow: View {
                         .bodyFont()
                     Image(systemName: server.https ? "lock.fill" : "lock.open")
                         .font(.caption2)
-                        .foregroundColor(server.https ? AppColors.success : AppColors.secondaryLabel)
+                        .foregroundColor(server.https ? AppColors.success : AppColors.textSecondary)
                 }
                 Text(server.url)
-                    .subtitle()
+                    .descriptionSmall()
                 Text(server.username)
                     .caption()
             }
@@ -25,7 +25,7 @@ struct ServerRow: View {
             if showChevron {
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(AppColors.textTertiary)
             }
         }
         .padding(.vertical, 4)

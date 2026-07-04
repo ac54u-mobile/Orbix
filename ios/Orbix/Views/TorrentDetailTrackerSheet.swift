@@ -28,7 +28,7 @@ struct TorrentDetailTrackerSheet: View {
                         } label: {
                             Image(systemName: "plus.circle.fill")
                                 .font(.system(size: 22))
-                                .foregroundColor(newTrackerURL.isEmpty ? AppColors.tertiaryLabel : AppColors.accent)
+                                .foregroundColor(newTrackerURL.isEmpty ? AppColors.textTertiary : AppColors.accentPrimary)
                         }
                         .disabled(newTrackerURL.isEmpty)
                     }
@@ -49,7 +49,7 @@ struct TorrentDetailTrackerSheet: View {
                                 Spacer()
                                 Text("\(OrbixStrings.miscSeedsPrefix)\(tracker.numSeeds)")
                                     .font(.system(size: 11))
-                                    .foregroundColor(Color(.tertiaryLabel))
+                                    .foregroundColor(AppColors.textTertiary)
                             }
                             Text(tracker.url)
                                 .font(.system(size: 12, design: .monospaced))
@@ -77,14 +77,14 @@ struct TorrentDetailTrackerSheet: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.backgroundBase)
+            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(OrbixStrings.navTrackerManagement)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(OrbixStrings.btnDone) { dismiss() }
                         .fontWeight(.medium)
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
             }
         }

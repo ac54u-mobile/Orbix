@@ -13,7 +13,7 @@ struct TorrentDetailFileSheet: View {
                     let file = files[index]
                     HStack(spacing: 10) {
                         Image(systemName: selectedFileIndices.contains(index) ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(selectedFileIndices.contains(index) ? AppColors.accent : AppColors.tertiaryLabel)
+                            .foregroundColor(selectedFileIndices.contains(index) ? AppColors.accentPrimary : AppColors.textTertiary)
                             .onTapGesture {
                                 if selectedFileIndices.contains(index) {
                                     selectedFileIndices.remove(index)
@@ -40,7 +40,7 @@ struct TorrentDetailFileSheet: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.backgroundBase)
+            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(OrbixStrings.navFilePriority)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -58,12 +58,12 @@ struct TorrentDetailFileSheet: View {
                         } label: {
                             Text("\(OrbixStrings.miscBatch) (\(selectedFileIndices.count))")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.accent)
+                                .foregroundColor(AppColors.accentPrimary)
                         }
                     }
                     Button(OrbixStrings.btnDone) { dismiss(); selectedFileIndices = [] }
                         .fontWeight(.medium)
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
             }
         }
@@ -72,10 +72,10 @@ struct TorrentDetailFileSheet: View {
     private func priorityBadge(_ priority: Int) -> some View {
         let (label, color): (String, Color) = {
             switch priority {
-            case 0: return (OrbixStrings.btnIgnore, AppColors.secondaryLabel)
-            case 6: return (OrbixStrings.btnHigh, AppColors.accent)
+            case 0: return (OrbixStrings.btnIgnore, AppColors.textSecondary)
+            case 6: return (OrbixStrings.btnHigh, AppColors.accentPrimary)
             case 7: return (OrbixStrings.btnMax, AppColors.success)
-            default: return (OrbixStrings.btnNormal, AppColors.tertiaryLabel)
+            default: return (OrbixStrings.btnNormal, AppColors.textTertiary)
             }
         }()
         return Text(label)

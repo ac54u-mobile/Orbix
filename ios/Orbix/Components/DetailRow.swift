@@ -1,39 +1,39 @@
 import SwiftUI
 
+// MARK: - Detail Row
+
 struct DetailRow: View {
     let icon: String
     let iconColor: Color
     let label: String
     let value: String
-    var valueColor: Color = .secondary
+    var valueColor: Color = AppColors.textSecondary
 
     var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(iconColor.opacity(0.13))
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(iconColor)
-            }
-            .frame(width: 28, height: 28)
+        HStack(spacing: AppSpacing.md) {
+            Image(systemName: icon)
+                .iconSymbol(iconColor)
 
             Text(label)
-                .font(.system(size: 15))
-                .foregroundColor(.primary)
-            Spacer()
+                .bodyFont()
+
+            Spacer(minLength: 0)
+
             Text(value)
-                .font(.system(size: 15, design: .monospaced))
+                .font(.system(size: 15, weight: .medium, design: .monospaced))
                 .foregroundColor(valueColor)
                 .multilineTextAlignment(.trailing)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
+        .padding(.vertical, AppSpacing.sm)
+        .padding(.horizontal, AppSpacing.lg)
+        .frame(height: 44)
     }
 }
 
 #if DEBUG
 #Preview {
-    DetailRow(icon: "arrow.down", iconColor: .blue, label: "下载速度", value: "10.5 MB/s")
+    DetailRow(icon: "arrow.down", iconColor: AppColors.accentPrimary, label: "下载速度", value: "10.5 MB/s")
+        .padding()
+        .background(AppColors.gridBackgroundGradient)
 }
 #endif

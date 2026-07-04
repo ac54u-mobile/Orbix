@@ -1,91 +1,113 @@
 import SwiftUI
 
-struct StarryBackground: View {
-    @State private var points: [StarPoint] = []
+// MARK: - Orbix Grid Background
+
+struct OrbixGridBackground: View {
+    @State private var cachedGrid: [GridLine] = []
+    private let gridSpacing: CGFloat = 120
 
     var body: some View {
         ZStack {
-            AppColors.backgroundGradient
+            AppColors.gridBackgroundGradient
 
             Canvas { context, size in
-                for point in points {
-                    let rect = CGRect(x: point.x * size.width,
-                                      y: point.y * size.height,
-                                      width: point.radius,
-                                      height: point.radius)
-                    let path = Path(ellipseIn: rect)
-                    context.fill(path, with: .color(.white.opacity(point.opacity)))
+                let lines = cachedGrid.isEmpty ? generateGridLines(size: size) : cachedGrid
+
+                let path = Path { p in
+                    for line in lines {
+                        p.move(to: line.start)
+                        p.addLine(to: line.end)
+                    }
                 }
+                context.stroke(
+                    path,
+                    with: .color(Color.primary.opacity(0.015)),
+                    style: StrokeStyle(lineWidth: 0.5, lineCap: .round)
+                )
             }
             .drawingGroup()
         }
         .ignoresSafeArea()
         .onAppear {
-            if points.isEmpty {
-                points = generateStars(count: 120)
+            if cachedGrid.isEmpty {
+                cachedGrid = generateGridLines(
+                    size: CGSize(
+                        width: UIScreen.main.bounds.width,
+                        height: UIScreen.main.bounds.height
+                    )
+                )
             }
         }
     }
-}
 
-private struct StarPoint {
-    let x: CGFloat
-    let y: CGFloat
-    let radius: CGFloat
-    let opacity: Double
-}
+    private func generateGridLines(size: CGSize) -> [GridLine] {
+        var lines: [GridLine] = []
 
-private func generateStars(count: Int) -> [StarPoint] {
-    var rng = SeededRandom(seed: 42)
-    return (0..<count).map { _ in
-        StarPoint(
-            x: CGFloat(rng.next()),
-            y: CGFloat(rng.next()),
-            radius: CGFloat(rng.range(0.5...2.0)),
-            opacity: Double.random(in: 0.15...0.55)
-        )
+        var x: CGFloat = gridSpacing
+        while x < size.width {
+            lines.append(GridLine(
+                start: CGPoint(x: x, y: 0),
+                end: CGPoint(x: x, y: size.height)
+            ))
+            x += gridSpacing
+        }
+
+        var y: CGFloat = gridSpacing
+        while y < size.height {
+            lines.append(GridLine(
+                start: CGPoint(x: 0, y: y),
+                end: CGPoint(x: size.width, y: y)
+            ))
+            y += gridSpacing
+        }
+
+        return lines
     }
 }
 
-private struct SeededRandom {
-    private var state: UInt64
+private struct GridLine {
+    let start: CGPoint
+    let end: CGPoint
+}
 
-    init(seed: UInt64) {
-        state = seed
-    }
+// MARK: - Pure Gradient Background (Fallback)
 
-    mutating func next() -> Double {
-        state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
-        let t = UInt64((state &* (state ^ (state >> 33))) &+ 2_525_870_597_928_498_105)
-        return Double(t % 1_000_000) / 1_000_000.0
-    }
-
-    mutating func range(_ range: ClosedRange<Double>) -> Double {
-        range.lowerBound + next() * (range.upperBound - range.lowerBound)
+struct GradientBackground: View {
+    var body: some View {
+        AppColors.gridBackgroundGradient.ignoresSafeArea()
     }
 }
 
 // MARK: - View Modifier
 
-struct StarryBackgroundModifier: ViewModifier {
+struct OrbixBackgroundModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
                 ZStack {
-                    AppColors.backgroundGradient
+                    AppColors.gridBackgroundGradient
 
                     Canvas { context, size in
-                        let seed: [StarPoint] = generateStars(count: 120)
-                        for point in seed {
-                            let rect = CGRect(
-                                x: point.x * size.width,
-                                y: point.y * size.height,
-                                width: point.radius,
-                                height: point.radius
-                            )
-                            context.fill(Path(ellipseIn: rect),
-                                         with: .color(.white.opacity(point.opacity)))
+                        let spacing: CGFloat = 120
+                        var x: CGFloat = spacing
+                        var y: CGFloat = spacing
+                        let path = Path { p in
+                            while x < size.width {
+                                p.move(to: CGPoint(x: x, y: 0))
+                                p.addLine(to: CGPoint(x: x, y: size.height))
+                                x += spacing
+                            }
+                            while y < size.height {
+                                p.move(to: CGPoint(x: 0, y: y))
+                                p.addLine(to: CGPoint(x: size.width, y: y))
+                                y += spacing
+                            }
                         }
+                        context.stroke(
+                            path,
+                            with: .color(Color.primary.opacity(0.015)),
+                            style: StrokeStyle(lineWidth: 0.5, lineCap: .round)
+                        )
                     }
                     .drawingGroup()
                 }
@@ -95,15 +117,7 @@ struct StarryBackgroundModifier: ViewModifier {
 }
 
 extension View {
-    func starryBackground() -> some View {
-        modifier(StarryBackgroundModifier())
-    }
-}
-
-// MARK: - Pure Gradient Background (no stars)
-
-struct GradientBackground: View {
-    var body: some View {
-        AppColors.backgroundGradient.ignoresSafeArea()
+    func orbixBackground() -> some View {
+        modifier(OrbixBackgroundModifier())
     }
 }

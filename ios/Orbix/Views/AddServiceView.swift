@@ -56,36 +56,36 @@ struct AddServiceView: View {
 
                 Section {
                     HStack {
-                        Text(OrbixStrings.sectionName).foregroundColor(AppColors.secondaryLabel)
+                        Text(OrbixStrings.sectionName).foregroundColor(AppColors.textSecondary)
                         Spacer()
                         TextField(OrbixStrings.phOptional, text: $name)
                             .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(AppColors.textPrimary)
                     }
 
                     HStack {
-                        Text(OrbixStrings.sectionHost).foregroundColor(AppColors.secondaryLabel)
+                        Text(OrbixStrings.sectionHost).foregroundColor(AppColors.textSecondary)
                         Spacer()
                         TextField(OrbixStrings.phIP, text: $host)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.URL)
                             .autocapitalization(.none)
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(AppColors.textPrimary)
                     }
 
                     HStack {
-                        Text(OrbixStrings.miscPort).foregroundColor(AppColors.secondaryLabel)
+                        Text(OrbixStrings.miscPort).foregroundColor(AppColors.textSecondary)
                         Spacer()
                         TextField(defaultPort, text: $port)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad)
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(AppColors.textPrimary)
                     }
 
                     Toggle(isOn: $https) {
-                        Text(OrbixStrings.labelHTTPS).foregroundColor(AppColors.secondaryLabel)
+                        Text(OrbixStrings.labelHTTPS).foregroundColor(AppColors.textSecondary)
                     }
-                    .tint(AppColors.accent)
+                    .tint(AppColors.accentPrimary)
                 } header: {
                     Text(OrbixStrings.sectionConnection)
                 }
@@ -93,15 +93,15 @@ struct AddServiceView: View {
                 if kind == .qBittorrent {
                     Section {
                         HStack {
-                            Text(OrbixStrings.miscUsername).foregroundColor(AppColors.secondaryLabel)
+                            Text(OrbixStrings.miscUsername).foregroundColor(AppColors.textSecondary)
                             Spacer()
                             TextField(OrbixStrings.phUsername, text: $username)
                                 .multilineTextAlignment(.trailing)
                                 .autocapitalization(.none)
-                                .foregroundColor(AppColors.label)
+                                .foregroundColor(AppColors.textPrimary)
                         }
                         HStack {
-                            Text(OrbixStrings.miscPassword).foregroundColor(AppColors.secondaryLabel)
+                            Text(OrbixStrings.miscPassword).foregroundColor(AppColors.textSecondary)
                             Spacer()
                             Group {
                                 if showPassword {
@@ -111,13 +111,13 @@ struct AddServiceView: View {
                                 }
                             }
                             .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(AppColors.textPrimary)
                             Button {
                                 showPassword.toggle()
                             } label: {
                                 Image(systemName: showPassword ? "eye.slash" : "eye")
                                     .font(.caption)
-                                    .foregroundColor(AppColors.tertiaryLabel)
+                                    .foregroundColor(AppColors.textTertiary)
                             }
                         }
                     } header: {
@@ -126,7 +126,7 @@ struct AddServiceView: View {
                 } else {
                     Section {
                         HStack {
-                            Text(OrbixStrings.labelAPIKey).foregroundColor(AppColors.secondaryLabel)
+                            Text(OrbixStrings.labelAPIKey).foregroundColor(AppColors.textSecondary)
                             Spacer()
                             Group {
                                 if showApiKey {
@@ -136,13 +136,13 @@ struct AddServiceView: View {
                                 }
                             }
                             .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(AppColors.textPrimary)
                             Button {
                                 showApiKey.toggle()
                             } label: {
                                 Image(systemName: showApiKey ? "eye.slash" : "eye")
                                     .font(.caption)
-                                    .foregroundColor(AppColors.tertiaryLabel)
+                                    .foregroundColor(AppColors.textTertiary)
                             }
                         }
                     } header: {
@@ -155,22 +155,22 @@ struct AddServiceView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.immediately)
-            .background(AppColors.backgroundBase)
+            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(existing != nil ? OrbixStrings.navEditService : OrbixStrings.navAddService)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(OrbixStrings.btnCancel) { dismiss() }
-                        .foregroundColor(AppColors.secondaryLabel)
+                        .foregroundColor(AppColors.textSecondary)
                         .disabled(isTesting)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if isTesting {
-                        ProgressView().tint(AppColors.accent)
+                        ProgressView().tint(AppColors.accentPrimary)
                     } else {
                         Button(OrbixStrings.btnConnect) { Task { await testAndSave() } }
                             .fontWeight(.bold)
-                            .foregroundColor(host.isEmpty ? AppColors.secondaryLabel : AppColors.accent)
+                            .foregroundColor(host.isEmpty ? AppColors.textSecondary : AppColors.accentPrimary)
                             .disabled(host.isEmpty)
                     }
                 }

@@ -34,9 +34,9 @@ struct TorrentDetailAdvancedSheet: View {
                             .padding(.vertical, 8)
                             .background(
                                 RoundedRectangle(cornerRadius: AppRadius.sm)
-                                    .fill(newLocation.isEmpty ? AppColors.elevated : AppColors.accent)
+                                    .fill(newLocation.isEmpty ? AppColors.elevated : AppColors.accentPrimary)
                             )
-                            .foregroundColor(newLocation.isEmpty ? AppColors.secondaryLabel : AppColors.label)
+                            .foregroundColor(newLocation.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
                     }
                     .disabled(newLocation.isEmpty)
                 } header: {
@@ -61,9 +61,9 @@ struct TorrentDetailAdvancedSheet: View {
                             .padding(.vertical, 8)
                             .background(
                                 RoundedRectangle(cornerRadius: AppRadius.sm)
-                                    .fill(newName.isEmpty ? AppColors.elevated : AppColors.accent)
+                                    .fill(newName.isEmpty ? AppColors.elevated : AppColors.accentPrimary)
                             )
-                            .foregroundColor(newName.isEmpty ? AppColors.secondaryLabel : AppColors.label)
+                            .foregroundColor(newName.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
                     }
                     .disabled(newName.isEmpty)
                 } header: {
@@ -102,7 +102,7 @@ struct TorrentDetailAdvancedSheet: View {
                             Spacer()
                             Image(systemName: "chevron.forward")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(Color(.tertiaryLabel))
+                                .foregroundColor(AppColors.textTertiary)
                         }
                     }
                 } header: {
@@ -113,14 +113,14 @@ struct TorrentDetailAdvancedSheet: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.backgroundBase)
+            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(OrbixStrings.navAdvancedControl)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(OrbixStrings.btnDone) { dismiss() }
                         .fontWeight(.medium)
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
             }
         }

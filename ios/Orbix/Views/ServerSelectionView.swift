@@ -18,7 +18,7 @@ struct ServerSelectionView: View {
                 GlowingLogo(size: 88)
 
                 Text(OrbixStrings.serverSelect)
-                    .largeTitle()
+                    .titleLarge()
 
                 if servers.isEmpty {
                     VStack(spacing: 16) {
@@ -27,7 +27,7 @@ struct ServerSelectionView: View {
                             .foregroundColor(AppColors.placeholder)
 
                         Text(OrbixStrings.serverNotAdded)
-                            .subtitle()
+                            .descriptionSmall()
 
                         Button {
                             AppHaptics.light()
@@ -40,8 +40,8 @@ struct ServerSelectionView: View {
                                 .padding(.vertical, 12)
                                 .background(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(AppColors.accent)
-                                        .shadow(color: AppColors.accent.opacity(0.25), radius: 10, y: 4)
+                                        .fill(AppColors.accentPrimary)
+                                        .shadow(color: AppColors.accentPrimary.opacity(0.25), radius: 10, y: 4)
                                 )
                         }
                         .buttonStyle(ScaleButtonStyle())
@@ -70,7 +70,7 @@ struct ServerSelectionView: View {
                             Image(systemName: "gearshape")
                             Text(OrbixStrings.btnManageServers)
                         }
-                        .subtitle(AppColors.accent)
+                        .descriptionSmall(AppColors.accentPrimary)
                     }
                     .padding(.bottom, 20)
                 }

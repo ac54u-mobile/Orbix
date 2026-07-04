@@ -93,16 +93,6 @@ struct TorrentListView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    colors: [
-                        Color(red: 1.0, green: 0.94, blue: 0.97),
-                        Color(red: 0.90, green: 0.95, blue: 1.0)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-
                 if isLoading {
                     loadingContent
                 } else if filteredTorrents.isEmpty {
@@ -111,12 +101,14 @@ struct TorrentListView: View {
                     torrentList
                 }
             }
+            .orbixBackground()
             .safeAreaInset(edge: .bottom) {
                 bottomInsetContent
             }
             .animation(AppMotion.standardCurve, value: globalDlSpeed > 0 || globalUpSpeed > 0)
             .animation(AppMotion.mediumAnim(), value: isEditMode)
             .animation(AppMotion.mediumAnim(), value: selectedHashes.count)
+            .animation(AppMotion.mediumAnim(), value: isLoading)
             .navigationTitle(OrbixStrings.tabTorrents)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
@@ -206,61 +198,26 @@ struct TorrentListView: View {
             if isEditMode {
                 toggleSelection(torrent.hash)
             } else {
+                AppHaptics.light()
                 selectedHash = torrent.hash
             }
         }
     }
 
-    // 骨架屏与真实行同构 — 数据到达时布局零跳动
     private var loadingContent: some View {
-        VStack(spacing: 0) {
-            ForEach(0..<6, id: \.self) { _ in
-                skeletonRow
-            }
-            Spacer()
-        }
-        .padding(.top, 8)
-        .transition(.opacity)
-    }
-
-    private var skeletonRow: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 14) {
-                SkeletonBar(height: 36, width: 36)
-                VStack(alignment: .leading, spacing: 8) {
-                    SkeletonBar(height: 15, width: 220)
-                    SkeletonBar(height: 12, width: 150)
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            Divider()
-        }
+        SkeletonList(count: 6)
+            .padding(.top, AppSpacing.sm)
+            .transition(.opacity)
     }
 
     private var emptyContent: some View {
-        VStack(spacing: 14) {
-            Image(systemName: filter == .all ? "tray" : "line.3.horizontal.decrease.circle")
-                .font(.system(size: 44, weight: .light))
-                .foregroundColor(Color(.tertiaryLabel))
-            Text(filter == .all ? OrbixStrings.msgNoTorrents : OrbixStrings.msgNoMatchingTorrents)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.secondary)
-            if filter == .all {
-                Button {
-                    AppHaptics.light()
-                    showAddTorrent = true
-                } label: {
-                    Text(OrbixStrings.navAddTorrent)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(AppColors.accent)
-                }
-                .buttonStyle(ScaleButtonStyle())
-                .padding(.top, 4)
-            }
-        }
-        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+        EmptyStateView(
+            icon: filter == .all ? "tray" : "line.3.horizontal.decrease.circle",
+            title: filter == .all ? OrbixStrings.msgNoTorrents : OrbixStrings.msgNoMatchingTorrents,
+            subtitle: filter == .all ? String(localized: "点击右上角 + 添加新任务", comment: "") : String(localized: "尝试切换到其他过滤条件", comment: ""),
+            actionTitle: filter == .all ? OrbixStrings.navAddTorrent : nil,
+            action: filter == .all ? { showAddTorrent = true } : nil
+        )
     }
 
     private var bottomInsetContent: some View {
@@ -282,6 +239,7 @@ struct TorrentListView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
+                AppHaptics.medium()
                 if isEditMode {
                     selectedHashes.removeAll()
                     isEditMode = false
@@ -291,18 +249,19 @@ struct TorrentListView: View {
             } label: {
                 Text(isEditMode ? OrbixStrings.btnDone : OrbixStrings.btnEdit)
                     .fontWeight(.medium)
-                    .foregroundColor(AppColors.accent)
+                    .foregroundColor(AppColors.accentPrimary)
             }
         }
         ToolbarItem(placement: .navigationBarLeading) {
             if !isEditMode {
                 Button { showSpeedPanel = true } label: {
                     Image(systemName: altSpeedEnabled ? "tortoise.fill" : "speedometer")
-                        .foregroundColor(altSpeedEnabled ? AppColors.warning : AppColors.accent)
+                        .foregroundColor(altSpeedEnabled ? AppColors.warning : AppColors.accentPrimary)
                 }
                 .accessibilityLabel(OrbixStrings.sectionGlobalSpeedLimit)
             } else {
                 Button {
+                    AppHaptics.selection()
                     if selectedHashes.count == filteredTorrents.count {
                         selectedHashes.removeAll()
                     } else {
@@ -311,7 +270,7 @@ struct TorrentListView: View {
                 } label: {
                     Text(selectedHashes.count == filteredTorrents.count ? OrbixStrings.btnDeselectAll : OrbixStrings.btnSelectAll)
                         .fontWeight(.medium)
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
             }
         }
@@ -332,7 +291,7 @@ struct TorrentListView: View {
                     }
                 } label: {
                     Image(systemName: "arrow.up.arrow.down")
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
                 .accessibilityLabel(OrbixStrings.sortName)
             }
@@ -351,7 +310,7 @@ struct TorrentListView: View {
 
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            LazyHStack(spacing: AppSpacing.sm) {
                 ForEach(TorrentFilter.allCases, id: \.self) { f in
                     Button {
                         AppHaptics.selection()
@@ -359,35 +318,35 @@ struct TorrentListView: View {
                     } label: {
                         HStack(spacing: 5) {
                             Image(systemName: f.icon)
-                                .font(.system(size: 12, weight: .semibold))
+                                .sfSymbolFrame()
                             Text(f.displayName)
-                                .font(.system(size: 13, weight: filter == f ? .bold : .medium))
+                                .font(.system(size: 14, weight: .semibold))
                         }
-                        .foregroundColor(filter == f ? .white : .primary)
+                        .foregroundColor(filter == f ? .white : AppColors.textPrimary)
                         .padding(.vertical, 7)
                         .padding(.horizontal, 13)
                         .background(
                             ZStack {
                                 if filter == f {
                                     Capsule()
-                                        .fill(AppColors.accent)
-                                        .matchedGeometryEffect(id: "pillBg", in: animationNamespace)
+                                        .fill(AppColors.accentPrimary)
+                                        .matchedGeometryEffect(id: "filterPill", in: animationNamespace)
                                 } else {
                                     Capsule()
-                                        .fill(Color(.systemBackground).opacity(0.8))
-                                    Capsule()
-                                        .stroke(Color(.separator), lineWidth: 0.5)
+                                        .fill(Color(.tertiarySystemFill).opacity(0.6))
                                 }
                             }
                         )
                     }
+                    .buttonStyle(ScaleButtonStyle())
                     .accessibilityLabel(f.displayName)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, AppSpacing.lg)
             .padding(.vertical, 10)
         }
         .background(.ultraThinMaterial)
+        .ignoresSafeArea(edges: .horizontal)
     }
 
     // MARK: - Selection
@@ -395,7 +354,7 @@ struct TorrentListView: View {
         let isSelected = selectedHashes.contains(torrent.hash)
         return Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
             .font(.system(size: 22))
-            .foregroundColor(isSelected ? AppColors.accent : AppColors.tertiaryLabel)
+            .foregroundColor(isSelected ? AppColors.accentPrimary : AppColors.textTertiary)
             .frame(width: 28)
     }
 
@@ -511,10 +470,10 @@ struct TorrentListView: View {
 
     // MARK: - Batch Actions
     private var batchActionBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.md) {
             Text(String(format: OrbixStrings.miscSelectedCount, selectedHashes.count))
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(AppColors.textSecondary)
 
             Spacer()
 
@@ -524,6 +483,7 @@ struct TorrentListView: View {
                 Label(OrbixStrings.btnBatchPause, systemImage: "pause.fill")
                     .font(.system(size: 13, weight: .medium))
             }
+            .buttonStyle(ScaleButtonStyle())
             .tint(AppColors.warning)
 
             Button {
@@ -532,6 +492,7 @@ struct TorrentListView: View {
                 Label(OrbixStrings.btnBatchResume, systemImage: "play.fill")
                     .font(.system(size: 13, weight: .medium))
             }
+            .buttonStyle(ScaleButtonStyle())
             .tint(AppColors.success)
 
             Button(role: .destructive) {
@@ -540,15 +501,21 @@ struct TorrentListView: View {
                 Label(OrbixStrings.btnBatchDelete, systemImage: "trash")
                     .font(.system(size: 13, weight: .medium))
             }
+            .buttonStyle(ScaleButtonStyle())
+            .tint(AppColors.danger)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
                 .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
+                        .stroke(AppColors.glassBorder, lineWidth: 0.5)
+                )
         )
-        .padding(.horizontal, 16)
-        .padding(.bottom, 8)
+        .padding(.horizontal, AppSpacing.lg)
+        .padding(.bottom, AppSpacing.sm)
     }
 
     private func executeBatchAction(_ type: SingleActionType) {
@@ -667,7 +634,7 @@ struct TorrentListView: View {
                 Section {
                     HStack {
                         Label(OrbixStrings.labelAltSpeedMode, systemImage: "tortoise")
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(AppColors.textPrimary)
                         Spacer()
                         Toggle("", isOn: $altSpeedEnabled)
                             .labelsHidden()
@@ -703,13 +670,13 @@ struct TorrentListView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.backgroundBase)
+            .orbixBackground()
             .navigationTitle(OrbixStrings.navGlobalControl)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(OrbixStrings.btnDone) { showSpeedPanel = false }
-                        .fontWeight(.medium).foregroundColor(AppColors.accent)
+                        .fontWeight(.medium).foregroundColor(AppColors.accentPrimary)
                 }
             }
         }

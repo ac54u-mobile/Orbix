@@ -50,7 +50,7 @@ struct StatsView: View {
             HStack(spacing: 12) {
                 speedCard(
                     icon: "arrow.down",
-                    color: AppColors.accent,
+                    color: AppColors.accentPrimary,
                     label: String(localized: "下载速度", comment: "Download speed"),
                     value: transfer.flatMap { formatSpeed($0.dlInfoSpeed) } ?? "0 B/s"
                 )
@@ -96,7 +96,7 @@ struct StatsView: View {
     // MARK: - Server
     private var serverSection: some View {
         Section {
-            statRow(icon: "server.rack", color: AppColors.accent,
+            statRow(icon: "server.rack", color: AppColors.accentPrimary,
                     label: "qBittorrent",
                     value: serverVersion.isEmpty ? "—" : serverVersion)
             .listRowBackground(Color.clear)
@@ -110,7 +110,7 @@ struct StatsView: View {
     private var historySection: some View {
         if let s = serverState {
             Section {
-                statRow(icon: "arrow.down.circle.fill", color: AppColors.accent,
+                statRow(icon: "arrow.down.circle.fill", color: AppColors.accentPrimary,
                         label: String(localized: "总下载量", comment: "Total downloaded"),
                         value: formatBytes(s.alltimeDl))
                     .listRowBackground(Color.clear)
@@ -134,7 +134,7 @@ struct StatsView: View {
     private var sessionSection: some View {
         let t = transfer
         return Section {
-            statRow(icon: "tray.and.arrow.down", color: AppColors.accent.opacity(0.7),
+            statRow(icon: "tray.and.arrow.down", color: AppColors.accentPrimary.opacity(0.7),
                     label: String(localized: "已下载", comment: "Downloaded"),
                     value: t.flatMap { formatBytes($0.dlInfoData) } ?? "—")
                 .listRowBackground(Color.clear)
@@ -151,7 +151,7 @@ struct StatsView: View {
     // MARK: - Server Info
     private var serverInfoSection: some View {
         Section {
-            statRow(icon: "internaldrive", color: AppColors.accent,
+            statRow(icon: "internaldrive", color: AppColors.accentPrimary,
                     label: String(localized: "可用磁盘空间", comment: "Free disk space"),
                     value: freeSpaceText)
                 .listRowBackground(Color.clear)
@@ -167,7 +167,7 @@ struct StatsView: View {
                     value: serverState.map { "\($0.queuedIoJobs)" } ?? "—")
                 .listRowBackground(Color.clear)
 
-            statRow(icon: "network", color: AppColors.accent.opacity(0.6),
+            statRow(icon: "network", color: AppColors.accentPrimary.opacity(0.6),
                     label: String(localized: "DHT 节点", comment: "DHT nodes"),
                     value: dhtNodesText)
                 .listRowBackground(Color.clear)
@@ -195,7 +195,7 @@ struct StatsView: View {
                     value: "\(torrents.count)")
                 .listRowBackground(Color.clear)
 
-            statRow(icon: "arrow.down.circle", color: AppColors.accent,
+            statRow(icon: "arrow.down.circle", color: AppColors.accentPrimary,
                     label: OrbixStrings.statsDownloading,
                     value: "\(dl)")
                 .listRowBackground(Color.clear)
@@ -205,7 +205,7 @@ struct StatsView: View {
                     value: "\(up)")
                 .listRowBackground(Color.clear)
 
-            statRow(icon: "pause.circle", color: Color(.tertiaryLabel),
+            statRow(icon: "pause.circle", color: AppColors.textTertiary,
                     label: OrbixStrings.statsPaused,
                     value: "\(paused)")
                 .listRowBackground(Color.clear)

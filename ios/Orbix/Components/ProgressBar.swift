@@ -3,7 +3,7 @@ import SwiftUI
 struct ProgressBar: View {
     let progress: Double
     var height: CGFloat = 0.5  // hairline: 1 pixel (0.5 pt on 2x display)
-    var color: Color = AppColors.accent
+    var color: Color = AppColors.accentPrimary
 
     var body: some View {
         GeometryReader { geo in
@@ -33,7 +33,7 @@ struct SpeedBadge: View {
 
     var body: some View {
         Text(formatSpeed(speed))
-            .caption(AppColors.tertiaryLabel)
+            .caption(AppColors.textTertiary)
     }
 }
 
@@ -42,6 +42,6 @@ struct SizeText: View {
 
     var body: some View {
         Text(formatBytes(bytes))
-            .subtitle()
+            .descriptionSmall()
     }
 }

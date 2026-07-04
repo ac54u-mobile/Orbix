@@ -41,21 +41,14 @@ struct TorrentDetailView: View {
 
     var body: some View {
         ZStack {
-            AppColors.backgroundGradient.ignoresSafeArea()
-
             if isLoading {
-                VStack(spacing: 16) {
-                    SkeletonBar(height: 140)
-                    SkeletonBar(height: 80)
-                    SkeletonBar(height: 200)
-                }
-                .padding(20)
-                .frame(maxWidth: horizontalSizeClass == .regular ? 640 : nil)
+                DetailSkeleton()
+                    .padding(20)
             } else if let err = loadError {
                 errorStateView(err)
             } else if let torrent = torrent {
                 ScrollView {
-                    VStack(spacing: 20) {
+                    VStack(spacing: AppSpacing.xl) {
                         dashboardCard(torrent)
 
                         if torrent.statusBadge.isError && !torrent.errorString.isEmpty {
@@ -64,13 +57,11 @@ struct TorrentDetailView: View {
 
                         actionGrid(torrent)
 
-                        VStack(spacing: 16) {
-                            transferSection(torrent)
-                            if let props = properties {
-                                infoSection(props)
-                            }
-                            timeSection(torrent, props: properties)
+                        transferSection(torrent)
+                        if let props = properties {
+                            infoSection(props)
                         }
+                        timeSection(torrent, props: properties)
 
                         if !files.isEmpty {
                             filesSection
@@ -84,15 +75,14 @@ struct TorrentDetailView: View {
                             peersSection
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, AppSpacing.lg)
                     .padding(.vertical, 20)
                 }
-                .refreshable {
-                    await manualRefresh()
-                }
+                .refreshable { await manualRefresh() }
                 .frame(maxWidth: horizontalSizeClass == .regular ? 640 : nil)
             }
         }
+        .orbixBackground()
         .navigationTitle(OrbixStrings.navDetails)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -107,7 +97,7 @@ struct TorrentDetailView: View {
                     showAdvancedSheet = true
                 } label: {
                     Image(systemName: "slider.horizontal.3")
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
                 .accessibilityLabel(OrbixStrings.navAdvancedControl)
             }
@@ -122,12 +112,8 @@ struct TorrentDetailView: View {
             }
         }
         .alert(OrbixStrings.miscDeleteTorrentTitle, isPresented: $showDeleteConfirmation) {
-            Button(OrbixStrings.btnDeleteTaskOnly, role: .destructive) {
-                delete(false)
-            }
-            Button(OrbixStrings.btnDeleteTaskFiles, role: .destructive) {
-                delete(true)
-            }
+            Button(OrbixStrings.btnDeleteTaskOnly, role: .destructive) { delete(false) }
+            Button(OrbixStrings.btnDeleteTaskFiles, role: .destructive) { delete(true) }
             Button(OrbixStrings.btnCancel, role: .cancel) {}
         } message: {
             Text(OrbixStrings.infoDeleteConfirm)
@@ -163,16 +149,17 @@ struct TorrentDetailView: View {
         .task { await autoRefreshLoop() }
     }
 
+    // MARK: - Dashboard Card
+
     @ViewBuilder
     private func dashboardCard(_ torrent: TorrentInfo) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Status badge row
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: AppSpacing.lg) {
+            HStack(spacing: AppSpacing.sm) {
                 Image(systemName: torrent.statusBadge.iconName)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(torrent.statusBadge.statusColor)
                 Text(torrent.statusBadge.displayName)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(torrent.statusBadge.statusColor)
                 Spacer()
                 if torrent.dlspeed > 0 {
@@ -182,7 +169,7 @@ struct TorrentDetailView: View {
                         Text(formatSpeed(torrent.dlspeed))
                             .font(.system(size: 13, weight: .semibold, design: .monospaced))
                     }
-                    .foregroundColor(AppColors.accent)
+                    .foregroundColor(AppColors.accentPrimary)
                 } else if torrent.upspeed > 0 {
                     HStack(spacing: 3) {
                         Image(systemName: "arrow.up")
@@ -195,50 +182,44 @@ struct TorrentDetailView: View {
             }
 
             Text(torrent.name)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(.primary)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(AppColors.textPrimary)
                 .lineLimit(3)
 
-            VStack(spacing: 8) {
-                HStack {
-                    Text("\(torrent.progressPercent)%")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
-                        .foregroundColor(torrent.progressColor)
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(formatBytes(torrent.downloaded))
-                            .font(.system(size: 13, weight: .medium, design: .monospaced))
-                            .foregroundColor(.primary)
-                        Text("/ " + formatBytes(torrent.size))
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(.secondary)
-                    }
+            HStack(alignment: .bottom) {
+                Text("\(torrent.progressPercent)%")
+                    .font(.system(size: 42, weight: .bold, design: .rounded))
+                    .foregroundColor(torrent.progressColor)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(formatBytes(torrent.downloaded))
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
+                        .foregroundColor(AppColors.textPrimary)
+                    Text("/ " + formatBytes(torrent.size))
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundColor(AppColors.textSecondary)
                 }
-
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(Color(.systemFill))
-                        Capsule()
-                            .fill(torrent.progressColor)
-                            .frame(width: max(0, geometry.size.width * CGFloat(torrent.progress)))
-                    }
-                }
-                .frame(height: 6)
             }
+
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(AppColors.hairlineDivider)
+                    Capsule()
+                        .fill(torrent.progressColor)
+                        .frame(width: max(0, geometry.size.width * CGFloat(torrent.progress)))
+                }
+            }
+            .frame(height: 4)
         }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
-                .fill(Color(.systemBackground).opacity(0.9))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
-                        .stroke(torrent.progressColor.opacity(0.25), lineWidth: 1)
-                )
-        )
+        .padding(AppSpacing.lg)
+        .orbixCard()
     }
 
+    // MARK: - Action Grid
+
     private func actionGrid(_ torrent: TorrentInfo) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: AppSpacing.md) {
             ActionTile(
                 icon: torrent.statusBadge.isPaused ? "play.fill" : "pause.fill",
                 label: torrent.statusBadge.isPaused ? OrbixStrings.btnStart : OrbixStrings.btnPause,
@@ -249,118 +230,130 @@ struct TorrentDetailView: View {
             ActionTile(
                 icon: "bolt.fill",
                 label: OrbixStrings.btnForce,
-                color: AppColors.accent,
+                color: AppColors.accentPrimary,
                 isLoading: processingAction == .force,
                 action: { performAction(.force, torrent: torrent) }
             )
             ActionTile(
                 icon: "checkmark.shield.fill",
                 label: OrbixStrings.btnRecheck,
-                color: AppColors.accent,
+                color: AppColors.accentPrimary,
                 isLoading: processingAction == .recheck,
                 action: { performAction(.recheck, torrent: torrent) }
             )
             ActionTile(
                 icon: announceCooldown ? "clock.fill" : "antenna.radiowaves.left.and.right",
                 label: announceCooldown ? OrbixStrings.btnWait : OrbixStrings.btnAnnounce,
-                color: announceCooldown ? Color.secondary : AppColors.accent,
+                color: announceCooldown ? Color.secondary : AppColors.accentPrimary,
                 isLoading: processingAction == .announce || announceCooldown,
                 action: { performAction(.announce, torrent: torrent) }
             )
         }
     }
 
+    // MARK: - Transfer Section
+
     private func transferSection(_ torrent: TorrentInfo) -> some View {
         VStack(spacing: 0) {
             SectionHeader(title: OrbixStrings.sectionTransfer)
+
             VStack(spacing: 0) {
-                DetailRow(icon: "arrow.down.circle.fill", iconColor: AppColors.accent, label: OrbixStrings.labelDownloadSpeed, value: formatSpeed(torrent.dlspeed), valueColor: AppColors.accent)
-                Divider().padding(.leading, 44)
-                DetailRow(icon: "arrow.up.circle.fill", iconColor: AppColors.success, label: OrbixStrings.labelUploadSpeed, value: formatSpeed(torrent.upspeed), valueColor: AppColors.success)
-                Divider().padding(.leading, 44)
-                DetailRow(icon: "tray.and.arrow.down.fill", iconColor: .secondary, label: OrbixStrings.labelDownloaded, value: formatBytes(torrent.downloaded))
-                Divider().padding(.leading, 44)
-                DetailRow(icon: "tray.and.arrow.up.fill", iconColor: .secondary, label: OrbixStrings.labelUploaded, value: formatBytes(torrent.uploaded))
-                Divider().padding(.leading, 44)
-                DetailRow(icon: "chart.pie.fill", iconColor: .secondary, label: OrbixStrings.labelRatio, value: String(format: "%.2f", torrent.ratio), valueColor: torrent.ratio >= 1.0 ? AppColors.success : .secondary)
+                DetailRow(icon: "arrow.down.circle.fill", iconColor: AppColors.accentPrimary,
+                          label: OrbixStrings.labelDownloadSpeed, value: formatSpeed(torrent.dlspeed), valueColor: AppColors.accentPrimary)
+                HairlineDivider(leadingPadding: 44)
+                DetailRow(icon: "arrow.up.circle.fill", iconColor: AppColors.success,
+                          label: OrbixStrings.labelUploadSpeed, value: formatSpeed(torrent.upspeed), valueColor: AppColors.success)
+                HairlineDivider(leadingPadding: 44)
+                DetailRow(icon: "tray.and.arrow.down.fill", iconColor: .secondary,
+                          label: OrbixStrings.labelDownloaded, value: formatBytes(torrent.downloaded))
+                HairlineDivider(leadingPadding: 44)
+                DetailRow(icon: "tray.and.arrow.up.fill", iconColor: .secondary,
+                          label: OrbixStrings.labelUploaded, value: formatBytes(torrent.uploaded))
+                HairlineDivider(leadingPadding: 44)
+                DetailRow(icon: "chart.pie.fill", iconColor: .secondary,
+                          label: OrbixStrings.labelRatio, value: String(format: "%.2f", torrent.ratio),
+                          valueColor: torrent.ratio >= 1.0 ? AppColors.success : .secondary)
                 if torrent.eta > 0 {
-                    Divider().padding(.leading, 44)
-                    DetailRow(icon: "timer", iconColor: .secondary, label: OrbixStrings.labelETA, value: torrent.etaFormatted)
+                    HairlineDivider(leadingPadding: 44)
+                    DetailRow(icon: "timer", iconColor: .secondary,
+                              label: OrbixStrings.labelETA, value: torrent.etaFormatted)
                 }
-                Divider().padding(.leading, 44)
-                DetailRow(icon: "person.2.fill", iconColor: .secondary, label: OrbixStrings.labelSeeds, value: "\(String(torrent.numSeeds)) / \(String(torrent.numLeechs))")
+                HairlineDivider(leadingPadding: 44)
+                DetailRow(icon: "person.2.fill", iconColor: .secondary,
+                          label: OrbixStrings.labelSeeds,
+                          value: "\(String(torrent.numSeeds)) / \(String(torrent.numLeechs))")
             }
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(Color(.systemBackground).opacity(0.9))
-            )
+            .orbixCard()
         }
     }
+
+    // MARK: - Info Section
 
     private func infoSection(_ props: TorrentProperties) -> some View {
         VStack(spacing: 0) {
             SectionHeader(title: OrbixStrings.sectionInfo)
+
             VStack(spacing: 0) {
-                DetailRow(icon: "internaldrive.fill", iconColor: .secondary, label: OrbixStrings.labelTotalSize, value: formatBytes(props.totalSize))
-                Divider().padding(.leading, 44)
+                DetailRow(icon: "internaldrive.fill", iconColor: .secondary,
+                          label: OrbixStrings.labelTotalSize, value: formatBytes(props.totalSize))
+                HairlineDivider(leadingPadding: 44)
 
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppSpacing.md) {
                         Image(systemName: "folder.fill")
-                            .font(.system(size: 16))
+                            .sfSymbolFrame()
                             .foregroundColor(.secondary)
-                            .frame(width: 24)
                         Text(OrbixStrings.labelSavePath)
                             .font(.system(size: 15))
-                            .foregroundColor(.primary)
+                            .foregroundColor(AppColors.textPrimary)
                         Spacer()
                         CopyButton(textToCopy: props.savePath)
                     }
                     Text(props.savePath)
                         .font(.system(size: 13, design: .monospaced))
-                        .foregroundColor(.secondary)
+                        .foregroundColor(AppColors.textSecondary)
                         .lineLimit(2)
-                        .padding(.leading, 36)
+                        .padding(.leading, IconLayout.sfSymbolSize + AppSpacing.md)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.vertical, AppSpacing.md)
 
                 if !props.category.isEmpty {
-                    Divider().padding(.leading, 44)
-                    DetailRow(icon: "square.grid.2x2.fill", iconColor: .secondary, label: OrbixStrings.labelCategory, value: props.category)
+                    HairlineDivider(leadingPadding: 44)
+                    DetailRow(icon: "square.grid.2x2.fill", iconColor: .secondary,
+                              label: OrbixStrings.labelCategory, value: props.category)
                 }
                 if !props.tags.isEmpty {
-                    Divider().padding(.leading, 44)
-                    DetailRow(icon: "tag.fill", iconColor: .secondary, label: OrbixStrings.labelTags, value: props.tags)
+                    HairlineDivider(leadingPadding: 44)
+                    DetailRow(icon: "tag.fill", iconColor: .secondary,
+                              label: OrbixStrings.labelTags, value: props.tags)
                 }
 
-                Divider().padding(.leading, 44)
+                HairlineDivider(leadingPadding: 44)
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: AppSpacing.md) {
                         Image(systemName: "number.circle.fill")
-                            .font(.system(size: 16))
+                            .sfSymbolFrame()
                             .foregroundColor(.secondary)
-                            .frame(width: 24)
                         Text(OrbixStrings.labelHash)
                             .font(.system(size: 15))
-                            .foregroundColor(.primary)
+                            .foregroundColor(AppColors.textPrimary)
                         Spacer()
                         CopyButton(textToCopy: props.hash)
                     }
                     Text(props.hash)
                         .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(Color(.tertiaryLabel))
-                        .padding(.leading, 36)
+                        .foregroundColor(AppColors.textTertiary)
+                        .padding(.leading, IconLayout.sfSymbolSize + AppSpacing.md)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal, AppSpacing.lg)
+                .padding(.vertical, AppSpacing.md)
             }
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(Color(.systemBackground).opacity(0.9))
-            )
+            .orbixCard()
         }
     }
+
+    // MARK: - Files Section
 
     private var filesSection: some View {
         VStack(spacing: 0) {
@@ -372,76 +365,76 @@ struct TorrentDetailView: View {
                 } label: {
                     Text(OrbixStrings.btnManage)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
-                .padding(.trailing, 16)
+                .padding(.trailing, AppSpacing.lg)
             }
+
             VStack(spacing: 0) {
                 ForEach(files.indices, id: \.self) { index in
                     let file = files[index]
                     VStack(alignment: .leading, spacing: 6) {
                         Text(file.name)
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.primary)
+                            .foregroundColor(AppColors.textPrimary)
                             .lineLimit(2)
 
                         HStack {
                             Text(formatBytes(file.size))
                                 .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppColors.textSecondary)
                             Spacer()
                             Text("\(file.progressPercent)%")
                                 .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(file.progress >= 1.0 ? AppColors.success : AppColors.accent)
+                                .foregroundColor(file.progress >= 1.0 ? AppColors.success : AppColors.accentPrimary)
                         }
 
                         GeometryReader { geometry in
                             ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 1, style: .continuous)
-                                    .fill(Color(.separator).opacity(0.4))
-                                RoundedRectangle(cornerRadius: 1, style: .continuous)
-                                    .fill(file.progress >= 1.0 ? AppColors.success : AppColors.accent)
+                                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                                    .fill(AppColors.hairlineDivider)
+                                RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                                    .fill(file.progress >= 1.0 ? AppColors.success : AppColors.accentPrimary)
                                     .frame(width: max(0, geometry.size.width * CGFloat(file.progress)))
                             }
                         }
                         .frame(height: 3)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.vertical, AppSpacing.md)
 
                     if index < files.count - 1 {
-                        Divider().padding(.leading, 16)
+                        HairlineDivider(leadingPadding: 44)
                     }
                 }
             }
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(Color(.systemBackground).opacity(0.9))
-            )
+            .orbixCard()
         }
     }
 
     // MARK: - Time Section
+
     private func timeSection(_ torrent: TorrentInfo, props: TorrentProperties?) -> some View {
         let added = props?.addedOn ?? torrent.addedOn
         let completed = props?.completionOn ?? torrent.completionOn
         return VStack(spacing: 0) {
             SectionHeader(title: OrbixStrings.sectionTime)
+
             VStack(spacing: 0) {
-                DetailRow(icon: "calendar.badge.plus", iconColor: .secondary, label: OrbixStrings.labelAddTime, value: formatUnixTime(added))
+                DetailRow(icon: "calendar.badge.plus", iconColor: .secondary,
+                          label: OrbixStrings.labelAddTime, value: formatUnixTime(added))
                 if completed > 0 {
-                    Divider().padding(.leading, 44)
-                    DetailRow(icon: "checkmark.seal.fill", iconColor: AppColors.success, label: OrbixStrings.labelCompleteTime, value: formatUnixTime(completed))
+                    HairlineDivider(leadingPadding: 44)
+                    DetailRow(icon: "checkmark.seal.fill", iconColor: AppColors.success,
+                              label: OrbixStrings.labelCompleteTime, value: formatUnixTime(completed))
                 }
             }
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(Color(.systemBackground).opacity(0.9))
-            )
+            .orbixCard()
         }
     }
 
     // MARK: - Trackers Section
+
     private var trackersSection: some View {
         VStack(spacing: 0) {
             HStack {
@@ -452,15 +445,16 @@ struct TorrentDetailView: View {
                 } label: {
                     Text(OrbixStrings.btnManage)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
                 }
-                .padding(.trailing, 16)
+                .padding(.trailing, AppSpacing.lg)
             }
+
             VStack(spacing: 0) {
                 ForEach(trackers.indices, id: \.self) { index in
                     let tracker = trackers[index]
                     VStack(alignment: .leading, spacing: 6) {
-                        HStack(spacing: 8) {
+                        HStack(spacing: AppSpacing.sm) {
                             Circle()
                                 .fill(tracker.statusColor)
                                 .frame(width: 8, height: 8)
@@ -473,29 +467,28 @@ struct TorrentDetailView: View {
                             .caption()
                         Text(tracker.url)
                             .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(.secondary)
+                            .foregroundColor(AppColors.textSecondary)
                             .lineLimit(2)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.vertical, AppSpacing.md)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     if index < trackers.count - 1 {
-                        Divider().padding(.leading, 16)
+                        HairlineDivider(leadingPadding: 44)
                     }
                 }
             }
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(Color(.systemBackground).opacity(0.9))
-            )
+            .orbixCard()
         }
     }
 
     // MARK: - Peers Section
+
     private var peersSection: some View {
         VStack(spacing: 0) {
             SectionHeader(title: String(format: OrbixStrings.labelPeersCount, peers.count))
+
             VStack(spacing: 0) {
                 ForEach(peers.indices, id: \.self) { index in
                     let peer = peers[index]
@@ -503,7 +496,7 @@ struct TorrentDetailView: View {
                         HStack {
                             Text("\(peer.ip):\(String(peer.port))")
                                 .font(.system(size: 13, weight: .medium, design: .monospaced))
-                                .foregroundColor(.primary)
+                                .foregroundColor(AppColors.textPrimary)
                             if !peer.country.isEmpty {
                                 Text(peer.country)
                                     .font(.system(size: 12))
@@ -517,41 +510,38 @@ struct TorrentDetailView: View {
                             }
                             Text("\(peer.progressPercent)%")
                                 .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(.secondary)
+                                .foregroundColor(AppColors.textSecondary)
                         }
                         if !peer.client.isEmpty {
                             Text(peer.client)
                                 .font(.system(size: 11, design: .monospaced))
-                                .foregroundColor(Color(.tertiaryLabel).opacity(0.7))
+                                .foregroundColor(AppColors.textTertiary.opacity(0.7))
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, AppSpacing.lg)
                     .padding(.vertical, 10)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     if index < peers.count - 1 {
-                        Divider()
-                            .padding(.leading, 16)
-                            .opacity(0.4)
+                        HairlineDivider(leadingPadding: 44)
                     }
                 }
             }
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(.ultraThinMaterial)
-            )
+            .orbixCard()
         }
     }
 
     private func countryColor(_ code: String) -> Color {
         switch code.uppercased() {
         case "CN", "HK", "TW", "MO": return AppColors.danger
-        case "JP": return AppColors.accent
+        case "JP": return AppColors.accentPrimary
         case "US", "GB", "CA", "AU": return AppColors.success
         case "KR": return AppColors.warning
         default: return .secondary
         }
     }
+
+    // MARK: - Error Hint
 
     private func errorHint(_ message: String) -> some View {
         HStack(spacing: 10) {
@@ -569,20 +559,22 @@ struct TorrentDetailView: View {
         )
     }
 
+    // MARK: - Error State
+
     @ViewBuilder
     private func errorStateView(_ message: String) -> some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AppSpacing.lg) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 48))
-                .foregroundColor(AppColors.danger)
+                .font(.system(size: 48, weight: .light))
+                .foregroundColor(AppColors.emptyStateIconColor)
 
             Text(OrbixStrings.errLoadFailed)
-                .font(.headline)
-                .foregroundColor(.primary)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(AppColors.textPrimary)
 
             Text(message)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(.system(size: 13, weight: .regular))
+                .foregroundColor(AppColors.emptyStateTextColor)
                 .multilineTextAlignment(.center)
 
             Button(OrbixStrings.btnRetry) {
@@ -591,19 +583,22 @@ struct TorrentDetailView: View {
                 Task { await manualRefresh() }
             }
             .font(.system(size: 15, weight: .medium))
-            .foregroundColor(.primary)
-            .padding(.horizontal, 24)
+            .foregroundColor(.white)
+            .padding(.horizontal, AppSpacing.xl)
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(AppColors.accent)
+                    .fill(AppColors.accentPrimary)
             )
             .buttonStyle(ScaleButtonStyle())
         }
         .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(AppColors.gridBackgroundGradient)
     }
 
     // MARK: - Tiered Refresh Strategy
+
     private func refreshInfoPeers() async {
         let result = await dataService.fetchHighFreq(syncRid: syncRid, peersRid: peersRid)
         await MainActor.run {
@@ -682,7 +677,6 @@ struct TorrentDetailView: View {
 
     private func performAction(_ type: ActionType, torrent: TorrentInfo) {
         guard processingAction == nil else { return }
-
         if type == .announce, announceCooldown { return }
 
         processingAction = type
@@ -753,12 +747,81 @@ struct TorrentDetailView: View {
     }
 }
 
+// MARK: - Detail Skeleton
+
+private struct DetailSkeleton: View {
+    var body: some View {
+        VStack(spacing: AppSpacing.xl) {
+            dashboardSkeleton
+            actionsSkeleton
+            sectionSkeleton
+            sectionSkeleton
+        }
+    }
+
+    private var dashboardSkeleton: some View {
+        VStack(spacing: AppSpacing.md) {
+            HStack {
+                SkeletonBar(height: 14, width: 80)
+                Spacer()
+            }
+            SkeletonBar(height: 20)
+            HStack {
+                SkeletonBar(height: 42, width: 80)
+                Spacer()
+                SkeletonBar(height: 14, width: 100)
+            }
+            SkeletonBar(height: 4)
+        }
+        .padding(AppSpacing.lg)
+        .orbixCard()
+    }
+
+    private var actionsSkeleton: some View {
+        HStack(spacing: AppSpacing.md) {
+            ForEach(0..<4, id: \.self) { _ in
+                VStack(spacing: AppSpacing.sm) {
+                    SkeletonBar(height: 44, width: 44)
+                    SkeletonBar(height: 12, width: 36)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private var sectionSkeleton: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.sm) {
+            SkeletonBar(height: 14, width: 60)
+                .padding(.leading, AppSpacing.lg)
+
+            VStack(spacing: 0) {
+                ForEach(0..<3, id: \.self) { i in
+                    HStack {
+                        SkeletonBar(height: 28, width: 28)
+                        SkeletonBar(height: 14, width: 80)
+                        Spacer()
+                        SkeletonBar(height: 14, width: 60)
+                    }
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.vertical, 11)
+
+                    if i < 2 {
+                        Rectangle()
+                            .fill(AppColors.hairlineDivider)
+                            .frame(height: 0.5)
+                            .padding(.leading, IconLayout.sfSymbolSize + AppSpacing.lg + AppSpacing.md)
+                    }
+                }
+            }
+            .orbixCard()
+        }
+    }
+}
+
 #if DEBUG
 #Preview {
-    TorrentDetailView(hash: "demo")
+    NavigationStack {
+        TorrentDetailView(hash: "demo")
+    }
 }
 #endif
-
-
-
-

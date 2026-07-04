@@ -20,18 +20,18 @@ struct ServerManagementView: View {
                             .foregroundColor(AppColors.placeholder)
 
                         Text(OrbixStrings.msgNoServer)
-                            .subtitle()
+                            .descriptionSmall()
 
                         Button {
                             showLogin = true
                         } label: {
                             Text(OrbixStrings.navAddServer)
-                                .bodyFont(AppColors.label)
+                                .bodyFont(AppColors.textPrimary)
                                 .padding(.horizontal, 32)
                                 .padding(.vertical, 12)
                                 .background(
                                     RoundedRectangle(cornerRadius: 14)
-                                        .fill(AppColors.accent)
+                                        .fill(AppColors.accentPrimary)
                                 )
                         }
                     }
@@ -55,7 +55,7 @@ struct ServerManagementView: View {
                                     } label: {
                                         Label(OrbixStrings.btnEdit, systemImage: "pencil")
                                     }
-                                    .tint(AppColors.accent)
+                                    .tint(AppColors.accentPrimary)
                                 }
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {

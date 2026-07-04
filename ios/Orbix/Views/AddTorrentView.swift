@@ -78,7 +78,7 @@ struct AddTorrentView: View {
                     Button(action: submit) {
                         if isSubmitting {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: AppColors.accent))
+                                .progressViewStyle(CircularProgressViewStyle(tint: AppColors.accentPrimary))
                         } else {
                             Text(OrbixStrings.btnAdd)
                                 .font(.system(size: 16, weight: .bold))
@@ -110,7 +110,7 @@ struct AddTorrentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(OrbixStrings.labelMagnetURL)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(AppColors.textSecondary)
                 .textCase(.uppercase)
                 .padding(.leading, 4)
 
@@ -142,7 +142,7 @@ struct AddTorrentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(OrbixStrings.sectionTorrentFile)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(AppColors.textSecondary)
                 .textCase(.uppercase)
                 .padding(.leading, 4)
 
@@ -150,12 +150,12 @@ struct AddTorrentView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
                         .font(.system(size: 32))
-                        .foregroundColor(AppColors.accent)
+                        .foregroundColor(AppColors.accentPrimary)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(url.lastPathComponent)
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(AppColors.textPrimary)
                             .lineLimit(1)
                         Text(OrbixStrings.msgReadyToUpload)
                             .font(.system(size: 12))
@@ -173,7 +173,7 @@ struct AddTorrentView: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.system(size: 20))
-                            .foregroundColor(AppColors.tertiaryLabel)
+                            .foregroundColor(AppColors.textTertiary)
                     }
                 }
                 .padding(16)
@@ -192,10 +192,10 @@ struct AddTorrentView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "doc.badge.plus")
                             .font(.system(size: 32))
-                            .foregroundColor(AppColors.accent)
+                            .foregroundColor(AppColors.accentPrimary)
                         Text(OrbixStrings.msgClickSelectTorrent)
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(AppColors.textPrimary)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 120)
@@ -208,7 +208,7 @@ struct AddTorrentView: View {
                                 .strokeBorder(
                                     style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
                                 )
-                                .foregroundColor(AppColors.tertiaryLabel)
+                                .foregroundColor(AppColors.textTertiary)
                         )
                 )
                 .contentShape(Rectangle())
@@ -220,7 +220,7 @@ struct AddTorrentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(OrbixStrings.sectionAdvancedOptions)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(AppColors.textSecondary)
                 .textCase(.uppercase)
                 .padding(.leading, 4)
 

@@ -87,7 +87,7 @@ struct SettingsView: View {
             HStack(alignment: .top, spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(AppColors.accent)
+                        .fill(AppColors.accentPrimary)
                         .frame(width: 48, height: 48)
                     Text(String(serverName.prefix(1).uppercased()))
                         .font(.system(size: 22, weight: .semibold, design: .rounded))
@@ -108,7 +108,7 @@ struct SettingsView: View {
 
                     HStack(spacing: 4) {
                         Circle()
-                            .fill(serverOnline == true ? AppColors.success : (serverOnline == false ? AppColors.danger : Color(.tertiaryLabel)))
+                            .fill(serverOnline == true ? AppColors.success : (serverOnline == false ? AppColors.danger : AppColors.textTertiary))
                             .frame(width: 7, height: 7)
                         Text(serverOnline == true ? String(localized: "在线", comment: "Online") :
                                 serverOnline == false ? String(localized: "离线", comment: "Offline") :
@@ -188,7 +188,7 @@ struct SettingsView: View {
                     .font(.system(size: 15))
                     .foregroundColor(.primary)
             }
-            .tint(AppColors.accent)
+            .tint(AppColors.accentPrimary)
 
             if appLock.isEnabled {
                 Text(String(localized: "切到后台 \(Int(AppConstants.lockGracePeriod)) 秒后自动锁定", comment: "Auto-lock hint"))
@@ -237,7 +237,7 @@ struct SettingsView: View {
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(Color(.tertiaryLabel))
+                    .foregroundColor(AppColors.textTertiary)
             }
         }
         .disabled(isCheckingUpdate)
@@ -294,7 +294,7 @@ struct SettingsView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 11)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(AppColors.accent))
+                    .background(RoundedRectangle(cornerRadius: 10).fill(AppColors.accentPrimary))
             }
             .disabled(isDownloading)
         }
@@ -304,7 +304,7 @@ struct SettingsView: View {
         VStack(spacing: 6) {
             GeometryReader { geo in
                 Capsule()
-                    .fill(AppColors.accent)
+                    .fill(AppColors.accentPrimary)
                     .frame(width: max(4, geo.size.width * downloadProgress))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Capsule().fill(AppColors.separator))
@@ -313,7 +313,7 @@ struct SettingsView: View {
             .frame(height: 4)
             Text("\(min(99, Int(downloadProgress * 100)))%")
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .foregroundColor(AppColors.accent)
+                .foregroundColor(AppColors.accentPrimary)
         }
     }
 
@@ -322,7 +322,7 @@ struct SettingsView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 15))
-                .foregroundColor(Color(.tertiaryLabel))
+                .foregroundColor(AppColors.textTertiary)
                 .frame(width: 26)
             Text(label)
                 .font(.system(size: 15))

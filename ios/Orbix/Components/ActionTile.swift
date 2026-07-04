@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - Action Tile
+
 struct ActionTile: View {
     let icon: String
     let label: String
@@ -8,51 +10,55 @@ struct ActionTile: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: {
-            if !isLoading {
-                AppHaptics.medium()
-                action()
-            }
-        }) {
-            VStack(spacing: 8) {
+        Button {
+            guard !isLoading else { return }
+            AppHaptics.breathing()
+            action()
+        } label: {
+            VStack(spacing: AppSpacing.xs) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(color.opacity(0.12))
-                        .frame(width: 44, height: 44)
+                    Circle()
+                        .fill(color.opacity(0.1))
+                        .frame(width: IconLayout.sfSymbolSize, height: IconLayout.sfSymbolSize)
+
                     if isLoading {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: color))
-                            .frame(width: 22, height: 22)
                     } else {
                         Image(systemName: icon)
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(size: 22, weight: .semibold))
                             .foregroundColor(color)
                     }
                 }
 
                 Text(label)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.primary)
+                    .foregroundColor(AppColors.textPrimary)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(Color(.systemBackground).opacity(0.85))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                            .stroke(Color(.separator).opacity(0.5), lineWidth: 0.5)
-                    )
-            )
+            .padding(.vertical, AppSpacing.sm)
+            .background(Color.clear)
         }
-        .buttonStyle(ScaleButtonStyle())
+        .buttonStyle(BreathingPressStyle())
         .accessibilityLabel(label)
         .disabled(isLoading)
+    }
+}
+
+// MARK: - Breathing Press Style
+
+private struct BreathingPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(AppMotion.breathingScale, value: configuration.isPressed)
     }
 }
 
 #if DEBUG
 #Preview {
     ActionTile(icon: "play.fill", label: "启动", color: .green, isLoading: false, action: {})
+        .padding()
+        .background(AppColors.gridBackgroundGradient)
 }
 #endif

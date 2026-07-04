@@ -45,7 +45,7 @@ struct MainTabView: View {
                 }
                 .tag(3)
         }
-        .tint(AppColors.accent)
+        .tint(AppColors.accentPrimary)
         .onAppear {
             if let tab = initialTab { selectedTab = tab }
         }

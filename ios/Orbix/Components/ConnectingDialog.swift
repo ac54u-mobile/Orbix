@@ -7,14 +7,14 @@ struct ConnectingDialog: View {
 
     var body: some View {
         ZStack {
-            AppColors.backgroundBase.opacity(0.6)
+            AppColors.gridBackgroundGradient.opacity(0.6)
                 .background(.ultraThinMaterial)
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.2)
-                    .tint(AppColors.accent)
+                    .tint(AppColors.accentPrimary)
 
                 Text(message)
                     .bodyFont()

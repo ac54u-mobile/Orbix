@@ -128,7 +128,19 @@ struct TorrentInfo: Codable, Identifiable {
     var progressColor: Color {
         if statusBadge.isError { return AppColors.danger }
         if isCompleted { return AppColors.success }
-        return AppColors.accent
+        return AppColors.accentPrimary
+    }
+
+    var lineStatusColor: Color {
+        switch statusBadge {
+        case .downloading, .forcedDL, .metaDL, .allocating: return AppColors.accentPrimary
+        case .uploading, .forcedUP, .stalledUP:             return AppColors.success
+        case .stalledDL:                                    return AppColors.warning
+        case .checkingDL, .checkingUP, .checkingResumeData, .moving: return .purple
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP: return Color(.systemGray2)
+        case .error, .missingFiles:                         return AppColors.danger
+        case .unknown:                                      return Color(.systemGray3)
+        }
     }
 
     var secondaryInfoLine: String {
@@ -257,10 +269,10 @@ enum TorrentStatus: String {
     var statusColor: Color {
         switch self {
         case .uploading, .stalledUP, .forcedUP: return AppColors.success
-        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accent
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accentPrimary
         case .error, .missingFiles: return AppColors.danger
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.secondaryLabel
-        default: return AppColors.secondaryLabel
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.textSecondary
+        default: return AppColors.textSecondary
         }
     }
 
@@ -492,7 +504,7 @@ struct TorrentTracker: Codable, Identifiable {
         case 0, 1: return AppColors.danger
         case 2, 4: return AppColors.success
         case 3: return AppColors.warning
-        default: return AppColors.secondaryLabel
+        default: return AppColors.textSecondary
         }
     }
 }

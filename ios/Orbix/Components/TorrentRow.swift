@@ -1,22 +1,22 @@
 import SwiftUI
 
+// MARK: - Torrent Row
+
 struct TorrentRow: View {
     let torrent: TorrentInfo
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 14) {
+            HStack(spacing: AppSpacing.md) {
                 statusIconView
 
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(torrent.name)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .titleSmall()
                         .lineLimit(2)
 
                     Text(torrent.secondaryInfoLine)
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
+                        .descriptionSmall()
                         .lineLimit(2)
                 }
 
@@ -24,47 +24,43 @@ struct TorrentRow: View {
 
                 trailingBadge
             }
-            .padding(.vertical, 11)
-            .padding(.horizontal, 16)
+            .padding(.vertical, AppSpacing.sm)
+            .padding(.horizontal, AppSpacing.lg)
+            .frame(minHeight: 60)
 
-            Divider()
+            Rectangle()
+                .fill(AppColors.hairlineDivider)
+                .frame(height: 0.5)
+                .padding(.leading, AppSpacing.lg + IconLayout.sfSymbolSize + AppSpacing.md)
         }
-        .background(Color.clear)
     }
 
     private var statusColor: Color {
-        switch torrent.statusBadge {
-        case .downloading, .forcedDL, .metaDL, .allocating: return AppColors.accent
-        case .uploading, .forcedUP, .stalledUP:             return AppColors.success
-        case .stalledDL:                                    return AppColors.warning
-        case .checkingDL, .checkingUP, .checkingResumeData, .moving: return Color.purple
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP: return Color(.systemGray2)
-        case .error, .missingFiles:                         return AppColors.danger
-        default:                                            return Color(.systemGray3)
-        }
+        torrent.lineStatusColor
     }
 
     private var statusIconView: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(statusColor.opacity(0.15))
+            RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
+                .fill(statusColor.opacity(0.12))
+                .frame(width: IconLayout.sfSymbolSize, height: IconLayout.sfSymbolSize)
+
             Image(systemName: torrent.statusBadge.iconName)
-                .font(.system(size: 15, weight: .semibold))
+                .sfSymbolFrame()
                 .foregroundColor(statusColor)
         }
-        .frame(width: 36, height: 36)
     }
 
     @ViewBuilder
     private var trailingBadge: some View {
         if torrent.isCompleted {
             Text("已完成")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(AppColors.success)
+                .caption(AppColors.success)
+                .fontWeight(.medium)
         } else {
             Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(Color(.tertiaryLabel))
+                .foregroundColor(AppColors.textTertiary)
         }
     }
 }
@@ -82,24 +78,11 @@ struct TorrentRow: View {
         VStack(spacing: 0) {
             ForEach(samples) { t in
                 TorrentRow(torrent: t)
-                    .padding(.horizontal, 16)
-                    .background(Color.clear)
             }
         }
-        .padding(.horizontal, 16)
         .padding(.top, 20)
     }
-    .background(
-        LinearGradient(
-            colors: [
-                Color(red: 1.0, green: 0.94, blue: 0.97),
-                Color(red: 0.90, green: 0.95, blue: 1.0)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-        .ignoresSafeArea()
-    )
+    .background(AppColors.gridBackgroundGradient.ignoresSafeArea())
     .preferredColorScheme(.light)
 }
 #endif

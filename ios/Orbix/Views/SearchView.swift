@@ -14,6 +14,7 @@ struct SearchView: View {
     @State private var currentPage = 1
     @State private var hasMorePages = true
     @State private var showingBookmarks = false
+    @State private var lastLoadTime: Date = .distantPast
 
     enum SearchState { case idle, loading, results, empty, error(String) }
 
@@ -22,7 +23,7 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.backgroundGradient.ignoresSafeArea()
+                AppColors.gridBackgroundGradient.ignoresSafeArea()
                 switch state {
                 case .idle: idleView
                 case .loading: loadingView
@@ -38,7 +39,7 @@ struct SearchView: View {
                         SearchModeState.shared.use141 = false
                     } label: {
                         Image(systemName: "antenna.radiowaves.left.and.right")
-                            .foregroundColor(AppColors.accent)
+                            .foregroundColor(AppColors.accentPrimary)
                             .font(.system(size: 14))
                     }
                 }
@@ -48,13 +49,17 @@ struct SearchView: View {
                         withAnimation(.none) { showingBookmarks.toggle() }
                     } label: {
                         Image(systemName: showingBookmarks ? "heart.fill" : (bookmarks.isEmpty ? "heart" : "heart.fill"))
-                            .foregroundColor(AppColors.accent)
+                            .foregroundColor(AppColors.accentPrimary)
                     }
                     .accessibilityLabel(OrbixStrings.navSearch)
                     .id("bookmark_\(bookmarks.hashValue)_\(showingBookmarks)")
                 }
             }
-            .onAppear { loadBookmarks(); if allResults.isEmpty { loadLatest() } }
+            .onAppear {
+                loadBookmarks()
+                let stale = Date().timeIntervalSince(lastLoadTime) > 300
+                if allResults.isEmpty || stale { loadLatest() }
+            }
             .sheet(item: $selectedTorrent) { TorrentDetailSheet(torrent: $0, bookmarks: $bookmarks, onChanged: saveBookmarks) }
             .fullScreenCover(isPresented: $showMediaViewer) {
                 let imgs = results.map { $0.thumbnail ?? "" }.filter { !$0.isEmpty }
@@ -77,7 +82,7 @@ struct SearchView: View {
                 .padding(.top, 16)
 
                 Text(OrbixStrings.msgSearchSuggestion)
-                    .subtitle(AppColors.tertiaryLabel)
+                    .descriptionSmall(AppColors.textTertiary)
                     .padding(.horizontal, 20)
 
                 if results.isEmpty {
@@ -94,8 +99,8 @@ struct SearchView: View {
     private var loadingView: some View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
-                ProgressView().tint(AppColors.accent)
-                Text(OrbixStrings.msgFetchingLatest).subtitle(AppColors.tertiaryLabel)
+                ProgressView().tint(AppColors.accentPrimary)
+                Text(OrbixStrings.msgFetchingLatest).descriptionSmall(AppColors.textTertiary)
             }
             .padding(.top, 16)
             listSkeleton
@@ -123,7 +128,7 @@ struct SearchView: View {
                         .font(.system(size: 40))
                         .foregroundColor(AppColors.placeholder)
                     Text(OrbixStrings.msgNoBookmarked)
-                        .foregroundColor(AppColors.secondaryLabel)
+                        .foregroundColor(AppColors.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -133,7 +138,7 @@ struct SearchView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(section.date)
                             .font(.system(size: 13))
-                            .foregroundColor(Color(.secondaryLabel))
+                            .foregroundColor(AppColors.textSecondary)
                             .padding(.horizontal, 20)
                         sectionGroup(section.items)
                     }
@@ -142,13 +147,13 @@ struct SearchView: View {
                 if !results.isEmpty, !showingBookmarks {
                     VStack(spacing: 4) {
                         if isLoadingMore {
-                            ProgressView().tint(AppColors.accent)
+                            ProgressView().tint(AppColors.accentPrimary)
                         } else if hasMorePages {
                             Color.clear.frame(height: 1).onAppear { loadMore() }
                         } else {
                             Text(OrbixStrings.msgAllLoaded)
                                 .font(.caption)
-                                .foregroundColor(AppColors.tertiaryLabel)
+                                .foregroundColor(AppColors.textTertiary)
                         }
                     }
                     .padding(.vertical, 20)
@@ -230,6 +235,7 @@ struct SearchView: View {
                 await MainActor.run {
                     allResults = items
                     results = items
+                    lastLoadTime = Date()
                     state = items.isEmpty ? .idle : .results
                 }
             } catch {
@@ -264,6 +270,7 @@ struct SearchView: View {
                 allResults = items
                 results = items
                 currentPage = 5
+                lastLoadTime = Date()
                 state = items.isEmpty ? .empty : .results
             }
         } catch {
@@ -290,6 +297,7 @@ struct SearchView: View {
                         results = newItems + results
                         allResults = newItems + allResults
                     }
+                    lastLoadTime = Date()
                     currentPage = 5
                     hasMorePages = true
                 }
@@ -359,7 +367,7 @@ struct SearchView: View {
         VStack(spacing: 10) {
             Image(systemName: icon).font(.system(size: 48))
                 .foregroundColor(isError ? AppColors.danger : AppColors.placeholder)
-            Text(text).subtitle(isError ? AppColors.danger : AppColors.secondaryLabel)
+            Text(text).descriptionSmall(isError ? AppColors.danger : AppColors.textSecondary)
         }
     }
 }

@@ -1,37 +1,38 @@
 import SwiftUI
 
+// MARK: - Global Speed Pill
+
 struct GlobalSpeedPill: View {
     let dl: Int64
     let up: Int64
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: AppSpacing.lg) {
             if dl > 0 {
-                HStack(spacing: 4) {
+                HStack(spacing: AppSpacing.xs) {
                     Image(systemName: "arrow.down")
-                        .font(.system(size: 13, weight: .bold))
+                        .iconSymbol(AppColors.accentPrimary)
                     Text(formatSpeed(dl))
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .foregroundColor(AppColors.accentPrimary)
                 }
-                .foregroundColor(AppColors.accent)
             }
 
             if up > 0 {
-                HStack(spacing: 4) {
+                HStack(spacing: AppSpacing.xs) {
                     Image(systemName: "arrow.up")
-                        .font(.system(size: 13, weight: .bold))
+                        .iconSymbol(AppColors.success)
                     Text(formatSpeed(up))
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .foregroundColor(AppColors.success)
                 }
-                .foregroundColor(AppColors.success)
             }
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.vertical, AppSpacing.md)
         .background(
             Capsule()
-                .fill(.regularMaterial)
-                .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 6)
+                .fill(.ultraThinMaterial)
                 .overlay(
                     Capsule()
                         .stroke(AppColors.glassBorder, lineWidth: 0.5)

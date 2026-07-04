@@ -3,7 +3,7 @@ import XCTest
 
 final class TorrentStatusTests: XCTestCase {
     func testStatusColor_forDownloading_returnsAccent() {
-        XCTAssertEqual(TorrentStatus.downloading.statusColor, AppColors.accent)
+        XCTAssertEqual(TorrentStatus.downloading.statusColor, AppColors.accentPrimary)
     }
 
     func testStatusColor_forUploading_returnsSuccess() {
@@ -40,7 +40,7 @@ final class TorrentInfoTests: XCTestCase {
 
     func testProgressColor_default_returnsAccent() {
         let t = TorrentInfo(name: "test", state: "downloading", progress: 0.5)
-        XCTAssertEqual(t.progressColor, AppColors.accent)
+        XCTAssertEqual(t.progressColor, AppColors.accentPrimary)
     }
 
     func testStatusBadge_fromRawValue() {
