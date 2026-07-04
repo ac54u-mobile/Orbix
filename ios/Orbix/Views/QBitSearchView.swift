@@ -307,7 +307,7 @@ struct QBitSearchView: View {
         Task {
             do {
                 if !result.descr.isEmpty {
-                    try await QBitApi.shared.addMagnet([result.descr])
+                    _ = try await QBitApi.shared.addMagnet([result.descr])
                 }
                 await MainActor.run {
                     downloadingNum = nil

@@ -4,7 +4,7 @@ struct SRTEntry: Sendable {
     let index: Int
     let start: String
     let end: String
-    let text: String
+    var text: String
 }
 
 enum SRTParser {
