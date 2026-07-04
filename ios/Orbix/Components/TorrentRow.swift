@@ -7,13 +7,14 @@ struct TorrentRow: View {
         VStack(spacing: 0) {
             HStack(spacing: AppSpacing.md) {
                 Image(systemName: torrent.statusBadge.iconName)
-                    .font(.system(size: 24, weight: .regular))
+                    .font(.system(size: 18, weight: .regular))
                     .foregroundColor(.primary)
                     .frame(width: 24, height: 24)
+                    .padding(.top, 2)
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(torrent.name)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
                         .lineLimit(2)
 
@@ -28,11 +29,12 @@ struct TorrentRow: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(AppColors.tertiaryLabel)
+                    .padding(.top, 4)
             }
-            .padding(.vertical, 10)
+            .padding(.vertical, 12)
 
             Divider()
-                .padding(.leading, 56)
+                .padding(.leading, 54)
         }
         .background(Color.clear)
     }
