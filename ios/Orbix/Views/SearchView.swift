@@ -20,6 +20,7 @@ struct SearchView: View {
     @State private var showTranslation = false
     @State private var exportedFileURL: URL?
     @State private var showExportSheet = false
+    @State private var showVideoSubtitle = false
 
     enum SearchState { case idle, loading, results, empty, error(String) }
 
@@ -84,6 +85,9 @@ struct SearchView: View {
                 if let url = exportedFileURL {
                     ShareSheet(activityItems: [url])
                 }
+            }
+            .sheet(isPresented: $showVideoSubtitle) {
+                VideoSubtitleView()
             }
         }
     }
@@ -239,6 +243,7 @@ struct SearchView: View {
                       systemImage: bookmarks.contains(torrent.code) ? "heart.fill" : "heart")
             }
             Button { translateCard(torrent) } label: { Label(String(localized: "一键翻译", comment: ""), systemImage: "translate") }
+            Button { showVideoSubtitle = true } label: { Label(String(localized: "提取字幕", comment: ""), systemImage: "waveform") }
             Button { UIPasteboard.general.string = torrent.magnet } label: { Label(OrbixStrings.btnCopyMagnet, systemImage: "doc.on.doc") }
         }
     }

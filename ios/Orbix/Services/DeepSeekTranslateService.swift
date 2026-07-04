@@ -38,33 +38,45 @@ actor DeepSeekTranslateService {
 
     func translateSubtitles(
         _ entries: [SRTEntry],
-        batchSize: Int = 8,
+        batchSize: Int = 20,
+        maxConcurrent: Int = 3,
         onProgress: (@Sendable (Int, Int) async -> Void)? = nil
     ) async throws -> [SRTEntry] {
         guard !entries.isEmpty else { return entries }
 
-        var translated: [Int: String] = [:]
         let total = entries.count
-        var current = 0
-
-        let batches = stride(from: 0, to: entries.count, by: batchSize).map {
-            Array(entries[$0..<min($0 + batchSize, entries.count)])
+        let batches = stride(from: 0, to: total, by: batchSize).map {
+            Array(entries[$0..<min($0 + batchSize, total)])
         }
 
-        for batch in batches {
-            let prompt = buildBatchPrompt(batch)
-            let response = try await translateToChinese(prompt)
-            parseBatchResponse(response, into: &translated, for: batch)
+        var translated: [Int: String] = [:]
+        var completed = 0
 
-            current += batch.count
-            await onProgress?(current, total)
-
-            if current < total {
-                try await Task.sleep(nanoseconds: 500_000_000)
+        try await withThrowingTaskGroup(of: (Int, [Int: String]).self) { group in
+            for (batchIndex, batch) in batches.enumerated() {
+                if batchIndex >= maxConcurrent {
+                    if let result = try await group.next() {
+                        completed += result.0
+                        for (k, v) in result.1 { translated[k] = v }
+                        await onProgress?(completed, total)
+                    }
+                }
+                group.addTask {
+                    let prompt = self.buildBatchPrompt(batch)
+                    let response = try await self.translateToChinese(prompt)
+                    var batchDict: [Int: String] = [:]
+                    self.parseBatchResponse(response, into: &batchDict, for: batch)
+                    return (batch.count, batchDict)
+                }
+            }
+            for try await result in group {
+                completed += result.0
+                for (k, v) in result.1 { translated[k] = v }
+                await onProgress?(completed, total)
             }
         }
 
-        return entries.enumerated().map { _, entry in
+        return entries.map { entry in
             var result = entry
             result.text = translated[entry.index] ?? entry.text
             return result
