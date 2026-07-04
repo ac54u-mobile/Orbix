@@ -6,53 +6,44 @@ struct ScrapedTorrentRow: View {
     @State private var loadedThumbnail: UIImage?
 
     var body: some View {
-        HStack(spacing: AppSpacing.md) {
-            thumbnailView
-
-            VStack(alignment: .leading, spacing: AppSpacing.xs) {
-                Text(torrent.title)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(AppColors.label)
-                    .lineLimit(2)
-
-                HStack(spacing: AppSpacing.sm) {
-                    Text(torrent.code)
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(AppColors.accent)
-
-                    if !torrent.date.isEmpty {
-                        Text(torrent.date)
-                            .font(.system(size: 11))
-                            .foregroundColor(AppColors.tertiaryLabel)
-                    }
-
-                    if !torrent.size.isEmpty {
-                        Text(torrent.size)
-                            .font(.system(size: 11, weight: .medium, design: .monospaced))
-                            .foregroundColor(AppColors.secondaryLabel)
-                    }
-                }
-
+        HStack(spacing: 16) {
+            // Thumbnail
+            ZStack(alignment: .topLeading) {
+                thumbnailView
                 if isBookmarked {
-                    HStack(spacing: AppSpacing.xs) {
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(AppColors.danger)
-                        Text(OrbixStrings.miscBookmark)
-                            .font(.system(size: 11))
-                            .foregroundColor(AppColors.danger)
-                    }
+                    Circle().fill(AppColors.danger).frame(width: 14, height: 14)
+                        .overlay(Image(systemName: "heart.fill").font(.system(size: 7)).foregroundColor(.white))
+                        .offset(x: -4, y: -4)
                 }
             }
+
+            // Text
+            VStack(alignment: .leading, spacing: 3) {
+                Text(torrent.code)
+                    .font(AppTypography.titleSmall())
+                    .foregroundColor(Color(.label))
+                    .lineLimit(1)
+
+                let subtitle = subtitleText
+                if !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(AppTypography.descriptionSmall())
+                        .foregroundColor(Color(.secondaryLabel))
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(Color(.tertiaryLabel))
         }
-        .padding(AppSpacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .fill(AppColors.card)
-        )
+        .padding(.horizontal, 16)
+        .padding(.vertical, 11)
+        .background(Color(.secondarySystemGroupedBackground))
         .task(id: torrent.id) {
-            guard let urlStr = torrent.thumbnail,
-                  let url = URL(string: urlStr) else {
+            guard let urlStr = torrent.thumbnail, let url = URL(string: urlStr) else {
                 loadedThumbnail = nil
                 return
             }
@@ -74,6 +65,14 @@ struct ScrapedTorrentRow: View {
         }
     }
 
+    private var subtitleText: String {
+        var parts: [String] = []
+        if !torrent.size.isEmpty { parts.append(torrent.size) }
+        if !torrent.date.isEmpty { parts.append(torrent.date) }
+        if let desc = torrent.description, !desc.isEmpty { parts.append(desc) }
+        return parts.joined(separator: " / ")
+    }
+
     private var thumbnailView: some View {
         Group {
             if let img = loadedThumbnail {
@@ -82,35 +81,36 @@ struct ScrapedTorrentRow: View {
                     .aspectRatio(contentMode: .fill)
             } else {
                 ZStack {
-                    AppColors.elevated
+                    Color(.tertiarySystemFill)
                     Image(systemName: "photo")
-                        .font(.system(size: 14))
-                        .foregroundColor(AppColors.placeholder)
+                        .font(.system(size: 18))
+                        .foregroundColor(Color(.tertiaryLabel))
                 }
             }
         }
-        .frame(width: 60, height: 80)
+        .frame(width: 52, height: 52)
         .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
     }
 }
 
 #if DEBUG
 #Preview {
-    VStack(spacing: AppSpacing.sm) {
+    VStack(spacing: 0) {
         ScrapedTorrentRow(
             torrent: ScrapedTorrent(
                 code: "SSIS-001",
-                title: "Sample Title That Is Quite Long And Might Span Multiple Lines",
+                title: "Sample Title",
                 size: "5.2 GB",
                 date: "2026-06-29",
                 thumbnail: nil,
                 magnet: "magnet:?xt=urn:btih:demo",
                 torrentUrl: nil,
                 pageUrl: nil,
-                description: nil
+                description: "Some description text here"
             ),
             isBookmarked: true
         )
+        Divider().padding(.leading, 80)
         ScrapedTorrentRow(
             torrent: ScrapedTorrent(
                 code: "ABW-123",
@@ -126,7 +126,9 @@ struct ScrapedTorrentRow: View {
             isBookmarked: false
         )
     }
-    .padding(.horizontal, AppSpacing.lg)
-    .background(AppColors.mainBg)
+    .background(Color(.secondarySystemGroupedBackground))
+    .clipShape(RoundedRectangle(cornerRadius: 14))
+    .padding(.horizontal, 16)
+    .background(Color(.systemGroupedBackground))
 }
 #endif

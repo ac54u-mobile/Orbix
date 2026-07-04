@@ -16,41 +16,13 @@ struct SearchView: View {
     @State private var showingBookmarks = false
 
     enum SearchState { case idle, loading, results, empty, error(String) }
-    enum ViewMode: String { case grid, list }
 
     @State private var searchTask: Task<Void, Never>?
-
-    // MARK: - Grid Layout (pinch to zoom)
-    @AppStorage("searchGridColumns") private var gridColumnCount = 4
-    @State private var pinchBaseColumns: Int?
-    @AppStorage("searchViewMode") private var viewModeRaw = ViewMode.grid.rawValue
-    private var viewMode: ViewMode { ViewMode(rawValue: viewModeRaw) ?? .grid }
-
-    private var gridColumns: [GridItem] {
-        Array(repeating: GridItem(.flexible(), spacing: 1), count: gridColumnCount)
-    }
-
-    private var pinchToZoom: some Gesture {
-        MagnificationGesture()
-            .onChanged { scale in
-                let base = pinchBaseColumns ?? gridColumnCount
-                if pinchBaseColumns == nil { pinchBaseColumns = gridColumnCount }
-                // 往外撑(scale>1) → 列变少卡片变大；往里捏 → 列变多
-                let steps = Int((scale - 1) * 3)
-                let target = min(6, max(2, base - steps))
-                if target != gridColumnCount {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-                        gridColumnCount = target
-                    }
-                }
-            }
-            .onEnded { _ in pinchBaseColumns = nil }
-    }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.groupedBg.ignoresSafeArea()
+                Color(.systemGroupedBackground).ignoresSafeArea()
                 switch state {
                 case .idle: idleView
                 case .loading: loadingView
@@ -62,40 +34,27 @@ struct SearchView: View {
             .navigationTitle(OrbixStrings.navSearch)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    HStack(spacing: 16) {
-                        Button {
-                            SearchModeState.shared.use141 = false
-                        } label: {
-                            Image(systemName: "antenna.radiowaves.left.and.right")
-                                .foregroundColor(AppColors.accent)
-                                .font(.system(size: 14))
-                        }
-                        Button {
-                            let impact = UIImpactFeedbackGenerator(style: .light)
-                            impact.impactOccurred()
-                            withAnimation(AppMotion.mediumAnim()) {
-                                viewModeRaw = (viewMode == .grid ? ViewMode.list : ViewMode.grid).rawValue
-                            }
-                        } label: {
-                            Image(systemName: viewMode == .grid ? "list.bullet" : "square.grid.3x3")
-                                .foregroundColor(AppColors.accent)
-                                .font(.system(size: 15))
-                        }
+                    Button {
+                        SearchModeState.shared.use141 = false
+                    } label: {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .foregroundColor(AppColors.accent)
+                            .font(.system(size: 14))
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    let impact = UIImpactFeedbackGenerator(style: .light)
-                    impact.impactOccurred()
-                    withAnimation(.none) { showingBookmarks.toggle() }
-                } label: {
-                    Image(systemName: showingBookmarks ? "heart.fill" : (bookmarks.isEmpty ? "heart" : "heart.fill"))
-                        .foregroundColor(AppColors.accent)
+                    Button {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        withAnimation(.none) { showingBookmarks.toggle() }
+                    } label: {
+                        Image(systemName: showingBookmarks ? "heart.fill" : (bookmarks.isEmpty ? "heart" : "heart.fill"))
+                            .foregroundColor(AppColors.accent)
+                    }
+                    .accessibilityLabel(OrbixStrings.navSearch)
+                    .id("bookmark_\(bookmarks.hashValue)_\(showingBookmarks)")
                 }
-                .accessibilityLabel(OrbixStrings.navSearch)
-                .id("bookmark_\(bookmarks.hashValue)_\(showingBookmarks)")
             }
-        }
             .onAppear { loadBookmarks(); if allResults.isEmpty { loadLatest() } }
             .sheet(item: $selectedTorrent) { TorrentDetailSheet(torrent: $0, bookmarks: $bookmarks, onChanged: saveBookmarks) }
             .fullScreenCover(isPresented: $showMediaViewer) {
@@ -123,30 +82,13 @@ struct SearchView: View {
                     .padding(.horizontal, 20)
 
                 if results.isEmpty {
-                    gridSkeleton
-                } else if viewMode == .grid {
-                    LazyVGrid(columns: gridColumns, spacing: 1) {
-                        ForEach(results) { torrent in
-                            TorrentCard(torrent: torrent)
-                                .onTapGesture { selectedTorrent = torrent }
-                                .contextMenu { cardContextMenu(torrent) }
-                        }
-                    }
+                    listSkeleton
                 } else {
-                    LazyVStack(spacing: AppSpacing.sm) {
-                        ForEach(results) { torrent in
-                            ScrapedTorrentRow(torrent: torrent, isBookmarked: bookmarks.contains(torrent.code))
-                                .contentShape(Rectangle())
-                                .onTapGesture { selectedTorrent = torrent }
-                                .contextMenu { cardContextMenu(torrent) }
-                        }
-                    }
-                    .padding(.horizontal, AppSpacing.lg)
+                    sectionGroup(results)
                 }
             }
         }
         .refreshable { await refreshSearch() }
-        .gesture(viewMode == .grid ? pinchToZoom : nil)
     }
 
     // MARK: - Loading
@@ -157,7 +99,7 @@ struct SearchView: View {
                 Text(OrbixStrings.msgFetchingLatest).subtitle(AppColors.tertiaryLabel)
             }
             .padding(.top, 16)
-            gridSkeleton
+            listSkeleton
         }
     }
 
@@ -187,44 +129,14 @@ struct SearchView: View {
                 .frame(maxWidth: .infinity)
             }
 
-            LazyVStack(spacing: 0, pinnedViews: viewMode == .grid ? .sectionHeaders : []) {
+            LazyVStack(spacing: 16) {
                 ForEach(sections, id: \.date) { section in
-                    Section {
-                        if viewMode == .grid {
-                            LazyVGrid(columns: gridColumns, spacing: 1) {
-                                ForEach(section.items) { torrent in
-                                    TorrentCard(torrent: torrent)
-                                        .onTapGesture { selectedTorrent = torrent }
-                                        .contextMenu { cardContextMenu(torrent) }
-                                }
-                            }
-                        } else {
-                            LazyVStack(spacing: AppSpacing.sm) {
-                                ForEach(section.items) { torrent in
-                                    ScrapedTorrentRow(torrent: torrent, isBookmarked: bookmarks.contains(torrent.code))
-                                        .contentShape(Rectangle())
-                                        .onTapGesture { selectedTorrent = torrent }
-                                        .contextMenu { cardContextMenu(torrent) }
-                                }
-                            }
-                            .padding(.horizontal, AppSpacing.lg)
-                        }
-                    } header: {
-                        HStack {
-                            Spacer()
-                            Text(section.date)
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 3)
-                                .background(
-                                    RoundedRectangle(cornerRadius: AppRadius.xs)
-                                        .fill(.black.opacity(0.65))
-                                )
-                                .padding(.trailing, 4)
-                                .padding(.top, 2)
-                        }
-                        .padding(.bottom, viewMode == .list ? AppSpacing.sm : 0)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(section.date)
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(.secondaryLabel))
+                            .padding(.horizontal, 20)
+                        sectionGroup(section.items)
                     }
                 }
 
@@ -233,9 +145,7 @@ struct SearchView: View {
                         if isLoadingMore {
                             ProgressView().tint(AppColors.accent)
                         } else if hasMorePages {
-                            Color.clear
-                                .frame(height: 1)
-                                .onAppear { loadMore() }
+                            Color.clear.frame(height: 1).onAppear { loadMore() }
                         } else {
                             Text(OrbixStrings.msgAllLoaded)
                                 .font(.caption)
@@ -245,10 +155,57 @@ struct SearchView: View {
                     .padding(.vertical, 20)
                 }
             }
+            .padding(.top, 8)
         }
         .refreshable { await refreshSearch() }
         .animation(.none, value: results.count)
-        .gesture(viewMode == .grid ? pinchToZoom : nil)
+    }
+
+    // MARK: - Grouped Section Container
+    @ViewBuilder
+    private func sectionGroup(_ items: [ScrapedTorrent]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(items.enumerated()), id: \.element.id) { idx, torrent in
+                ScrapedTorrentRow(torrent: torrent, isBookmarked: bookmarks.contains(torrent.code))
+                    .contentShape(Rectangle())
+                    .onTapGesture { selectedTorrent = torrent }
+                    .contextMenu { cardContextMenu(torrent) }
+                if idx < items.count - 1 {
+                    Divider().padding(.leading, 80)
+                }
+            }
+        }
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: SettingsConfig.containerCornerRadius))
+        .padding(.horizontal, 16)
+    }
+
+    // MARK: - Skeleton
+    private var listSkeleton: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<6, id: \.self) { i in
+                HStack(spacing: 16) {
+                    RoundedRectangle(cornerRadius: AppRadius.sm)
+                        .fill(Color(.tertiarySystemFill))
+                        .frame(width: 52, height: 52)
+                    VStack(alignment: .leading, spacing: 6) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color(.tertiarySystemFill))
+                            .frame(height: 14).frame(maxWidth: 150)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color(.quaternarySystemFill))
+                            .frame(height: 11).frame(maxWidth: 220)
+                    }
+                    Spacer()
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 11)
+                .background(Color(.secondarySystemGroupedBackground))
+                if i < 5 { Divider().padding(.leading, 80) }
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: SettingsConfig.containerCornerRadius))
+        .padding(.horizontal, 16)
     }
 
     // MARK: - Context Menu
@@ -349,15 +306,14 @@ struct SearchView: View {
         guard !isLoadingMore, hasMorePages else { return }
         isLoadingMore = true
         let q = query.trimmingCharacters(in: .whitespaces)
-        let searchQuery = q.isEmpty ? "" : q
         let nextPage = currentPage + 1
         Task {
             do {
                 let items: [ScrapedTorrent]
-                if searchQuery.isEmpty {
+                if q.isEmpty {
                     items = try await TorrentSearchService.shared.newTorrents(pages: 1, startPage: nextPage)
                 } else {
-                    items = try await TorrentSearchService.shared.search(query: searchQuery, pages: 1, startPage: nextPage)
+                    items = try await TorrentSearchService.shared.search(query: q, pages: 1, startPage: nextPage)
                 }
                 await MainActor.run {
                     if items.isEmpty {
@@ -399,22 +355,12 @@ struct SearchView: View {
         PersistenceService.shared.saveBookmarks(Array(bookmarks))
     }
 
-    // MARK: - Shared Components
+    // MARK: - Empty / Error
     private func emptyHint(_ text: String, icon: String, isError: Bool = false) -> some View {
         VStack(spacing: 10) {
             Image(systemName: icon).font(.system(size: 48))
                 .foregroundColor(isError ? AppColors.danger : AppColors.placeholder)
             Text(text).subtitle(isError ? AppColors.danger : AppColors.secondaryLabel)
-        }
-    }
-
-    private var gridSkeleton: some View {
-        LazyVGrid(columns: gridColumns, spacing: 1) {
-            ForEach(0..<12, id: \.self) { _ in
-                RoundedRectangle(cornerRadius: 1)
-                    .fill(AppColors.card.opacity(0.5))
-                    .aspectRatio(1, contentMode: .fit)
-            }
         }
     }
 }
@@ -424,7 +370,3 @@ struct SearchView: View {
     SearchView()
 }
 #endif
-
-
-
-
