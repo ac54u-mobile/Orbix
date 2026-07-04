@@ -7,7 +7,7 @@ actor DeepSeekTranslateService {
     private let session: URLSession
 
     private init() {
-        serverURL = "http://27.47.33.146:8899/translate"
+        serverURL = "http://152.53.131.108:8899/translate"
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 60
         config.timeoutIntervalForResource = 120
