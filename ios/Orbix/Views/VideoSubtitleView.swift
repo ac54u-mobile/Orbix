@@ -6,17 +6,22 @@ struct VideoSubtitleView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var state: PipelineState = .idle
     @State private var showFilePicker = false
-    @State private var progressText = ""
+    @State private var phaseText = ""
+    @State private var progress = 0
+    @State private var total = 0
+    @State private var elapsedSeconds = 0
     @State private var srtContent: String?
     @State private var exportedFileURL: URL?
     @State private var showExportSheet = false
     @State private var errorMessage: String?
 
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
     enum PipelineState {
         case idle
         case extracting
-        case uploading
-        case processing
+        case recognizing
+        case translating
         case done
         case error(String)
     }
@@ -27,8 +32,10 @@ struct VideoSubtitleView: View {
                 switch state {
                 case .idle:
                     idleView
-                case .extracting, .uploading, .processing:
-                    processingView
+                case .extracting, .recognizing:
+                    singleProgressView
+                case .translating:
+                    translatingView
                 case .done:
                     doneView
                 case .error(let msg):
@@ -45,18 +52,16 @@ struct VideoSubtitleView: View {
                 }
             }
         }
-        .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.movie, .mpeg4Movie, .quickTimeMovie]) { result in
-            switch result {
-            case .success(let url):
-                processVideo(url)
-            case .failure:
-                break
+        .onReceive(timer) { _ in
+            if state == .recognizing || state == .translating {
+                elapsedSeconds += 1
             }
         }
+        .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.movie, .mpeg4Movie, .quickTimeMovie]) { result in
+            if case .success(let url) = result { processVideo(url) }
+        }
         .sheet(isPresented: $showExportSheet) {
-            if let url = exportedFileURL {
-                ShareSheet(activityItems: [url])
-            }
+            if let url = exportedFileURL { ShareSheet(activityItems: [url]) }
         }
     }
 
@@ -69,7 +74,7 @@ struct VideoSubtitleView: View {
             VStack(spacing: AppSpacing.sm) {
                 Text(String(localized: "语音转字幕", comment: ""))
                     .font(.system(size: 22, weight: .semibold))
-                Text(String(localized: "选择视频文件，服务器将自动提取语音 → 识别 → 翻译为中文 .srt", comment: ""))
+                Text(String(localized: "选择视频 → 提取音频 → Whisper 识别 → DeepSeek 翻译 → 中文 .srt", comment: ""))
                     .descriptionSmall()
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, AppSpacing.xl)
@@ -91,17 +96,35 @@ struct VideoSubtitleView: View {
         .padding(AppSpacing.xl)
     }
 
-    private var processingView: some View {
+    private var singleProgressView: some View {
         VStack(spacing: AppSpacing.xl) {
             Spacer()
             ProgressView()
                 .scaleEffect(1.5)
                 .tint(AppColors.accentPrimary)
             VStack(spacing: AppSpacing.sm) {
-                Text(progressText)
+                Text(phaseText)
                     .font(.system(size: 18, weight: .semibold))
-                Text(String(localized: "请耐心等待，2小时视频约需5-10分钟", comment: ""))
+                Text(String(format: String(localized: "已运行 %d 秒", comment: ""), elapsedSeconds))
                     .descriptionSmall()
+            }
+            Spacer()
+        }
+    }
+
+    private var translatingView: some View {
+        VStack(spacing: AppSpacing.xl) {
+            Spacer()
+            ProgressView(value: Double(progress), total: Double(total))
+                .progressViewStyle(LinearProgressViewStyle(tint: AppColors.accentPrimary))
+                .padding(.horizontal, AppSpacing.xxl)
+            VStack(spacing: AppSpacing.sm) {
+                Text(String(localized: "翻译中…", comment: ""))
+                    .font(.system(size: 18, weight: .semibold))
+                Text("\(progress) / \(total) \(String(localized: "条", comment: ""))")
+                    .descriptionSmall()
+                Text(String(format: String(localized: "耗时 %d 秒", comment: ""), elapsedSeconds))
+                    .caption()
             }
             Spacer()
         }
@@ -116,7 +139,7 @@ struct VideoSubtitleView: View {
             VStack(spacing: AppSpacing.sm) {
                 Text(String(localized: "字幕生成完成", comment: ""))
                     .font(.system(size: 22, weight: .semibold))
-                Text(String(localized: "已自动识别语音并翻译为中文", comment: ""))
+                Text(String(format: String(localized: "共 %d 条字幕，耗时 %d 秒", comment: ""), total, elapsedSeconds))
                     .descriptionSmall()
             }
             Button {
@@ -144,31 +167,71 @@ struct VideoSubtitleView: View {
             Text(msg)
                 .descriptionSmall(AppColors.danger)
                 .multilineTextAlignment(.center)
-            Button(String(localized: "重试", comment: "")) { state = .idle }
-                .buttonStyle(ScaleButtonStyle())
+            Button(String(localized: "重试", comment: "")) {
+                state = .idle
+                elapsedSeconds = 0
+            }
+            .buttonStyle(ScaleButtonStyle())
             Spacer()
         }
     }
 
     private func processVideo(_ url: URL) {
         guard url.startAccessingSecurityScopedResource() else { return }
+        elapsedSeconds = 0
         Task {
             do {
                 await MainActor.run {
                     state = .extracting
-                    progressText = String(localized: "提取音频中…", comment: "")
+                    phaseText = String(localized: "提取音频中…", comment: "")
                 }
 
                 let audioURL = try await SpeechTranscribeService.extractAudio(from: url)
                 url.stopAccessingSecurityScopedResource()
 
-                await MainActor.run {
-                    state = .processing
-                    progressText = String(localized: "服务器识别 + 翻译中…", comment: "")
+                let segments = try await SpeechTranscribeService.shared.transcribe(audioURL: audioURL) { phase in
+                    await MainActor.run {
+                        switch phase {
+                        case .extracting:
+                            phaseText = String(localized: "提取音频中…", comment: "")
+                        case .recognizing:
+                            state = .recognizing
+                            phaseText = String(localized: "Whisper 语音识别中…", comment: "")
+                        case .translating:
+                            break
+                        }
+                    }
+                }
+                try? FileManager.default.removeItem(at: audioURL)
+
+                guard !segments.isEmpty else {
+                    await MainActor.run { state = .error(String(localized: "未识别到语音内容", comment: "")) }
+                    return
                 }
 
-                let srt = try await SpeechTranscribeService.shared.transcribeAndTranslate(audioURL: audioURL)
-                try? FileManager.default.removeItem(at: audioURL)
+                let srtEntries = segments.enumerated().map { idx, seg in
+                    SRTEntry(index: idx + 1, start: seg.start, end: seg.end, text: seg.text)
+                }
+
+                await MainActor.run {
+                    state = .translating
+                    progress = 0
+                    total = srtEntries.count
+                }
+
+                let translated = try await DeepSeekTranslateService.shared.translateSubtitles(
+                    srtEntries, batchSize: 25, maxConcurrent: 5
+                ) { current, totalCount in
+                    await MainActor.run {
+                        progress = current
+                        total = totalCount
+                    }
+                }
+
+                let srt = SpeechTranscribeService.shared.segmentsToSRT(
+                    segments,
+                    with: translated.map { $0.text }
+                )
 
                 await MainActor.run {
                     srtContent = srt
