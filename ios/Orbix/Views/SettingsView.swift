@@ -26,44 +26,59 @@ struct SettingsView: View {
                 if !isLoading {
                     Section {
                         serverProfileCard
+                            .listRowBackground(Color.clear)
                     } header: {
                         Text(OrbixStrings.sectionServer.uppercased())
+                            .foregroundColor(.secondary)
                     }
 
                     if appLock.isDeviceSupported {
                         Section {
                             appLockToggle
+                                .listRowBackground(Color.clear)
                         } header: {
                             Text(String(localized: "安全", comment: "Security").uppercased())
+                                .foregroundColor(.secondary)
                         }
                     }
 
                     Section {
                         updateRow
+                            .listRowBackground(Color.clear)
                         if let release = updateCheck?.latest {
                             releaseCard(release)
+                                .listRowBackground(Color.clear)
                         }
                         if isDownloading {
                             downloadBar
+                                .listRowBackground(Color.clear)
                         }
                     } header: {
                         Text(String(localized: "更新", comment: "Update").uppercased())
+                            .foregroundColor(.secondary)
                     }
 
                     Section {
                         aboutRow(icon: "info.circle", label: String(localized: "版本", comment: "Version"), value: appVersion)
+                            .listRowBackground(Color.clear)
                         aboutRow(icon: "number", label: String(localized: "构建号", comment: "Build"), value: buildNumber)
+                            .listRowBackground(Color.clear)
                     } header: {
                         Text(String(localized: "关于", comment: "About").uppercased())
+                            .foregroundColor(.secondary)
                     }
                 }
             }
-            .listStyle(.insetGrouped)
+            .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(AppColors.groupedBg)
+            .background(
+                AppColors.backgroundGradient
+                    .ignoresSafeArea()
+            )
             .navigationTitle(OrbixStrings.navSettings)
             .onAppear { loadInfo() }
         }
+        .preferredColorScheme(.light)
     }
 
     // MARK: - Server Profile Card
@@ -83,7 +98,7 @@ struct SettingsView: View {
                     HStack(spacing: 6) {
                         Text(serverName)
                             .font(.system(size: 17, weight: .semibold))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(.primary)
                         if serverHttps {
                             Image(systemName: "lock.fill")
                                 .font(.system(size: 11))
@@ -93,13 +108,13 @@ struct SettingsView: View {
 
                     HStack(spacing: 4) {
                         Circle()
-                            .fill(serverOnline == true ? AppColors.success : (serverOnline == false ? AppColors.danger : AppColors.tertiaryLabel))
+                            .fill(serverOnline == true ? AppColors.success : (serverOnline == false ? AppColors.danger : Color(.tertiaryLabel)))
                             .frame(width: 7, height: 7)
                         Text(serverOnline == true ? String(localized: "在线", comment: "Online") :
                                 serverOnline == false ? String(localized: "离线", comment: "Offline") :
                                 String(localized: "检测中…", comment: "Checking"))
                             .font(.system(size: 13))
-                            .foregroundColor(serverOnline == true ? AppColors.success : AppColors.secondaryLabel)
+                            .foregroundColor(serverOnline == true ? AppColors.success : .secondary)
                     }
                 }
 
@@ -112,11 +127,11 @@ struct SettingsView: View {
                 HStack {
                     Text(OrbixStrings.sectionAddress)
                         .font(.system(size: 14))
-                        .foregroundColor(AppColors.label)
+                        .foregroundColor(.primary)
                     Spacer()
                     Text(serverURL)
                         .font(.system(size: 14, design: .monospaced))
-                        .foregroundColor(AppColors.secondaryLabel)
+                        .foregroundColor(.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
@@ -127,11 +142,11 @@ struct SettingsView: View {
                     HStack {
                         Text(OrbixStrings.miscQBVersion)
                             .font(.system(size: 14))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(.primary)
                         Spacer()
                         Text(serverVersion)
                             .font(.system(size: 14, design: .monospaced))
-                            .foregroundColor(AppColors.secondaryLabel)
+                            .foregroundColor(.secondary)
                     }
                     .padding(.vertical, 8)
                     Divider()
@@ -140,11 +155,11 @@ struct SettingsView: View {
                 HStack {
                     Text(OrbixStrings.sectionUser)
                         .font(.system(size: 14))
-                        .foregroundColor(AppColors.label)
+                        .foregroundColor(.primary)
                     Spacer()
                     Text(username)
                         .font(.system(size: 14))
-                        .foregroundColor(AppColors.secondaryLabel)
+                        .foregroundColor(.secondary)
                 }
                 .padding(.vertical, 8)
             }
@@ -171,14 +186,14 @@ struct SettingsView: View {
             Toggle(isOn: $appLock.isEnabled) {
                 Text(String(localized: "应用锁", comment: "App lock"))
                     .font(.system(size: 15))
-                    .foregroundColor(AppColors.label)
+                    .foregroundColor(.primary)
             }
             .tint(AppColors.accent)
 
             if appLock.isEnabled {
                 Text(String(localized: "切到后台 \(Int(AppConstants.lockGracePeriod)) 秒后自动锁定", comment: "Auto-lock hint"))
                     .font(.system(size: 13))
-                    .foregroundColor(AppColors.secondaryLabel)
+                    .foregroundColor(.secondary)
             }
         }
     }
@@ -203,7 +218,7 @@ struct SettingsView: View {
                             .foregroundColor(AppColors.success)
                     } else {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .foregroundColor(AppColors.secondaryLabel)
+                            .foregroundColor(.secondary)
                     }
                 }
                 .font(.system(size: 15))
@@ -212,17 +227,17 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(updateStatusText)
                         .font(.system(size: 15))
-                        .foregroundColor(AppColors.label)
+                        .foregroundColor(.primary)
                     if let detail = updateStatusDetail {
                         Text(detail)
                             .font(.system(size: 13))
-                            .foregroundColor(AppColors.secondaryLabel)
+                            .foregroundColor(.secondary)
                     }
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(Color(.tertiaryLabel))
             }
         }
         .disabled(isCheckingUpdate)
@@ -249,14 +264,14 @@ struct SettingsView: View {
             HStack {
                 Text(release.version)
                     .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(AppColors.label)
+                    .foregroundColor(.primary)
                 Spacer()
                 if let size = release.ipaSize {
                     Text(formatBytes(size))
                         .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundColor(AppColors.secondaryLabel)
+                        .foregroundColor(.secondary)
                         .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(Capsule().fill(AppColors.elevated))
+                        .background(Capsule().fill(Color(.secondarySystemFill)))
                 }
             }
 
@@ -267,7 +282,7 @@ struct SettingsView: View {
             if !cleanNotes.isEmpty {
                 Text(cleanNotes)
                     .font(.system(size: 13))
-                    .foregroundColor(AppColors.secondaryLabel)
+                    .foregroundColor(.secondary)
                     .lineLimit(3)
             }
 
@@ -307,15 +322,15 @@ struct SettingsView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 15))
-                .foregroundColor(AppColors.tertiaryLabel)
+                .foregroundColor(Color(.tertiaryLabel))
                 .frame(width: 26)
             Text(label)
                 .font(.system(size: 15))
-                .foregroundColor(AppColors.label)
+                .foregroundColor(.primary)
             Spacer()
             Text(value)
                 .font(.system(size: 15, design: .monospaced))
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(.secondary)
         }
     }
 

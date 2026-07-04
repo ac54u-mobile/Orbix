@@ -27,7 +27,6 @@ struct TorrentRow: View {
             .padding(.vertical, 12)
 
             Divider()
-                .padding(.leading, 42)
         }
         .background(Color.clear)
     }

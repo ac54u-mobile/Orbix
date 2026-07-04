@@ -4,9 +4,9 @@ import SwiftUI
 
 enum AppColors {
     // Background
-    static let backgroundBase          = Color(hex: "#0A0C1F")
-    static let backgroundGradientStart = Color(hex: "#1C003D")
-    static let backgroundGradientEnd   = Color(hex: "#00122B")
+    static let backgroundBase          = Color(red: 0.97, green: 0.96, blue: 0.98)
+    static let backgroundGradientStart = Color(red: 1.0,  green: 0.94, blue: 0.97)
+    static let backgroundGradientEnd   = Color(red: 0.90, green: 0.95, blue: 1.0)
 
     // Surface / Card
     static let card                     = Color(hex: "#11132B")
@@ -49,8 +49,8 @@ enum AppColors {
     // Gradients
     static let backgroundGradient = LinearGradient(
         colors: [backgroundGradientStart, backgroundGradientEnd],
-        startPoint: .top,
-        endPoint: .bottom
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
     )
 
     static let logoGradient = LinearGradient(
