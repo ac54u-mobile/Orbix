@@ -17,7 +17,7 @@ struct TorrentDetailAdvancedSheet: View {
                         .sectionHeader()
                         TextField(OrbixStrings.phNewSavePath, text: $newLocation)
                             .font(.system(size: 14, design: .monospaced))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(.primary)
                     }
                     .padding(.vertical, 4)
 
@@ -47,7 +47,7 @@ struct TorrentDetailAdvancedSheet: View {
                 Section {
                     TextField(OrbixStrings.phRename, text: $newName)
                         .font(.system(size: 14))
-                        .foregroundColor(AppColors.label)
+                        .foregroundColor(.primary)
 
                     Button {
                         Task {
@@ -100,11 +100,11 @@ struct TorrentDetailAdvancedSheet: View {
                     } label: {
                         HStack {
                             Label(OrbixStrings.btnToggleSequential, systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                                .foregroundColor(AppColors.label)
+                                .foregroundColor(.primary)
                             Spacer()
                             Image(systemName: "chevron.forward")
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.tertiaryLabel)
+                                .foregroundColor(Color(.tertiaryLabel))
                         }
                     }
                 } header: {

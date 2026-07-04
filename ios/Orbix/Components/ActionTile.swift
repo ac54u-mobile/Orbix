@@ -16,26 +16,34 @@ struct ActionTile: View {
             }
         }) {
             VStack(spacing: 8) {
-                if isLoading {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: color))
-                        .frame(height: 20)
-                } else {
-                    Image(systemName: icon)
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(color)
-                        .frame(height: 20)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(color.opacity(0.12))
+                        .frame(width: 44, height: 44)
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: color))
+                            .frame(width: 22, height: 22)
+                    } else {
+                        Image(systemName: icon)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundColor(color)
+                    }
                 }
 
                 Text(label)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(AppColors.label)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.primary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
+                    .fill(Color(.systemBackground).opacity(0.85))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                            .stroke(Color(.separator).opacity(0.5), lineWidth: 0.5)
+                    )
             )
         }
         .buttonStyle(ScaleButtonStyle())

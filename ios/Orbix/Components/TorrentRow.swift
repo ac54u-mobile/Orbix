@@ -24,7 +24,7 @@ struct TorrentRow: View {
 
                 trailingBadge
             }
-            .padding(.vertical, 12)
+            .padding(.vertical, 11)
             .padding(.horizontal, 16)
 
             Divider()
@@ -32,11 +32,27 @@ struct TorrentRow: View {
         .background(Color.clear)
     }
 
+    private var statusColor: Color {
+        switch torrent.statusBadge {
+        case .downloading, .forcedDL, .metaDL, .allocating: return AppColors.accent
+        case .uploading, .forcedUP, .stalledUP:             return AppColors.success
+        case .stalledDL:                                    return AppColors.warning
+        case .checkingDL, .checkingUP, .checkingResumeData, .moving: return Color.purple
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP: return Color(.systemGray2)
+        case .error, .missingFiles:                         return AppColors.danger
+        default:                                            return Color(.systemGray3)
+        }
+    }
+
     private var statusIconView: some View {
-        Image(systemName: torrent.statusBadge.iconName)
-            .font(.system(size: 20, weight: .light))
-            .foregroundColor(.primary)
-            .frame(width: 28, height: 28)
+        ZStack {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(statusColor.opacity(0.15))
+            Image(systemName: torrent.statusBadge.iconName)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(statusColor)
+        }
+        .frame(width: 36, height: 36)
     }
 
     @ViewBuilder

@@ -14,11 +14,11 @@ struct SectionHeader: View {
             if let icon = icon {
                 Image(systemName: icon)
                     .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(AppColors.tertiaryLabel)
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             Text(title)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.secondaryLabel)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.secondary)
                 .textCase(.uppercase)
         }
         .padding(.leading, 16)

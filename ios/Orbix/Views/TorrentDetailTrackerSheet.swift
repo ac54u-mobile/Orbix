@@ -13,7 +13,7 @@ struct TorrentDetailTrackerSheet: View {
                     HStack(spacing: 8) {
                         TextField(OrbixStrings.phTrackerURL, text: $newTrackerURL)
                             .font(.system(size: 14, design: .monospaced))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(.primary)
                         Button {
                             guard !newTrackerURL.isEmpty else { return }
                             let urls = newTrackerURL.components(separatedBy: "\n").filter { !$0.isEmpty }
@@ -49,11 +49,11 @@ struct TorrentDetailTrackerSheet: View {
                                 Spacer()
                                 Text("\(OrbixStrings.miscSeedsPrefix)\(tracker.numSeeds)")
                                     .font(.system(size: 11))
-                                    .foregroundColor(AppColors.tertiaryLabel)
+                                    .foregroundColor(Color(.tertiaryLabel))
                             }
                             Text(tracker.url)
                                 .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(AppColors.secondaryLabel)
+                                .foregroundColor(.secondary)
                                 .lineLimit(2)
                         }
                         .padding(.vertical, 4)

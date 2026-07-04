@@ -166,65 +166,73 @@ struct TorrentDetailView: View {
     @ViewBuilder
     private func dashboardCard(_ torrent: TorrentInfo) -> some View {
         VStack(alignment: .leading, spacing: 16) {
+            // Status badge row
+            HStack(spacing: 8) {
+                Image(systemName: torrent.statusBadge.iconName)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(torrent.statusBadge.statusColor)
+                Text(torrent.statusBadge.displayName)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(torrent.statusBadge.statusColor)
+                Spacer()
+                if torrent.dlspeed > 0 {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.down")
+                            .font(.system(size: 11, weight: .bold))
+                        Text(formatSpeed(torrent.dlspeed))
+                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    }
+                    .foregroundColor(AppColors.accent)
+                } else if torrent.upspeed > 0 {
+                    HStack(spacing: 3) {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 11, weight: .bold))
+                        Text(formatSpeed(torrent.upspeed))
+                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    }
+                    .foregroundColor(AppColors.success)
+                }
+            }
+
             Text(torrent.name)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(AppColors.label)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(.primary)
                 .lineLimit(3)
 
-            HStack(alignment: .bottom) {
-                Text("\(torrent.progressPercent)%")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .foregroundColor(torrent.progressColor)
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 4) {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(torrent.statusBadge.statusColor)
-                            .frame(width: 8, height: 8)
-                        Text(torrent.statusBadge.displayName)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(torrent.statusBadge.statusColor)
-                    }
-
-                    if torrent.dlspeed > 0 {
-                        Text("↓ \(formatSpeed(torrent.dlspeed))")
-                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                            .foregroundColor(AppColors.accent)
-                    } else if torrent.upspeed > 0 {
-                        Text("↑ \(formatSpeed(torrent.upspeed))")
-                            .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                            .foregroundColor(AppColors.success)
+            VStack(spacing: 8) {
+                HStack {
+                    Text("\(torrent.progressPercent)%")
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .foregroundColor(torrent.progressColor)
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(formatBytes(torrent.downloaded))
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(.primary)
+                        Text("/ " + formatBytes(torrent.size))
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundColor(.secondary)
                     }
                 }
-            }
 
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(AppColors.separator.opacity(0.5))
-                    Capsule()
-                        .fill(torrent.progressColor)
-                        .frame(width: max(0, geometry.size.width * CGFloat(torrent.progress)))
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color(.systemFill))
+                        Capsule()
+                            .fill(torrent.progressColor)
+                            .frame(width: max(0, geometry.size.width * CGFloat(torrent.progress)))
+                    }
                 }
+                .frame(height: 6)
             }
-            .frame(height: 4)
         }
-        .padding(20)
+        .padding(18)
         .background(
             RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
-                .fill(AppColors.card)
+                .fill(Color(.systemBackground).opacity(0.9))
                 .overlay(
                     RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
-                        .stroke(
-                            LinearGradient(
-                                colors: [torrent.progressColor.opacity(0.4), .clear],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
+                        .stroke(torrent.progressColor.opacity(0.25), lineWidth: 1)
                 )
         )
     }
@@ -255,7 +263,7 @@ struct TorrentDetailView: View {
             ActionTile(
                 icon: announceCooldown ? "clock.fill" : "antenna.radiowaves.left.and.right",
                 label: announceCooldown ? OrbixStrings.btnWait : OrbixStrings.btnAnnounce,
-                color: announceCooldown ? AppColors.secondaryLabel : AppColors.accent,
+                color: announceCooldown ? Color.secondary : AppColors.accent,
                 isLoading: processingAction == .announce || announceCooldown,
                 action: { performAction(.announce, torrent: torrent) }
             )
@@ -270,21 +278,21 @@ struct TorrentDetailView: View {
                 Divider().padding(.leading, 44)
                 DetailRow(icon: "arrow.up.circle.fill", iconColor: AppColors.success, label: OrbixStrings.labelUploadSpeed, value: formatSpeed(torrent.upspeed), valueColor: AppColors.success)
                 Divider().padding(.leading, 44)
-                DetailRow(icon: "tray.and.arrow.down.fill", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelDownloaded, value: formatBytes(torrent.downloaded))
+                DetailRow(icon: "tray.and.arrow.down.fill", iconColor: .secondary, label: OrbixStrings.labelDownloaded, value: formatBytes(torrent.downloaded))
                 Divider().padding(.leading, 44)
-                DetailRow(icon: "tray.and.arrow.up.fill", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelUploaded, value: formatBytes(torrent.uploaded))
+                DetailRow(icon: "tray.and.arrow.up.fill", iconColor: .secondary, label: OrbixStrings.labelUploaded, value: formatBytes(torrent.uploaded))
                 Divider().padding(.leading, 44)
-                DetailRow(icon: "chart.pie.fill", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelRatio, value: String(format: "%.2f", torrent.ratio), valueColor: torrent.ratio >= 1.0 ? AppColors.success : AppColors.secondaryLabel)
+                DetailRow(icon: "chart.pie.fill", iconColor: .secondary, label: OrbixStrings.labelRatio, value: String(format: "%.2f", torrent.ratio), valueColor: torrent.ratio >= 1.0 ? AppColors.success : .secondary)
                 if torrent.eta > 0 {
                     Divider().padding(.leading, 44)
-                    DetailRow(icon: "timer", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelETA, value: torrent.etaFormatted)
+                    DetailRow(icon: "timer", iconColor: .secondary, label: OrbixStrings.labelETA, value: torrent.etaFormatted)
                 }
                 Divider().padding(.leading, 44)
-                DetailRow(icon: "person.2.fill", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelSeeds, value: "\(String(torrent.numSeeds)) / \(String(torrent.numLeechs))")
+                DetailRow(icon: "person.2.fill", iconColor: .secondary, label: OrbixStrings.labelSeeds, value: "\(String(torrent.numSeeds)) / \(String(torrent.numLeechs))")
             }
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
+                    .fill(Color(.systemBackground).opacity(0.9))
             )
         }
     }
@@ -293,24 +301,24 @@ struct TorrentDetailView: View {
         VStack(spacing: 0) {
             SectionHeader(title: OrbixStrings.sectionInfo)
             VStack(spacing: 0) {
-                DetailRow(icon: "internaldrive.fill", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelTotalSize, value: formatBytes(props.totalSize))
+                DetailRow(icon: "internaldrive.fill", iconColor: .secondary, label: OrbixStrings.labelTotalSize, value: formatBytes(props.totalSize))
                 Divider().padding(.leading, 44)
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 12) {
                         Image(systemName: "folder.fill")
                             .font(.system(size: 16))
-                            .foregroundColor(AppColors.secondaryLabel)
+                            .foregroundColor(.secondary)
                             .frame(width: 24)
                         Text(OrbixStrings.labelSavePath)
                             .font(.system(size: 15))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(.primary)
                         Spacer()
                         CopyButton(textToCopy: props.savePath)
                     }
                     Text(props.savePath)
                         .font(.system(size: 13, design: .monospaced))
-                        .foregroundColor(AppColors.secondaryLabel)
+                        .foregroundColor(.secondary)
                         .lineLimit(2)
                         .padding(.leading, 36)
                 }
@@ -319,11 +327,11 @@ struct TorrentDetailView: View {
 
                 if !props.category.isEmpty {
                     Divider().padding(.leading, 44)
-                    DetailRow(icon: "square.grid.2x2.fill", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelCategory, value: props.category)
+                    DetailRow(icon: "square.grid.2x2.fill", iconColor: .secondary, label: OrbixStrings.labelCategory, value: props.category)
                 }
                 if !props.tags.isEmpty {
                     Divider().padding(.leading, 44)
-                    DetailRow(icon: "tag.fill", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelTags, value: props.tags)
+                    DetailRow(icon: "tag.fill", iconColor: .secondary, label: OrbixStrings.labelTags, value: props.tags)
                 }
 
                 Divider().padding(.leading, 44)
@@ -331,17 +339,17 @@ struct TorrentDetailView: View {
                     HStack(spacing: 12) {
                         Image(systemName: "number.circle.fill")
                             .font(.system(size: 16))
-                            .foregroundColor(AppColors.secondaryLabel)
+                            .foregroundColor(.secondary)
                             .frame(width: 24)
                         Text(OrbixStrings.labelHash)
                             .font(.system(size: 15))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(.primary)
                         Spacer()
                         CopyButton(textToCopy: props.hash)
                     }
                     Text(props.hash)
                         .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(AppColors.tertiaryLabel)
+                        .foregroundColor(Color(.tertiaryLabel))
                         .padding(.leading, 36)
                 }
                 .padding(.horizontal, 16)
@@ -349,7 +357,7 @@ struct TorrentDetailView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
+                    .fill(Color(.systemBackground).opacity(0.9))
             )
         }
     }
@@ -374,13 +382,13 @@ struct TorrentDetailView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(file.name)
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(AppColors.label)
+                            .foregroundColor(.primary)
                             .lineLimit(2)
 
                         HStack {
                             Text(formatBytes(file.size))
                                 .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(AppColors.secondaryLabel)
+                                .foregroundColor(.secondary)
                             Spacer()
                             Text("\(file.progressPercent)%")
                                 .font(.system(size: 12, design: .monospaced))
@@ -390,7 +398,7 @@ struct TorrentDetailView: View {
                         GeometryReader { geometry in
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: 1, style: .continuous)
-                                    .fill(AppColors.separator.opacity(0.4))
+                                    .fill(Color(.separator).opacity(0.4))
                                 RoundedRectangle(cornerRadius: 1, style: .continuous)
                                     .fill(file.progress >= 1.0 ? AppColors.success : AppColors.accent)
                                     .frame(width: max(0, geometry.size.width * CGFloat(file.progress)))
@@ -408,7 +416,7 @@ struct TorrentDetailView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
+                    .fill(Color(.systemBackground).opacity(0.9))
             )
         }
     }
@@ -420,7 +428,7 @@ struct TorrentDetailView: View {
         return VStack(spacing: 0) {
             SectionHeader(title: OrbixStrings.sectionTime)
             VStack(spacing: 0) {
-                DetailRow(icon: "calendar.badge.plus", iconColor: AppColors.secondaryLabel, label: OrbixStrings.labelAddTime, value: formatUnixTime(added))
+                DetailRow(icon: "calendar.badge.plus", iconColor: .secondary, label: OrbixStrings.labelAddTime, value: formatUnixTime(added))
                 if completed > 0 {
                     Divider().padding(.leading, 44)
                     DetailRow(icon: "checkmark.seal.fill", iconColor: AppColors.success, label: OrbixStrings.labelCompleteTime, value: formatUnixTime(completed))
@@ -428,7 +436,7 @@ struct TorrentDetailView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
+                    .fill(Color(.systemBackground).opacity(0.9))
             )
         }
     }
@@ -465,7 +473,7 @@ struct TorrentDetailView: View {
                             .caption()
                         Text(tracker.url)
                             .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(AppColors.secondaryLabel)
+                            .foregroundColor(.secondary)
                             .lineLimit(2)
                     }
                     .padding(.horizontal, 16)
@@ -479,7 +487,7 @@ struct TorrentDetailView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
+                    .fill(Color(.systemBackground).opacity(0.9))
             )
         }
     }
@@ -495,7 +503,7 @@ struct TorrentDetailView: View {
                         HStack {
                             Text("\(peer.ip):\(String(peer.port))")
                                 .font(.system(size: 13, weight: .medium, design: .monospaced))
-                                .foregroundColor(AppColors.label)
+                                .foregroundColor(.primary)
                             if !peer.country.isEmpty {
                                 Text(peer.country)
                                     .font(.system(size: 12))
@@ -509,12 +517,12 @@ struct TorrentDetailView: View {
                             }
                             Text("\(peer.progressPercent)%")
                                 .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(AppColors.secondaryLabel)
+                                .foregroundColor(.secondary)
                         }
                         if !peer.client.isEmpty {
                             Text(peer.client)
                                 .font(.system(size: 11, design: .monospaced))
-                                .foregroundColor(AppColors.tertiaryLabel.opacity(0.7))
+                                .foregroundColor(Color(.tertiaryLabel).opacity(0.7))
                         }
                     }
                     .padding(.horizontal, 16)
@@ -541,7 +549,7 @@ struct TorrentDetailView: View {
         case "JP": return AppColors.accent
         case "US", "GB", "CA", "AU": return AppColors.success
         case "KR": return AppColors.warning
-        default: return AppColors.secondaryLabel
+        default: return .secondary
         }
     }
 
@@ -570,11 +578,11 @@ struct TorrentDetailView: View {
 
             Text(OrbixStrings.errLoadFailed)
                 .font(.headline)
-                .foregroundColor(AppColors.label)
+                .foregroundColor(.primary)
 
             Text(message)
                 .font(.subheadline)
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
 
             Button(OrbixStrings.btnRetry) {
@@ -583,7 +591,7 @@ struct TorrentDetailView: View {
                 Task { await manualRefresh() }
             }
             .font(.system(size: 15, weight: .medium))
-            .foregroundColor(AppColors.label)
+            .foregroundColor(.primary)
             .padding(.horizontal, 24)
             .padding(.vertical, 10)
             .background(

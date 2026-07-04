@@ -73,6 +73,17 @@ struct TorrentListView: View {
             case .completed: return OrbixStrings.filterCompleted
             }
         }
+
+        var icon: String {
+            switch self {
+            case .all:         return "square.stack"
+            case .downloading: return "arrow.down.circle.fill"
+            case .seeding:     return "arrow.up.circle.fill"
+            case .active:      return "bolt.circle.fill"
+            case .paused:      return "pause.circle.fill"
+            case .completed:   return "checkmark.circle.fill"
+            }
+        }
     }
 
     private let timer = Timer.publish(every: RefreshInterval.torrentList, on: .main, in: .common).autoconnect()
@@ -304,38 +315,41 @@ struct TorrentListView: View {
 
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 ForEach(TorrentFilter.allCases, id: \.self) { f in
                     Button {
                         let impact = UISelectionFeedbackGenerator()
                         impact.selectionChanged()
-                        
-                        withAnimation(AppMotion.fastAnim()) {
-                            filter = f
-                        }
+                        withAnimation(AppMotion.fastAnim()) { filter = f }
                     } label: {
-                        Text(f.displayName)
-                            .font(.system(size: 14, weight: filter == f ? .bold : .medium))
-                            .foregroundColor(filter == f ? AppColors.label : AppColors.secondaryLabel)
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 16)
-                            .background(
-                                ZStack {
-                                    if filter == f {
-                                        Capsule()
-                                            .fill(AppColors.accent)
-                                            .matchedGeometryEffect(id: "pillBg", in: animationNamespace)
-                                    } else {
-                                        Capsule()
-                                            .fill(AppColors.card.opacity(0.6))
-                                    }
+                        HStack(spacing: 5) {
+                            Image(systemName: f.icon)
+                                .font(.system(size: 12, weight: .semibold))
+                            Text(f.displayName)
+                                .font(.system(size: 13, weight: filter == f ? .bold : .medium))
+                        }
+                        .foregroundColor(filter == f ? .white : .primary)
+                        .padding(.vertical, 7)
+                        .padding(.horizontal, 13)
+                        .background(
+                            ZStack {
+                                if filter == f {
+                                    Capsule()
+                                        .fill(AppColors.accent)
+                                        .matchedGeometryEffect(id: "pillBg", in: animationNamespace)
+                                } else {
+                                    Capsule()
+                                        .fill(Color(.systemBackground).opacity(0.8))
+                                    Capsule()
+                                        .stroke(Color(.separator), lineWidth: 0.5)
                                 }
-                            )
+                            }
+                        )
                     }
                     .accessibilityLabel(f.displayName)
                 }
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
         .background(.ultraThinMaterial)

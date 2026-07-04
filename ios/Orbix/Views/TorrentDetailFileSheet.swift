@@ -25,11 +25,11 @@ struct TorrentDetailFileSheet: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(file.name)
                                 .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.label)
+                                .foregroundColor(.primary)
                                 .lineLimit(2)
                             Text(formatBytes(file.size))
                                 .font(.system(size: 12))
-                                .foregroundColor(AppColors.secondaryLabel)
+                                .foregroundColor(.secondary)
                         }
 
                         Spacer()
@@ -46,7 +46,7 @@ struct TorrentDetailFileSheet: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(OrbixStrings.btnCancel) { dismiss(); selectedFileIndices = [] }
-                        .foregroundColor(AppColors.secondaryLabel)
+                        .foregroundColor(.secondary)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !selectedFileIndices.isEmpty {

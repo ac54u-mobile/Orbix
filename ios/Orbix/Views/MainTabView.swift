@@ -17,15 +17,13 @@ struct MainTabView: View {
         TabView(selection: $selectedTab) {
             TorrentListView()
                 .tabItem {
-                    Image(systemName: "square.stack")
-                    Text(OrbixStrings.tabTorrents)
+                    Label(OrbixStrings.tabTorrents, systemImage: "arrow.down.circle.fill")
                 }
                 .tag(0)
 
             StatsView()
                 .tabItem {
-                    Image(systemName: "chart.bar")
-                    Text(OrbixStrings.tabTransfer)
+                    Label(OrbixStrings.tabTransfer, systemImage: "chart.line.uptrend.xyaxis")
                 }
                 .tag(1)
 
@@ -37,15 +35,13 @@ struct MainTabView: View {
                 }
             }
             .tabItem {
-                Image(systemName: searchMode.use141 ? "magnifyingglass.circle.fill" : "magnifyingglass")
-                Text(OrbixStrings.tabSearch)
+                Label(OrbixStrings.tabSearch, systemImage: "magnifyingglass")
             }
             .tag(2)
 
             SettingsView(onLogout: onLogout)
                 .tabItem {
-                    Image(systemName: "gearshape")
-                    Text(OrbixStrings.tabSettings)
+                    Label(OrbixStrings.tabSettings, systemImage: "gearshape.fill")
                 }
                 .tag(3)
         }

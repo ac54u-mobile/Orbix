@@ -5,18 +5,22 @@ struct DetailRow: View {
     let iconColor: Color
     let label: String
     let value: String
-    var valueColor: Color = AppColors.secondaryLabel
+    var valueColor: Color = .secondary
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(iconColor)
-                .frame(width: 24)
+            ZStack {
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(iconColor.opacity(0.13))
+                Image(systemName: icon)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(iconColor)
+            }
+            .frame(width: 28, height: 28)
 
             Text(label)
                 .font(.system(size: 15))
-                .foregroundColor(AppColors.label)
+                .foregroundColor(.primary)
             Spacer()
             Text(value)
                 .font(.system(size: 15, design: .monospaced))
@@ -24,7 +28,7 @@ struct DetailRow: View {
                 .multilineTextAlignment(.trailing)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.vertical, 11)
     }
 }
 
