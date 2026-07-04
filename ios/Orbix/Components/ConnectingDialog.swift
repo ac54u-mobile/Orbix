@@ -23,8 +23,8 @@ struct ConnectingDialog: View {
             .padding(.vertical, 32)
             .background(
                     RoundedRectangle(cornerRadius: AppRadius.xxl)
-                    .fill(AppColors.card)
-                    .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 8)
+                    .fill(.regularMaterial)
+                    .shadow(color: .black.opacity(0.1), radius: 24, x: 0, y: 8)
             )
             .scaleEffect(isVisible ? 1 : 0.8)
             .opacity(isVisible ? 1 : 0)

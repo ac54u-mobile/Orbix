@@ -10,8 +10,7 @@ struct ActionTile: View {
     var body: some View {
         Button(action: {
             if !isLoading {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
+                AppHaptics.medium()
                 action()
             }
         }) {

@@ -7,8 +7,7 @@ struct CopyButton: View {
     var body: some View {
         Button {
             UIPasteboard.general.string = textToCopy
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
+            AppHaptics.success()
 
             withAnimation { copied = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {

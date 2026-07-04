@@ -42,8 +42,7 @@ struct WelcomeView: View {
                 Spacer()
 
                 Button {
-                    let impactMed = UIImpactFeedbackGenerator(style: .medium)
-                    impactMed.impactOccurred()
+                    AppHaptics.medium()
                     onAddServer()
                 } label: {
                     HStack(spacing: 8) {
@@ -52,7 +51,7 @@ struct WelcomeView: View {
                         Text(OrbixStrings.btnStartSetup)
                             .font(.system(size: 16, weight: .bold))
                     }
-                    .foregroundColor(AppColors.label)
+                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(

@@ -713,8 +713,7 @@ struct TorrentDetailView: View {
                     }
                 }
 
-                let generator = UINotificationFeedbackGenerator()
-                generator.notificationOccurred(.success)
+                AppHaptics.success()
 
                 if let newTorrent = await dataService.pollAfterAction(
                     oldState: oldState, oldDlspeed: oldDlspeed,
@@ -730,7 +729,7 @@ struct TorrentDetailView: View {
                     peers = details.peers; peersRid = details.peersRid
                 }
             } catch {
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                AppHaptics.error()
             }
 
             await MainActor.run { processingAction = nil }

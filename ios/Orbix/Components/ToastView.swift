@@ -20,15 +20,20 @@ struct ToastView: View {
 
     @State private var isShowing = false
 
+    private var textColor: Color {
+        type == .neutral ? .primary : .white
+    }
+
     var body: some View {
         Text(message)
-            .bodyFont(AppColors.label)
+            .font(.system(size: 15, weight: .medium))
+            .foregroundColor(textColor)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .background(
                 Capsule()
                     .fill(type.color)
-                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 4)
+                    .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 4)
             )
             .opacity(isShowing ? 1 : 0)
             .scaleEffect(isShowing ? 1 : 0.85)

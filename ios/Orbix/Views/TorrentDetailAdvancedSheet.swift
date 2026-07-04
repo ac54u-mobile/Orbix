@@ -22,11 +22,10 @@ struct TorrentDetailAdvancedSheet: View {
                     .padding(.vertical, 4)
 
                     Button {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
+                        AppHaptics.medium()
                         Task {
                             try? await QBitApi.shared.setTorrentLocation(hash, location: newLocation)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            AppHaptics.success()
                         }
                     } label: {
                         Text(OrbixStrings.btnApplyPath)
@@ -52,7 +51,7 @@ struct TorrentDetailAdvancedSheet: View {
                     Button {
                         Task {
                             try? await QBitApi.shared.renameTorrent(hash, name: newName)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            AppHaptics.success()
                             dismiss()
                         }
                     } label: {
@@ -84,18 +83,17 @@ struct TorrentDetailAdvancedSheet: View {
                             else if dl == 0 { try? await QBitApi.shared.setTorrentDownloadLimit(hash, limit: 0) }
                             if ul > 0 { try? await QBitApi.shared.setTorrentUploadLimit(hash, limit: ul * 1024) }
                             else if ul == 0 { try? await QBitApi.shared.setTorrentUploadLimit(hash, limit: 0) }
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            AppHaptics.success()
                         }
                     }
                 )
 
                 Section {
                     Button {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
+                        AppHaptics.medium()
                         Task {
                             try? await QBitApi.shared.toggleSequentialDownload(hash)
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            AppHaptics.success()
                         }
                     } label: {
                         HStack {

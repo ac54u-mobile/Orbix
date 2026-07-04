@@ -104,8 +104,7 @@ struct QBitSearchView: View {
     private func pluginChip(_ id: String, label: String) -> some View {
         let selected = selectedPlugins.contains(id)
         return Button {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
+            AppHaptics.light()
             if id == "all" {
                 selectedPlugins = ["all"]
             } else {
@@ -115,7 +114,7 @@ struct QBitSearchView: View {
         } label: {
             Text(label)
                 .font(.system(size: 14, weight: selected ? .semibold : .medium))
-                .foregroundColor(selected ? AppColors.label : AppColors.label)
+                .foregroundColor(selected ? .white : .primary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
@@ -189,6 +188,7 @@ struct QBitSearchView: View {
                 Spacer()
 
                 Button {
+                    AppHaptics.medium()
                     download(result: item)
                 } label: {
                     if downloadingNum == item.num {
@@ -303,8 +303,7 @@ struct QBitSearchView: View {
 
     private func download(result: SearchResult) {
         downloadingNum = result.num
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        AppHaptics.medium()
         Task {
             do {
                 if !result.descr.isEmpty {
@@ -312,13 +311,13 @@ struct QBitSearchView: View {
                 }
                 await MainActor.run {
                     downloadingNum = nil
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    AppHaptics.success()
                     ToastManager.shared.show(String(format: String(localized: "已添加: %@"), result.fileName))
                 }
             } catch {
                 await MainActor.run {
                     downloadingNum = nil
-                    UINotificationFeedbackGenerator().notificationOccurred(.error)
+                    AppHaptics.error()
                     ToastManager.shared.show(String(format: String(localized: "添加失败: %@"), error.localizedDescription))
                 }
             }

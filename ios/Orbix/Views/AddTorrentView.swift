@@ -63,7 +63,7 @@ struct AddTorrentView: View {
                             selectedFileURL = url
                             selectedFileData = data
                         }
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        AppHaptics.success()
                     }
                     showFilePicker = false
                 } onDismiss: {
@@ -165,8 +165,7 @@ struct AddTorrentView: View {
                     Spacer()
 
                     Button {
-                        let impact = UIImpactFeedbackGenerator(style: .light)
-                        impact.impactOccurred()
+                        AppHaptics.light()
                         withAnimation(AppMotion.mediumAnim()) {
                             selectedFileURL = nil
                             selectedFileData = nil
@@ -247,8 +246,7 @@ struct AddTorrentView: View {
     }
 
     private func submit() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        AppHaptics.medium()
         isSubmitting = true
 
         Task {
@@ -277,13 +275,11 @@ struct AddTorrentView: View {
                     }
                 }
 
-                let successImpact = UINotificationFeedbackGenerator()
-                successImpact.notificationOccurred(.success)
+                AppHaptics.success()
 
                 await MainActor.run { dismiss() }
             } catch {
-                let errorImpact = UINotificationFeedbackGenerator()
-                errorImpact.notificationOccurred(.error)
+                AppHaptics.error()
 
                 await MainActor.run {
                     isSubmitting = false
@@ -295,8 +291,7 @@ struct AddTorrentView: View {
     }
 
     private func pickFile() {
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        AppHaptics.light()
         showFilePicker = true
     }
 }

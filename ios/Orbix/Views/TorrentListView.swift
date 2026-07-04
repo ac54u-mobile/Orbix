@@ -163,7 +163,11 @@ struct TorrentListView: View {
         .background(Color.clear)
         .refreshable { await manualRefresh() }
         .navigationDestination(item: $selectedHash) { hash in
-            TorrentDetailView(hash: hash)
+            // 相册式滑动 — 在详情页左右滑动即可切换相邻种子
+            TorrentDetailPagerView(
+                hashes: filteredTorrents.map(\.hash),
+                initialHash: hash
+            )
         }
     }
 
@@ -207,24 +211,56 @@ struct TorrentListView: View {
         }
     }
 
+    // 骨架屏与真实行同构 — 数据到达时布局零跳动
     private var loadingContent: some View {
-        VStack(spacing: 12) {
-            SkeletonBar(height: 80)
-            SkeletonBar(height: 80)
-            SkeletonBar(height: 80)
+        VStack(spacing: 0) {
+            ForEach(0..<6, id: \.self) { _ in
+                skeletonRow
+            }
+            Spacer()
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 20)
+        .padding(.top, 8)
+        .transition(.opacity)
+    }
+
+    private var skeletonRow: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 14) {
+                SkeletonBar(height: 36, width: 36)
+                VStack(alignment: .leading, spacing: 8) {
+                    SkeletonBar(height: 15, width: 220)
+                    SkeletonBar(height: 12, width: 150)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            Divider()
+        }
     }
 
     private var emptyContent: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "square.stack")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
+        VStack(spacing: 14) {
+            Image(systemName: filter == .all ? "tray" : "line.3.horizontal.decrease.circle")
+                .font(.system(size: 44, weight: .light))
+                .foregroundColor(Color(.tertiaryLabel))
             Text(filter == .all ? OrbixStrings.msgNoTorrents : OrbixStrings.msgNoMatchingTorrents)
+                .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
+            if filter == .all {
+                Button {
+                    AppHaptics.light()
+                    showAddTorrent = true
+                } label: {
+                    Text(OrbixStrings.navAddTorrent)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(AppColors.accent)
+                }
+                .buttonStyle(ScaleButtonStyle())
+                .padding(.top, 4)
+            }
         }
+        .transition(.opacity.combined(with: .scale(scale: 0.96)))
     }
 
     private var bottomInsetContent: some View {
@@ -318,8 +354,7 @@ struct TorrentListView: View {
             HStack(spacing: 8) {
                 ForEach(TorrentFilter.allCases, id: \.self) { f in
                     Button {
-                        let impact = UISelectionFeedbackGenerator()
-                        impact.selectionChanged()
+                        AppHaptics.selection()
                         withAnimation(AppMotion.fastAnim()) { filter = f }
                     } label: {
                         HStack(spacing: 5) {
@@ -365,8 +400,7 @@ struct TorrentListView: View {
     }
 
     private func toggleSelection(_ hash: String) {
-        let impact = UISelectionFeedbackGenerator()
-        impact.selectionChanged()
+        AppHaptics.selection()
         if selectedHashes.contains(hash) {
             selectedHashes.remove(hash)
         } else {
@@ -432,8 +466,7 @@ struct TorrentListView: View {
     }
 
     private func executeSingleAction(_ type: SingleActionType, _ torrent: TorrentInfo) {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        AppHaptics.medium()
         processingAction = torrent.hash
 
         Task {
@@ -468,12 +501,10 @@ struct TorrentListView: View {
                     await MainActor.run { processingAction = nil }
                     refresh()
                 }
-                let feedback = UINotificationFeedbackGenerator()
-                feedback.notificationOccurred(.success)
+                AppHaptics.success()
             } catch {
                 await MainActor.run { processingAction = nil }
-                let feedback = UINotificationFeedbackGenerator()
-                feedback.notificationOccurred(.error)
+                AppHaptics.error()
             }
         }
     }
@@ -521,8 +552,7 @@ struct TorrentListView: View {
     }
 
     private func executeBatchAction(_ type: SingleActionType) {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        AppHaptics.medium()
 
         let hashes = selectedHashes.joined(separator: "|")
 
@@ -538,18 +568,15 @@ struct TorrentListView: View {
                 }
                 await MainActor.run { selectedHashes.removeAll() }
                 refresh()
-                let feedback = UINotificationFeedbackGenerator()
-                feedback.notificationOccurred(.success)
+                AppHaptics.success()
             } catch {
-                let feedback = UINotificationFeedbackGenerator()
-                feedback.notificationOccurred(.error)
+                AppHaptics.error()
             }
         }
     }
 
     private func executeBatchDelete(deleteFiles: Bool) {
-        let impact = UIImpactFeedbackGenerator(style: .heavy)
-        impact.impactOccurred()
+        AppHaptics.heavy()
 
         let hashes = selectedHashes.joined(separator: "|")
 
@@ -562,11 +589,9 @@ struct TorrentListView: View {
                         selectedHashes.removeAll()
                     }
                 }
-                let feedback = UINotificationFeedbackGenerator()
-                feedback.notificationOccurred(.success)
+                AppHaptics.success()
             } catch {
-                let feedback = UINotificationFeedbackGenerator()
-                feedback.notificationOccurred(.error)
+                AppHaptics.error()
             }
         }
     }
@@ -650,7 +675,7 @@ struct TorrentListView: View {
                             .onChange(of: altSpeedEnabled) { _, _ in
                                 Task {
                                     try? await QBitApi.shared.toggleSpeedLimitsMode()
-                                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                                    AppHaptics.success()
                                 }
                             }
                     }
@@ -671,7 +696,7 @@ struct TorrentListView: View {
                             let ul = Int64(gUlLimitStr) ?? -1
                             if dl >= 0 { try? await QBitApi.shared.setGlobalDownloadLimit(dl > 0 ? dl * 1024 : 0) }
                             if ul >= 0 { try? await QBitApi.shared.setGlobalUploadLimit(ul > 0 ? ul * 1024 : 0) }
-                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            AppHaptics.success()
                         }
                     }
                 )

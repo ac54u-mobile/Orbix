@@ -8,19 +8,19 @@ enum AppColors {
     static let backgroundGradientStart = Color(red: 1.0,  green: 0.94, blue: 0.97)
     static let backgroundGradientEnd   = Color(red: 0.90, green: 0.95, blue: 1.0)
 
-    // Surface / Card
-    static let card                     = Color(hex: "#11132B")
-    static let elevated                 = Color(hex: "#181B37")
+    // Surface / Card — 浅色毛玻璃卡片
+    static let card                     = Color.white.opacity(0.85)
+    static let elevated                 = Color.white
 
-    // Text
-    static let textPrimary              = Color(hex: "#FFFFFF")
-    static let textSecondary            = Color(hex: "#C0C0C8")
-    static let textTertiary             = Color(hex: "#8E8E98")
+    // Text — 系统语义色，自动保证对比度
+    static let textPrimary              = Color(.label)
+    static let textSecondary            = Color(.secondaryLabel)
+    static let textTertiary             = Color(.tertiaryLabel)
 
     // Accent
     static let accentPrimary            = Color(hex: "#007AFF")
     static let accentDark               = Color(hex: "#0056D6")
-    static let accentSoftBg             = Color(hex: "#1A1F3D")
+    static let accentSoftBg             = Color(hex: "#E8F1FF")
 
     // Tag Backgrounds
     static let tagBackgroundGreen       = Color(hex: "#34C759")
@@ -35,16 +35,16 @@ enum AppColors {
     static let statsWaveform            = Color(hex: "#34C759")
 
     // Separator / Border / Divider
-    static let listDivider              = Color(hex: "#303038")
+    static let listDivider              = Color(.separator)
     static let separator                = listDivider
-    static let placeholder              = Color(hex: "#6B6D80")
+    static let placeholder              = Color(.placeholderText)
 
     // Skeleton
-    static let skeletonBase             = Color(hex: "#181B37")
-    static let skeletonHighlight        = Color(hex: "#24284A")
+    static let skeletonBase             = Color(.systemGray5)
+    static let skeletonHighlight        = Color(.systemGray6)
 
     // Glass / Translucent
-    static let glassBorder              = Color.white.opacity(0.05)
+    static let glassBorder              = Color.black.opacity(0.06)
 
     // Gradients
     static let backgroundGradient = LinearGradient(

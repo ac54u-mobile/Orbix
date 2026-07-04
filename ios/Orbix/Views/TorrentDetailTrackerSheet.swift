@@ -19,7 +19,7 @@ struct TorrentDetailTrackerSheet: View {
                             let urls = newTrackerURL.components(separatedBy: "\n").filter { !$0.isEmpty }
                             Task {
                                 try? await QBitApi.shared.addTrackers(hash, urls: urls)
-                                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                                AppHaptics.success()
                                 await MainActor.run { newTrackerURL = "" }
                                 if let t = try? await QBitApi.shared.getTorrentTrackers(hash) {
                                     await MainActor.run { trackers = t }
@@ -61,7 +61,7 @@ struct TorrentDetailTrackerSheet: View {
                             Button(role: .destructive) {
                                 Task {
                                     try? await QBitApi.shared.removeTrackers(hash, urls: [tracker.url])
-                                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                                    AppHaptics.success()
                                     if let t = try? await QBitApi.shared.getTorrentTrackers(hash) {
                                         await MainActor.run { trackers = t }
                                     }

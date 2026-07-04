@@ -44,8 +44,7 @@ struct SearchView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        let impact = UIImpactFeedbackGenerator(style: .light)
-                        impact.impactOccurred()
+                        AppHaptics.light()
                         withAnimation(.none) { showingBookmarks.toggle() }
                     } label: {
                         Image(systemName: showingBookmarks ? "heart.fill" : (bookmarks.isEmpty ? "heart" : "heart.fill"))

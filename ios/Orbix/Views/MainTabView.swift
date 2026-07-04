@@ -50,8 +50,7 @@ struct MainTabView: View {
             if let tab = initialTab { selectedTab = tab }
         }
         .onChange(of: selectedTab) { _, _ in
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
+            AppHaptics.light()
         }
     }
 }

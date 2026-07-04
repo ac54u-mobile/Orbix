@@ -157,8 +157,7 @@ struct TorrentDetailSheet: View {
             HStack(spacing: AppSpacing.sm) {
                 Button {
                     UIPasteboard.general.string = torrent.magnet
-                    let feedback = UINotificationFeedbackGenerator()
-                    feedback.notificationOccurred(.success)
+                    AppHaptics.success()
                 } label: {
                     Label(OrbixStrings.btnCopyMagnet, systemImage: "doc.on.doc")
                         .font(.system(size: 14, weight: .medium))
@@ -174,8 +173,7 @@ struct TorrentDetailSheet: View {
 
                 Button {
                     UIPasteboard.general.string = torrent.code
-                    let feedback = UINotificationFeedbackGenerator()
-                    feedback.notificationOccurred(.success)
+                    AppHaptics.success()
                 } label: {
                     Label(OrbixStrings.miscCode, systemImage: "number")
                         .font(.system(size: 14, weight: .medium))
@@ -282,8 +280,7 @@ struct TorrentDetailSheet: View {
 
             Button {
                 UIPasteboard.general.string = copyValue
-                let feedback = UINotificationFeedbackGenerator()
-                feedback.notificationOccurred(.success)
+                AppHaptics.success()
             } label: {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 13))

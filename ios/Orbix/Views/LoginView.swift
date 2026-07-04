@@ -111,8 +111,7 @@ struct LoginView: View {
 
                 Section {
                     Button {
-                        let impact = UIImpactFeedbackGenerator(style: .light)
-                        impact.impactOccurred()
+                        AppHaptics.light()
                         testConnection()
                     } label: {
                         HStack {
@@ -171,12 +170,20 @@ struct LoginView: View {
             let result = await QBitApi.shared.connect()
             await MainActor.run {
                 isTesting = false
-                testResult = result
+                withAnimation(AppMotion.spring) {
+                    testResult = result
+                }
+                if result.isSuccess {
+                    AppHaptics.success()
+                } else {
+                    AppHaptics.error()
+                }
             }
         }
     }
 
     private func save() {
+        AppHaptics.medium()
         let config = buildConfig()
         Task { await QBitApi.shared.upsertServer(config) }
         onSave(config)

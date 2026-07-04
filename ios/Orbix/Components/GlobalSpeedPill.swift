@@ -30,8 +30,8 @@ struct GlobalSpeedPill: View {
         .padding(.vertical, 12)
         .background(
             Capsule()
-                .fill(.ultraThinMaterial)
-                .shadow(color: Color.black.opacity(0.3), radius: 15, x: 0, y: 8)
+                .fill(.regularMaterial)
+                .shadow(color: Color.black.opacity(0.1), radius: 15, x: 0, y: 6)
                 .overlay(
                     Capsule()
                         .stroke(AppColors.glassBorder, lineWidth: 0.5)

@@ -24,7 +24,7 @@ struct SpeedLimitSection: View {
                 Text("KB/s").font(.system(size: 12)).foregroundColor(AppColors.tertiaryLabel)
             }
             Button {
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                AppHaptics.medium()
                 onApply()
             } label: {
                 Text(OrbixStrings.btnApplyLimit)

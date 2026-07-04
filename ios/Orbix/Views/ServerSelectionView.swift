@@ -30,28 +30,34 @@ struct ServerSelectionView: View {
                             .subtitle()
 
                         Button {
+                            AppHaptics.light()
                             showLogin = true
                         } label: {
                             Text(OrbixStrings.navAddServer)
-                                .bodyFont(AppColors.label)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(.white)
                                 .padding(.horizontal, 32)
                                 .padding(.vertical, 12)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 14)
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
                                         .fill(AppColors.accent)
+                                        .shadow(color: AppColors.accent.opacity(0.25), radius: 10, y: 4)
                                 )
                         }
+                        .buttonStyle(ScaleButtonStyle())
                     }
                 } else {
                     List(servers) { server in
                         Button {
+                            AppHaptics.light()
                             connect(server)
                         } label: {
                             ServerRow(server: server, showChevron: false)
                         }
-                        .listRowBackground(AppColors.card)
+                        .listRowBackground(Color.clear)
                     }
-                    .insetGroupedStyle()
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
                 }
 
                 Spacer()
