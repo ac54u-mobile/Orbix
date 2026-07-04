@@ -4,58 +4,52 @@ struct TorrentRow: View {
     let torrent: TorrentInfo
 
     var body: some View {
-        HStack(spacing: 16) {
-            statusIconView
+        VStack(spacing: 0) {
+            HStack(spacing: 14) {
+                statusIconView
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text(torrent.name)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(Color(.label))
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(torrent.name)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
 
-                Text(torrent.secondaryInfoLine)
-                    .font(.system(size: 13))
-                    .foregroundColor(Color(.secondaryLabel))
-                    .lineLimit(2)
+                    Text(torrent.secondaryInfoLine)
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+
+                trailingBadge
             }
+            .padding(.vertical, 12)
 
-            Spacer(minLength: 0)
+            Divider()
+                .padding(.leading, 42)
+        }
+        .background(Color.clear)
+    }
 
+    private var statusIconView: some View {
+        Image(systemName: torrent.statusBadge.iconName)
+            .font(.system(size: 20, weight: .light))
+            .foregroundColor(.primary)
+            .frame(width: 28, height: 28)
+    }
+
+    @ViewBuilder
+    private var trailingBadge: some View {
+        if torrent.isCompleted {
+            Text("已完成")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(AppColors.success)
+        } else {
             Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(Color(.tertiaryLabel))
         }
-        .padding(.vertical, 12)
-    }
-
-    private var statusColor: Color {
-        switch torrent.statusBadge {
-        case .downloading, .forcedDL, .metaDL, .allocating:
-            return AppColors.accent
-        case .uploading, .forcedUP:
-            return AppColors.success
-        case .stalledDL, .stalledUP:
-            return AppColors.warning
-        case .checkingDL, .checkingUP, .checkingResumeData, .moving:
-            return Color.purple
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP:
-            return AppColors.placeholder
-        case .error, .missingFiles:
-            return AppColors.danger
-        default:
-            return AppColors.placeholder
-        }
-    }
-
-    private var statusIconView: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(statusColor)
-            Image(systemName: torrent.statusBadge.iconName)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.white)
-        }
-        .frame(width: 36, height: 36)
     }
 }
 
@@ -70,17 +64,26 @@ struct TorrentRow: View {
     ]
     ScrollView {
         VStack(spacing: 0) {
-            ForEach(Array(samples.enumerated()), id: \.element.id) { idx, t in
+            ForEach(samples) { t in
                 TorrentRow(torrent: t)
                     .padding(.horizontal, 16)
-                    .background(Color(.secondarySystemGroupedBackground))
-                if idx < samples.count - 1 { Divider().padding(.leading, 68) }
+                    .background(Color.clear)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 14))
         .padding(.horizontal, 16)
         .padding(.top, 20)
     }
-    .background(Color(.systemGroupedBackground))
+    .background(
+        LinearGradient(
+            colors: [
+                Color(red: 1.0, green: 0.94, blue: 0.97),
+                Color(red: 0.90, green: 0.95, blue: 1.0)
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    )
+    .preferredColorScheme(.light)
 }
 #endif

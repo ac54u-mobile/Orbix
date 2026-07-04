@@ -82,7 +82,15 @@ struct TorrentListView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground).ignoresSafeArea()
+                LinearGradient(
+                    colors: [
+                        Color(red: 1.0, green: 0.94, blue: 0.97),
+                        Color(red: 0.90, green: 0.95, blue: 1.0)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
 
                 if isLoading {
                     loadingContent
@@ -129,6 +137,7 @@ struct TorrentListView: View {
                 Text(String(format: OrbixStrings.infoBatchDeleteConfirm, selectedHashes.count))
         }
         .toast(isPresented: $showErrorToast, type: .error, message: errorToastMessage)
+        .preferredColorScheme(.light)
     }
 
     // MARK: - Torrent List
@@ -140,7 +149,7 @@ struct TorrentListView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(Color(.systemGroupedBackground))
+        .background(Color.clear)
         .refreshable { await manualRefresh() }
         .navigationDestination(item: $selectedHash) { hash in
             TorrentDetailView(hash: hash)
@@ -155,7 +164,7 @@ struct TorrentListView: View {
             }
             TorrentRow(torrent: torrent)
         }
-        .listRowBackground(Color(.secondarySystemGroupedBackground))
+        .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -201,9 +210,9 @@ struct TorrentListView: View {
         VStack(spacing: 12) {
             Image(systemName: "square.stack")
                 .font(.system(size: 48))
-                .foregroundColor(AppColors.placeholder)
+                .foregroundColor(.secondary)
             Text(filter == .all ? OrbixStrings.msgNoTorrents : OrbixStrings.msgNoMatchingTorrents)
-                .foregroundColor(AppColors.secondaryLabel)
+                .foregroundColor(.secondary)
         }
     }
 

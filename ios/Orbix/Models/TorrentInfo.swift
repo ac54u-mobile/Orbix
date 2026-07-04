@@ -137,15 +137,15 @@ struct TorrentInfo: Codable, Identifiable {
         let progressStr = "\(progressPercent)%"
 
         if dlspeed > 0 {
-            return "\(status)/ \(sizeStr)/ 速度 \(formatSpeed(dlspeed))/ \(progressStr)"
+            return "\(status) / \(sizeStr) / 速度 \(formatSpeed(dlspeed)) / \(progressStr)"
         }
         if upspeed > 0 {
-            return "\(status)/ \(sizeStr)/ 速度 \(formatSpeed(upspeed))/ \(progressStr)"
+            return "\(status) / \(sizeStr) / 速度 \(formatSpeed(upspeed)) / \(progressStr)"
         }
         if ratio > 0 {
-            return "\(status)/ \(sizeStr)/ 比例 \(String(format: "%.2f", ratio))/ \(progressStr)"
+            return "\(status) / \(sizeStr) / 比例 \(String(format: "%.2f", ratio)) / \(progressStr)"
         }
-        return "\(status)/ \(sizeStr)/ \(progressStr)"
+        return "\(status) / \(sizeStr) / \(progressStr)"
     }
 }
 
