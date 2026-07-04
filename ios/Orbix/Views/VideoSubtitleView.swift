@@ -10,6 +10,7 @@ struct VideoSubtitleView: View {
     @State private var progress = 0
     @State private var total = 0
     @State private var elapsedSeconds = 0
+    @State private var isTimerRunning = false
     @State private var srtContent: String?
     @State private var exportedFileURL: URL?
     @State private var showExportSheet = false
@@ -53,9 +54,7 @@ struct VideoSubtitleView: View {
             }
         }
         .onReceive(timer) { _ in
-            if state == .recognizing || state == .translating {
-                elapsedSeconds += 1
-            }
+            if isTimerRunning { elapsedSeconds += 1 }
         }
         .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.movie, .mpeg4Movie, .quickTimeMovie]) { result in
             if case .success(let url) = result { processVideo(url) }
@@ -170,6 +169,7 @@ struct VideoSubtitleView: View {
             Button(String(localized: "重试", comment: "")) {
                 state = .idle
                 elapsedSeconds = 0
+                isTimerRunning = false
             }
             .buttonStyle(ScaleButtonStyle())
             Spacer()
@@ -228,7 +228,7 @@ struct VideoSubtitleView: View {
                     }
                 }
 
-                let srt = SpeechTranscribeService.shared.segmentsToSRT(
+                let srt = await SpeechTranscribeService.shared.segmentsToSRT(
                     segments,
                     with: translated.map { $0.text }
                 )
@@ -236,12 +236,14 @@ struct VideoSubtitleView: View {
                 await MainActor.run {
                     srtContent = srt
                     state = .done
+                    isTimerRunning = false
                     AppHaptics.success()
                 }
             } catch {
                 url.stopAccessingSecurityScopedResource()
                 await MainActor.run {
                     state = .error(error.localizedDescription)
+                    isTimerRunning = false
                     AppHaptics.error()
                 }
             }

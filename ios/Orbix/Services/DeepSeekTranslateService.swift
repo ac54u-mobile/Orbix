@@ -62,10 +62,10 @@ actor DeepSeekTranslateService {
                     }
                 }
                 group.addTask {
-                    let prompt = self.buildBatchPrompt(batch)
+                    let prompt = await self.buildBatchPrompt(batch)
                     let response = try await self.translateToChinese(prompt)
                     var batchDict: [Int: String] = [:]
-                    self.parseBatchResponse(response, into: &batchDict, for: batch)
+                    await self.parseBatchResponse(response, into: &batchDict, for: batch)
                     return (batch.count, batchDict)
                 }
             }
