@@ -41,7 +41,7 @@ struct ScrapedTorrentRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.clear)
         .task(id: torrent.id) {
             guard let urlStr = torrent.thumbnail, let url = URL(string: urlStr) else {
                 loadedThumbnail = nil
@@ -126,9 +126,9 @@ struct ScrapedTorrentRow: View {
             isBookmarked: false
         )
     }
-    .background(Color(.secondarySystemGroupedBackground))
+    .background(Color.clear)
     .clipShape(RoundedRectangle(cornerRadius: 14))
     .padding(.horizontal, 16)
-    .background(Color(.systemGroupedBackground))
+    .background(AppColors.backgroundBase)
 }
 #endif

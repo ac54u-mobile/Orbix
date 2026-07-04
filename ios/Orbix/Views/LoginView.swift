@@ -145,7 +145,7 @@ struct LoginView: View {
             }
             .formStyle(.grouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.mainBg.ignoresSafeArea())
+            .background(AppColors.backgroundGradient.ignoresSafeArea())
             .navigationTitle(server != nil ? OrbixStrings.navEditServer : OrbixStrings.navAddServer)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

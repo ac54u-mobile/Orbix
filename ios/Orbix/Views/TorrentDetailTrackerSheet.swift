@@ -77,7 +77,7 @@ struct TorrentDetailTrackerSheet: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.mainBg)
+            .background(AppColors.backgroundBase)
             .navigationTitle(OrbixStrings.navTrackerManagement)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

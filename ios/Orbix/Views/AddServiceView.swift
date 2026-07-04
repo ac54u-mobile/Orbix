@@ -155,7 +155,7 @@ struct AddServiceView: View {
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.immediately)
-            .background(AppColors.mainBg)
+            .background(AppColors.backgroundBase)
             .navigationTitle(existing != nil ? OrbixStrings.navEditService : OrbixStrings.navAddService)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

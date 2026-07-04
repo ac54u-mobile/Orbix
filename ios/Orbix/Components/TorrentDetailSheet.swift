@@ -29,7 +29,7 @@ struct TorrentDetailSheet: View {
                 .padding(AppSpacing.lg)
                 .padding(.bottom, 32)
             }
-            .background(AppColors.groupedBg)
+            .background(AppColors.backgroundBase)
             .navigationTitle(torrent.code)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

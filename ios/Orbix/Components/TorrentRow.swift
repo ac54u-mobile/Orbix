@@ -25,6 +25,7 @@ struct TorrentRow: View {
                 trailingBadge
             }
             .padding(.vertical, 12)
+            .padding(.horizontal, 16)
 
             Divider()
         }

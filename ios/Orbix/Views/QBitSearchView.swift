@@ -18,7 +18,7 @@ struct QBitSearchView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.mainBg.ignoresSafeArea()
+                AppColors.backgroundGradient.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     pluginBar

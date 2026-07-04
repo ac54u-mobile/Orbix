@@ -4,7 +4,7 @@ extension View {
     func insetGroupedStyle() -> some View {
         self
             .scrollContentBackground(.hidden)
-            .background(AppColors.groupedBg)
+            .background(AppColors.backgroundBase)
     }
 }
 

@@ -31,7 +31,7 @@ struct AddTorrentView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.mainBg.ignoresSafeArea()
+                AppColors.backgroundGradient.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 24) {

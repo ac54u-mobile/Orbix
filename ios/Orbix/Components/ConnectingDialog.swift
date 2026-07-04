@@ -7,7 +7,7 @@ struct ConnectingDialog: View {
 
     var body: some View {
         ZStack {
-            AppColors.mainBg.opacity(0.6)
+            AppColors.backgroundBase.opacity(0.6)
                 .background(.ultraThinMaterial)
                 .ignoresSafeArea()
 

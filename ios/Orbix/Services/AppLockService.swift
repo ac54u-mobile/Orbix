@@ -119,7 +119,7 @@ private struct LockScreen: View {
 
     var body: some View {
         ZStack {
-            AppColors.mainBg.ignoresSafeArea()
+            AppColors.backgroundGradient.ignoresSafeArea()
 
             VStack(spacing: AppSpacing.lg) {
                 Button {

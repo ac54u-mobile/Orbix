@@ -115,7 +115,7 @@ struct TorrentDetailAdvancedSheet: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.mainBg)
+            .background(AppColors.backgroundBase)
             .navigationTitle(OrbixStrings.navAdvancedControl)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

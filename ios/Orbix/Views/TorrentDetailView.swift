@@ -41,7 +41,7 @@ struct TorrentDetailView: View {
 
     var body: some View {
         ZStack {
-            AppColors.mainBg.ignoresSafeArea()
+            AppColors.backgroundGradient.ignoresSafeArea()
 
             if isLoading {
                 VStack(spacing: 16) {

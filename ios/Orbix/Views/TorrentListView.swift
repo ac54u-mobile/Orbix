@@ -166,7 +166,7 @@ struct TorrentListView: View {
         }
         .listRowBackground(Color.clear)
         .listRowSeparator(.hidden)
-        .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive) {
                 executeSingleAction(.deleteFiles, torrent)
@@ -664,7 +664,7 @@ struct TorrentListView: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.mainBg)
+            .background(AppColors.backgroundBase)
             .navigationTitle(OrbixStrings.navGlobalControl)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

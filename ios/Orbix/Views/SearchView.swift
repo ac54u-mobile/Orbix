@@ -22,7 +22,7 @@ struct SearchView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.systemGroupedBackground).ignoresSafeArea()
+                AppColors.backgroundGradient.ignoresSafeArea()
                 switch state {
                 case .idle: idleView
                 case .loading: loadingView
@@ -175,7 +175,7 @@ struct SearchView: View {
                 }
             }
         }
-        .background(Color(.secondarySystemGroupedBackground))
+        .background(Color.clear)
         .clipShape(RoundedRectangle(cornerRadius: SettingsConfig.containerCornerRadius))
         .padding(.horizontal, 16)
     }
@@ -200,7 +200,7 @@ struct SearchView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 11)
-                .background(Color(.secondarySystemGroupedBackground))
+                .background(Color.clear)
                 if i < 5 { Divider().padding(.leading, 80) }
             }
         }

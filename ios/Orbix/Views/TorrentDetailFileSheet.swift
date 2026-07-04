@@ -40,7 +40,7 @@ struct TorrentDetailFileSheet: View {
             }
             .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
-            .background(AppColors.mainBg)
+            .background(AppColors.backgroundBase)
             .navigationTitle(OrbixStrings.navFilePriority)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

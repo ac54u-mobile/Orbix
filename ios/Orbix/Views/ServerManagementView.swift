@@ -11,7 +11,7 @@ struct ServerManagementView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.groupedBg.ignoresSafeArea()
+                AppColors.backgroundGradient.ignoresSafeArea()
 
                 if servers.isEmpty {
                     VStack(spacing: 16) {
