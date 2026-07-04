@@ -82,7 +82,7 @@ struct TorrentListView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AppColors.mainBg.ignoresSafeArea()
+                Color(.systemGroupedBackground).ignoresSafeArea()
 
                 if isLoading {
                     loadingContent
@@ -140,7 +140,7 @@ struct TorrentListView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
-        .background(AppColors.mainBg)
+        .background(Color(.systemGroupedBackground))
         .refreshable { await manualRefresh() }
         .navigationDestination(item: $selectedHash) { hash in
             TorrentDetailView(hash: hash)
@@ -155,7 +155,7 @@ struct TorrentListView: View {
             }
             TorrentRow(torrent: torrent)
         }
-        .listRowBackground(Color.clear)
+        .listRowBackground(Color(.secondarySystemGroupedBackground))
         .listRowSeparator(.hidden)
         .listRowInsets(EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12))
         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
