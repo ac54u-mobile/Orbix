@@ -15,6 +15,9 @@ struct SearchView: View {
     @State private var hasMorePages = true
     @State private var showingBookmarks = false
     @State private var lastLoadTime: Date = .distantPast
+    @State private var translatingCode: String?
+    @State private var translatedText: String?
+    @State private var showTranslation = false
 
     enum SearchState { case idle, loading, results, empty, error(String) }
 
@@ -66,6 +69,11 @@ struct SearchView: View {
                 if !imgs.isEmpty {
                     MediaViewer(images: imgs, initialIndex: mediaViewerIndex)
                 }
+            }
+            .alert(String(localized: "翻译结果", comment: ""), isPresented: $showTranslation) {
+                Button(OrbixStrings.btnDone) {}
+            } message: {
+                Text(translatedText ?? "")
             }
         }
     }
@@ -220,6 +228,7 @@ struct SearchView: View {
                 Label(bookmarks.contains(torrent.code) ? OrbixStrings.miscUnbookmark : OrbixStrings.miscBookmark,
                       systemImage: bookmarks.contains(torrent.code) ? "heart.fill" : "heart")
             }
+            Button { translateCard(torrent) } label: { Label(String(localized: "一键翻译", comment: ""), systemImage: "translate") }
             Button { UIPasteboard.general.string = torrent.magnet } label: { Label(OrbixStrings.btnCopyMagnet, systemImage: "doc.on.doc") }
         }
     }
@@ -352,6 +361,30 @@ struct SearchView: View {
         if bookmarks.contains(torrent.code) { bookmarks.remove(torrent.code) }
         else { bookmarks.insert(torrent.code) }
         saveBookmarks()
+    }
+
+    private func translateCard(_ torrent: ScrapedTorrent) {
+        guard translatingCode == nil else { return }
+        let sourceText = [torrent.title, torrent.description].compactMap { $0 }.filter { !$0.isEmpty }.first
+        guard let text = sourceText else { return }
+
+        translatingCode = torrent.code
+        AppHaptics.medium()
+        Task {
+            do {
+                let result = try await DeepSeekTranslateService.shared.translateToChinese(text)
+                await MainActor.run {
+                    translatingCode = nil
+                    translatedText = result
+                    showTranslation = true
+                    AppHaptics.success()
+                }
+            } catch {
+                await MainActor.run {
+                    translatingCode = nil
+                }
+            }
+        }
     }
 
     private func loadBookmarks() {

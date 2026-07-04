@@ -304,7 +304,7 @@ struct TorrentDetailSheet: View {
     private func translate() {
         guard let desc = torrent.description, !desc.isEmpty else { return }
         Task {
-            let translated = try? await TranslateService.shared.toChinese(desc)
+            let translated = try? await DeepSeekTranslateService.shared.translateToChinese(desc)
             await MainActor.run { translatedDescription = translated }
         }
     }
