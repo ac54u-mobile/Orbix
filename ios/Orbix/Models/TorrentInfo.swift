@@ -89,11 +89,13 @@ struct TorrentInfo: Codable, Identifiable {
                      dlspeed: Int64 = 10_240_000, upspeed: Int64 = 512_000,
                      size: Int64 = 5_876_543_210, downloaded: Int64 = 3_800_000_000,
                      uploaded: Int64 = 200_000_000, ratio: Double = 0.05,
-                     numSeeds: Int = 142, numLeechs: Int = 38) -> TorrentInfo {
+                     numSeeds: Int = 142, numLeechs: Int = 38,
+                     addedOn: Int64 = 0, completionOn: Int64 = 0) -> TorrentInfo {
         TorrentInfo(name: name, state: state, progress: progress,
                     dlspeed: dlspeed, upspeed: upspeed,
                     size: size, downloaded: downloaded, uploaded: uploaded,
-                    ratio: ratio, numSeeds: numSeeds, numLeechs: numLeechs)
+                    ratio: ratio, numSeeds: numSeeds, numLeechs: numLeechs,
+                    addedOn: addedOn, completionOn: completionOn)
     }
 #endif
 
@@ -127,6 +129,23 @@ struct TorrentInfo: Codable, Identifiable {
         if statusBadge.isError { return AppColors.danger }
         if isCompleted { return AppColors.success }
         return AppColors.accent
+    }
+
+    var secondaryInfoLine: String {
+        let status = statusBadge.displayName
+        let sizeStr = formatBytes(size)
+        let progressStr = "\(progressPercent)%"
+
+        if dlspeed > 0 {
+            return "\(status)/ \(sizeStr)/ 速度 \(formatSpeed(dlspeed))/ \(progressStr)"
+        }
+        if upspeed > 0 {
+            return "\(status)/ \(sizeStr)/ 速度 \(formatSpeed(upspeed))/ \(progressStr)"
+        }
+        if ratio > 0 {
+            return "\(status)/ \(sizeStr)/ 比例 \(String(format: "%.2f", ratio))/ \(progressStr)"
+        }
+        return "\(status)/ \(sizeStr)/ \(progressStr)"
     }
 }
 
@@ -264,6 +283,20 @@ enum TorrentStatus: String {
         case .missingFiles: String(localized: "文件丢失", comment: "Missing files")
         case .metaDL: String(localized: "获取元数据", comment: "Fetching metadata")
         case .unknown: String(localized: "未知", comment: "Unknown")
+        }
+    }
+
+    var iconName: String {
+        switch self {
+        case .downloading, .stalledDL, .forcedDL: return "arrow.down"
+        case .uploading, .stalledUP, .forcedUP: return "arrow.up"
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP: return "pause"
+        case .queuedDL, .queuedUP: return "clock"
+        case .error, .missingFiles: return "exclamationmark.triangle"
+        case .checkingDL, .checkingUP, .checkingResumeData, .allocating: return "arrow.triangle.2.circlepath"
+        case .metaDL: return "doc.text.magnifyingglass"
+        case .moving: return "folder"
+        case .unknown: return "questionmark"
         }
     }
 }
