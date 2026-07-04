@@ -18,6 +18,8 @@ struct SearchView: View {
     @State private var translatingCode: String?
     @State private var translatedText: String?
     @State private var showTranslation = false
+    @State private var exportedFileURL: URL?
+    @State private var showExportSheet = false
 
     enum SearchState { case idle, loading, results, empty, error(String) }
 
@@ -72,8 +74,16 @@ struct SearchView: View {
             }
             .alert(String(localized: "翻译结果", comment: ""), isPresented: $showTranslation) {
                 Button(OrbixStrings.btnDone) {}
+                Button(String(localized: "导出字幕 (.srt)", comment: "")) {
+                    exportSRT()
+                }
             } message: {
                 Text(translatedText ?? "")
+            }
+            .sheet(isPresented: $showExportSheet) {
+                if let url = exportedFileURL {
+                    ShareSheet(activityItems: [url])
+                }
             }
         }
     }
@@ -355,6 +365,19 @@ struct SearchView: View {
 
     private func addMagnet(_ torrent: ScrapedTorrent) {
         Task { try? await QBitApi.shared.addMagnet([torrent.magnet]) }
+    }
+
+    private func exportSRT() {
+        guard let text = translatedText, !text.isEmpty else { return }
+        let srt = "1\n00:00:00,000 --> 10:00:00,000\n\(text)\n"
+        let fileName = "translation.srt"
+        let tempDir = FileManager.default.temporaryDirectory
+        let fileURL = tempDir.appendingPathComponent(fileName)
+        do {
+            try srt.write(to: fileURL, atomically: true, encoding: .utf8)
+            exportedFileURL = fileURL
+            showExportSheet = true
+        } catch {}
     }
 
     private func toggleBookmark(_ torrent: ScrapedTorrent) {
