@@ -5,8 +5,14 @@ on:
     branches:
       - master
       - main
+      - 'fix/**'
+      - 'feat/**'
     tags:
       - 'v*'
+  pull_request:
+    branches:
+      - master
+      - main
   workflow_dispatch:
 
 concurrency:
