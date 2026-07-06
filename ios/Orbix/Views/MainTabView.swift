@@ -2,13 +2,11 @@ import SwiftUI
 import UIKit
 
 enum SearchSource: String, CaseIterable {
-    case qbit
     case ppv141
     case radarr
 
     var displayName: String {
         switch self {
-        case .qbit: return String(localized: "内置搜索", comment: "Built-in search")
         case .ppv141: return "141PPV"
         case .radarr: return "Radarr"
         }
@@ -16,7 +14,6 @@ enum SearchSource: String, CaseIterable {
 
     var icon: String {
         switch self {
-        case .qbit: return "antenna.radiowaves.left.and.right"
         case .ppv141: return "globe"
         case .radarr: return "film"
         }
@@ -24,7 +21,7 @@ enum SearchSource: String, CaseIterable {
 }
 
 final class SearchModeState: ObservableObject {
-    @Published var source: SearchSource = .qbit
+    @Published var source: SearchSource = .ppv141
     static let shared = SearchModeState()
 }
 
@@ -70,7 +67,6 @@ struct MainTabView: View {
 
             Group {
                 switch searchMode.source {
-                case .qbit: QBitSearchView()
                 case .ppv141: SearchView()
                 case .radarr: RadarrSearchView()
                 }

@@ -5,7 +5,6 @@ enum OrbixStrings {
     // MARK: - Navigation titles
     static let navSettings = String(localized: "设置", comment: "Settings tab")
     static let navAddTorrent = String(localized: "添加种子", comment: "Add torrent")
-    static let navExplore = String(localized: "探索", comment: "Explore tab")
     static let navSearch = String(localized: "搜索", comment: "Search tab")
     static let navEditServer = String(localized: "编辑服务器", comment: "Edit server")
     static let navAddServer = String(localized: "添加服务器", comment: "Add server")
@@ -145,13 +144,11 @@ enum OrbixStrings {
     // MARK: - Error / Status
     static let errLoadFailed = String(localized: "加载失败", comment: "Load failed")
     static let errCantLoadTorrent = String(localized: "无法加载种子信息", comment: "Cannot load torrent info")
-    static let errBuiltInSearchFailed = String(localized: "内置搜索失败", comment: "Built-in search failed")
     static let errNoResults = String(localized: "未找到相关资源", comment: "No results found")
     static let errNoSearchResults = String(localized: "未找到结果", comment: "No search results")
     static let errCheckFailed = String(localized: "检查失败", comment: "Check failed")
     static let msgConnTest = String(localized: "连接测试", comment: "Connection test")
     static let msgConnecting = String(localized: "连接中...", comment: "Connecting...")
-    static let msgSearchingAll = String(localized: "正在全网检索...", comment: "Searching all sources...")
     static let msgFetchingLatest = String(localized: "正在获取最新资源...", comment: "Fetching latest...")
     static let msgAdding = String(localized: "添加中...", comment: "Adding...")
     static let msgDownloading = String(localized: "正在下载...", comment: "Downloading...")
