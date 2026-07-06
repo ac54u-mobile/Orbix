@@ -95,17 +95,15 @@ struct SearchView: View {
     // MARK: - Idle / Trending
     private var idleView: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: AppSpacing.lg) {
                 HStack {
                     Image(systemName: "flame.fill").foregroundColor(AppColors.warning)
                     Text(OrbixStrings.msgBrowseHot).sectionHeader()
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
+                .padding(.top, AppSpacing.lg)
 
                 Text(OrbixStrings.msgSearchSuggestion)
                     .descriptionSmall(AppColors.textTertiary)
-                    .padding(.horizontal, 20)
 
                 if results.isEmpty {
                     listSkeleton
@@ -113,19 +111,22 @@ struct SearchView: View {
                     sectionGroup(results)
                 }
             }
+            .padding(.horizontal, AppSpacing.lg)
         }
         .refreshable { await refreshSearch() }
     }
 
     // MARK: - Loading
     private var loadingView: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 8) {
+        VStack(spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.sm) {
                 ProgressView().tint(AppColors.accentPrimary)
                 Text(OrbixStrings.msgFetchingLatest).descriptionSmall(AppColors.textTertiary)
             }
-            .padding(.top, 16)
+            .padding(.top, AppSpacing.lg)
+
             listSkeleton
+                .padding(.horizontal, AppSpacing.lg)
         }
     }
 
@@ -155,13 +156,13 @@ struct SearchView: View {
                 .frame(maxWidth: .infinity)
             }
 
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: AppSpacing.lg) {
                 ForEach(sections, id: \.date) { section in
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 0) {
                         Text(section.date)
-                            .font(.system(size: 13))
-                            .foregroundColor(AppColors.textSecondary)
-                            .padding(.horizontal, 20)
+                            .descriptionSmall(AppColors.textSecondary)
+                            .padding(.bottom, AppSpacing.xs)
+
                         sectionGroup(section.items)
                     }
                 }
@@ -181,13 +182,14 @@ struct SearchView: View {
                     .padding(.vertical, 20)
                 }
             }
-            .padding(.top, 8)
+            .padding(.horizontal, AppSpacing.lg)
+            .padding(.top, AppSpacing.sm)
         }
         .refreshable { await refreshSearch() }
         .animation(.none, value: results.count)
     }
 
-    // MARK: - Grouped Section Container
+    // MARK: - Grouped Section Container (Glass Card)
     @ViewBuilder
     private func sectionGroup(_ items: [ScrapedTorrent]) -> some View {
         VStack(spacing: 0) {
@@ -197,41 +199,37 @@ struct SearchView: View {
                     .onTapGesture { selectedTorrent = torrent }
                     .contextMenu { cardContextMenu(torrent) }
                 if idx < items.count - 1 {
-                    Divider().padding(.leading, 80)
+                    HairlineDivider(leadingPadding: 80)
                 }
             }
         }
-        .background(Color.clear)
-        .clipShape(RoundedRectangle(cornerRadius: SettingsConfig.containerCornerRadius))
-        .padding(.horizontal, 16)
+        .liquidGlass(.regular)
     }
 
-    // MARK: - Skeleton
+    // MARK: - Skeleton (Glass Card)
     private var listSkeleton: some View {
         VStack(spacing: 0) {
             ForEach(0..<6, id: \.self) { i in
                 HStack(spacing: 16) {
                     RoundedRectangle(cornerRadius: AppRadius.sm)
-                        .fill(Color(.tertiarySystemFill))
+                        .fill(AppColors.skeletonBase)
                         .frame(width: 52, height: 52)
                     VStack(alignment: .leading, spacing: 6) {
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(.tertiarySystemFill))
+                            .fill(AppColors.skeletonBase)
                             .frame(height: 14).frame(maxWidth: 150)
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(.quaternarySystemFill))
+                            .fill(AppColors.skeletonHighlight)
                             .frame(height: 11).frame(maxWidth: 220)
                     }
                     Spacer()
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, AppSpacing.lg)
                 .padding(.vertical, 11)
-                .background(Color.clear)
-                if i < 5 { Divider().padding(.leading, 80) }
+                if i < 5 { HairlineDivider(leadingPadding: 80) }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: SettingsConfig.containerCornerRadius))
-        .padding(.horizontal, 16)
+        .liquidGlass(.regular)
     }
 
     // MARK: - Context Menu
@@ -423,13 +421,16 @@ struct SearchView: View {
         PersistenceService.shared.saveBookmarks(Array(bookmarks))
     }
 
-    // MARK: - Empty / Error
+    // MARK: - Empty / Error (Glass Card)
     private func emptyHint(_ text: String, icon: String, isError: Bool = false) -> some View {
-        VStack(spacing: 10) {
+        VStack(spacing: AppSpacing.md) {
+            Spacer().frame(height: 60)
             Image(systemName: icon).font(.system(size: 48))
                 .foregroundColor(isError ? AppColors.danger : AppColors.placeholder)
             Text(text).descriptionSmall(isError ? AppColors.danger : AppColors.textSecondary)
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
