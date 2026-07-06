@@ -64,4 +64,15 @@ final class PersistenceService {
         get { defaults.bool(forKey: "radarr_https") }
         set { defaults.set(newValue, forKey: "radarr_https") }
     }
+
+    // MARK: - Subtitle Service
+    var subtitleHost: String {
+        get { defaults.string(forKey: "subtitle_host") ?? "" }
+        set { defaults.set(newValue, forKey: "subtitle_host") }
+    }
+
+    var subtitlePort: Int {
+        get { defaults.object(forKey: "subtitle_port") as? Int ?? 8788 }
+        set { defaults.set(newValue, forKey: "subtitle_port") }
+    }
 }

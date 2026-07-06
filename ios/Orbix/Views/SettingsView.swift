@@ -13,6 +13,7 @@ struct SettingsView: View {
     @State private var serverHttps: Bool = false
 
     @State private var radarrConfigured = false
+    @State private var subtitleConfigured = false
 
     @State private var updateCheck: UpdateCheck?
     @State private var isCheckingUpdate = false
@@ -39,6 +40,24 @@ struct SettingsView: View {
                             }
                             Spacer()
                             Text(radarrConfigured
+                                 ? String(localized: "已配置", comment: "Configured")
+                                 : String(localized: "未配置", comment: "Not configured"))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+
+                    NavigationLink {
+                        SubtitleSettingsView()
+                    } label: {
+                        HStack {
+                            Label {
+                                Text(String(localized: "字幕服务", comment: "Subtitle service"))
+                            } icon: {
+                                Image(systemName: "captions.bubble")
+                                    .foregroundStyle(.purple)
+                            }
+                            Spacer()
+                            Text(subtitleConfigured
                                  ? String(localized: "已配置", comment: "Configured")
                                  : String(localized: "未配置", comment: "Not configured"))
                                 .foregroundStyle(.secondary)
@@ -282,6 +301,7 @@ struct SettingsView: View {
         appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
         buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
         radarrConfigured = RadarrConfig.load().isConfigured
+        subtitleConfigured = SubtitleServiceConfig.load().isConfigured
 
         // 本地配置先展示，网络请求（qBit 版本、连接测试）后台补齐，页面不转圈
         Task {

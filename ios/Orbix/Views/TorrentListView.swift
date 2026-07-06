@@ -18,9 +18,7 @@ struct TorrentListView: View {
     @State private var processingAction: String?
     @State private var showErrorToast = false
     @State private var errorToastMessage = ""
-    @State private var showSubtitleTranslate = false
-    @State private var showVideoSubtitle = false
-    @State private var translateTorrentName = ""
+    @State private var subtitleTorrent: TorrentInfo?
     @State private var searchText = ""
     @Environment(\.scenePhase) private var scenePhase
 
@@ -105,11 +103,8 @@ struct TorrentListView: View {
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showSubtitleTranslate) {
-            SubtitleTranslateView()
-        }
-        .sheet(isPresented: $showVideoSubtitle) {
-            VideoSubtitleView()
+        .sheet(item: $subtitleTorrent) { torrent in
+            ServerSubtitleView(torrent: torrent)
         }
         .alert(OrbixStrings.miscDeleteTorrentTitle, isPresented: $showBatchDeleteAlert) {
                 Button(OrbixStrings.btnDeleteTaskFiles, role: .destructive) { executeBatchDelete(deleteFiles: true) }
@@ -436,14 +431,7 @@ struct TorrentListView: View {
         Divider()
 
         Button {
-            translateTorrentName = torrent.name
-            showSubtitleTranslate = true
-        } label: {
-            Label(String(localized: "翻译字幕", comment: ""), systemImage: "translate")
-        }
-
-        Button {
-            showVideoSubtitle = true
+            subtitleTorrent = torrent
         } label: {
             Label(String(localized: "提取字幕", comment: ""), systemImage: "waveform")
         }
