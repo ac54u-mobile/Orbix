@@ -1,12 +1,11 @@
 import SwiftUI
 
-// MARK: - Torrent Row
+// MARK: - Torrent Row (iOS 26 Liquid Glass Card)
 
 struct TorrentRow: View {
     let torrent: TorrentInfo
 
-    private static let separatorOffset: CGFloat =
-        AppSpacing.lg + IconLayout.sfSymbolSize + AppSpacing.md
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         VStack(spacing: 0) {
@@ -30,21 +29,29 @@ struct TorrentRow: View {
             .padding(.vertical, AppSpacing.sm)
             .padding(.horizontal, AppSpacing.lg)
             .frame(minHeight: 60)
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel(torrent.name)
-            .accessibilityValue(torrent.secondaryInfoLine)
-            .accessibilityHint(String(localized: "Double-tap to view details"))
 
-            // Progress bar — shows for non-completed torrents
+            // Progress bar
             if !torrent.isCompleted && torrent.progress > 0 {
                 ProgressBar(progress: torrent.progress, color: torrent.lineStatusColor)
                     .padding(.horizontal, AppSpacing.lg)
                     .padding(.top, 2)
                     .accessibilityHidden(true)
             }
-
-            HairlineDivider(leadingPadding: Self.separatorOffset)
         }
+        .background(
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                .fill(AppColors.glassRegular(for: colorScheme))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
+                .stroke(AppColors.glassBorder(for: colorScheme), lineWidth: 0.5)
+        )
+        .padding(.horizontal, AppSpacing.lg)
+        .padding(.vertical, AppSpacing.xs)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(torrent.name)
+        .accessibilityValue(torrent.secondaryInfoLine)
+        .accessibilityHint(String(localized: "Double-tap to view details"))
     }
 
     private var statusColor: Color {

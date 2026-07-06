@@ -23,6 +23,7 @@ struct TorrentListView: View {
     @State private var showVideoSubtitle = false
     @State private var translateTorrentName = ""
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.colorScheme) private var colorScheme
 
     enum TorrentSort: CaseIterable {
         case dateAdded
@@ -323,7 +324,7 @@ struct TorrentListView: View {
                 ForEach(TorrentFilter.allCases, id: \.self) { f in
                     Button {
                         AppHaptics.selection()
-                        withAnimation(AppMotion.fastAnim()) { filter = f }
+                        withAnimation(AppMotion.fluidQuick) { filter = f }
                     } label: {
                         HStack(spacing: AppSpacing.xs) {
                             Image(systemName: f.icon)
@@ -342,7 +343,11 @@ struct TorrentListView: View {
                                         .matchedGeometryEffect(id: "filterPill", in: animationNamespace)
                                 } else {
                                     Capsule()
-                                        .fill(Color(.tertiarySystemFill).opacity(0.6))
+                                        .fill(AppColors.glassRegular(for: colorScheme))
+                                        .overlay(
+                                            Capsule()
+                                                .stroke(AppColors.glassBorder(for: colorScheme), lineWidth: 0.5)
+                                        )
                                 }
                             }
                         )
@@ -354,7 +359,12 @@ struct TorrentListView: View {
             .padding(.horizontal, AppSpacing.lg)
             .padding(.vertical, 10)
         }
-        .background(.ultraThinMaterial)
+        .background(AppColors.glassChrome(for: colorScheme))
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(AppColors.glassBorder(for: colorScheme))
+                .frame(height: 0.5)
+        }
     }
 
     // MARK: - Selection
@@ -529,11 +539,11 @@ struct TorrentListView: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
-                        .stroke(AppColors.glassBorder, lineWidth: 0.5)
-                )
+                .fill(AppColors.glassThick(for: colorScheme))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: AppRadius.xl, style: .continuous)
+                .stroke(AppColors.glassBorder(for: colorScheme), lineWidth: 0.5)
         )
         .padding(.horizontal, AppSpacing.lg)
         .padding(.bottom, AppSpacing.sm)

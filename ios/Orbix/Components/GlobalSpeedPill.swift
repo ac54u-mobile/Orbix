@@ -1,10 +1,12 @@
 import SwiftUI
 
-// MARK: - Global Speed Pill
+// MARK: - Global Speed Pill (iOS 26 Liquid Glass)
 
 struct GlobalSpeedPill: View {
     let dl: Int64
     let up: Int64
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         HStack(spacing: AppSpacing.lg) {
@@ -32,11 +34,11 @@ struct GlobalSpeedPill: View {
         .padding(.vertical, AppSpacing.md)
         .background(
             Capsule()
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    Capsule()
-                        .stroke(AppColors.glassBorder, lineWidth: 0.5)
-                )
+                .fill(AppColors.glassThick(for: colorScheme))
+        )
+        .overlay(
+            Capsule()
+                .stroke(AppColors.glassBorder(for: colorScheme), lineWidth: 0.5)
         )
     }
 }
