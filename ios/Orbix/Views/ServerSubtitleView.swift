@@ -48,6 +48,14 @@ struct ServerSubtitleView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(OrbixStrings.btnClose) { dismiss() }
                 }
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink {
+                        SubtitleJobsListView()
+                    } label: {
+                        Image(systemName: "list.bullet.rectangle")
+                    }
+                    .accessibilityLabel(String(localized: "字幕任务", comment: "Subtitle jobs"))
+                }
             }
         }
         .task { await prepare() }

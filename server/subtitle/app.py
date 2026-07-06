@@ -67,13 +67,54 @@ class Job:
     updated_at: float = field(default_factory=time.time)
 
     def update(self, **kw):
+        stage_changed = "stage" in kw and kw["stage"] != self.stage
         for k, v in kw.items():
             setattr(self, k, v)
         self.updated_at = time.time()
+        if stage_changed:
+            save_jobs()
 
 
 JOBS: dict[str, Job] = {}
 JOBS_LOCK = threading.Lock()
+
+# 任务记录落盘，服务重启后仍能查看历史
+JOBS_FILE = os.environ.get("JOBS_FILE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "jobs.json"))
+
+
+def save_jobs():
+    try:
+        with JOBS_LOCK:
+            data = [asdict(j) for j in JOBS.values()]
+        tmp = JOBS_FILE + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+        os.replace(tmp, JOBS_FILE)
+    except OSError:
+        pass
+
+
+def load_jobs():
+    if not os.path.isfile(JOBS_FILE):
+        return
+    try:
+        with open(JOBS_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return
+    for d in data:
+        try:
+            job = Job(**d)
+        except TypeError:
+            continue
+        # 重启后进行中的任务已无法恢复，标记为中断
+        if job.stage not in ("done", "error"):
+            job.stage = "error"
+            job.error = "服务重启，任务中断，请重新发起"
+        JOBS[job.id] = job
+
+
+load_jobs()
 
 _whisper_model = None
 _whisper_lock = threading.Lock()
@@ -264,6 +305,7 @@ def create_job(req: CreateJobRequest, x_api_key: str | None = Header(default=Non
                 return asdict(job)
         job = Job(id=uuid.uuid4().hex[:12], video_path=video_path)
         JOBS[job.id] = job
+    save_jobs()
     threading.Thread(target=run_pipeline, args=(job,), daemon=True).start()
     return asdict(job)
 

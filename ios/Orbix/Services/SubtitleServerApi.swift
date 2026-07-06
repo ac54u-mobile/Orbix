@@ -80,4 +80,10 @@ actor SubtitleServerApi {
         let jobs = try JSONDecoder().decode([SubtitleJob].self, from: data)
         return jobs.first
     }
+
+    /// 全部任务（最近 50 条，新的在前）
+    func listJobs() async throws -> [SubtitleJob] {
+        let data = try await request("jobs")
+        return try JSONDecoder().decode([SubtitleJob].self, from: data)
+    }
 }

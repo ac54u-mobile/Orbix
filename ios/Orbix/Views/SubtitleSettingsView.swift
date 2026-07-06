@@ -40,6 +40,14 @@ struct SubtitleSettingsView: View {
             }
 
             Section {
+                NavigationLink {
+                    SubtitleJobsListView()
+                } label: {
+                    Label(String(localized: "字幕任务", comment: "Subtitle jobs"), systemImage: "list.bullet.rectangle")
+                }
+            }
+
+            Section {
                 Button {
                     testConnection()
                 } label: {
