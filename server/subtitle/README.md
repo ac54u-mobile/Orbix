@@ -32,6 +32,25 @@ app 设置 → 字幕服务：
 - 端口：8788
 - API Key：`grep ORBIX_API_KEY /etc/orbix-subtitle.env` 的值（安装时自动生成）
 
+## qBittorrent 在 Docker 里？必须配置路径映射
+
+app 汇报的视频路径是容器内路径（如 `/downloads/xxx.mp4`），宿主机上的字幕服务
+需要知道它对应的真实目录。先查挂载：
+
+```bash
+docker inspect -f '{{ range .Mounts }}{{ .Source }} -> {{ .Destination }}{{ "\n" }}{{ end }}' qbittorrent
+# 输出例: /mnt/user/downloads -> /downloads
+```
+
+然后在 `/etc/orbix-subtitle.env` 加一行并重启：
+
+```bash
+PATH_MAP=/downloads=/mnt/user/downloads
+sudo systemctl restart orbix-subtitle
+```
+
+多组映射用逗号分隔：`PATH_MAP=/downloads=/mnt/a,/media=/mnt/b`。
+
 ## 注意
 
 - 服务需要能读写 qBittorrent 的下载目录（默认以 root 运行；如目录属主不同，编辑

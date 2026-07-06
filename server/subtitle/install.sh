@@ -32,6 +32,9 @@ DEEPSEEK_API_KEY=sk-xxxxxxxxxxxxxxxx
 # whisper 模型：tiny/base/small/medium/large-v3，越大越准越慢（CPU 建议 small）
 WHISPER_MODEL=small
 PORT=8788
+# qBittorrent 跑在 Docker 里时必填：容器路径=宿主机路径（多组用逗号分隔）
+# 宿主机路径用 docker inspect 查看挂载: docker inspect -f '{{ range .Mounts }}{{ .Source }} -> {{ .Destination }}{{ "\n" }}{{ end }}' qbittorrent
+#PATH_MAP=/downloads=/mnt/user/downloads
 EOF
     echo "==> 已生成配置 $ENV_FILE，请编辑填入 DEEPSEEK_API_KEY"
 else

@@ -9,6 +9,9 @@ Orbix 字幕服务
   DEEPSEEK_API_KEY   DeepSeek 平台的 API Key（必填）
   WHISPER_MODEL      whisper 模型，默认 small（可选 tiny/base/small/medium/large-v3）
   PORT               监听端口，默认 8788
+  PATH_MAP           路径映射，qBittorrent 在 Docker 里时必填。
+                     格式：容器路径=宿主机路径，多组用逗号分隔。
+                     例：PATH_MAP=/downloads=/mnt/user/downloads
 """
 
 import os
@@ -29,6 +32,19 @@ ORBIX_API_KEY = os.environ.get("ORBIX_API_KEY", "")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "small")
 PORT = int(os.environ.get("PORT", "8788"))
+PATH_MAP = os.environ.get("PATH_MAP", "")
+
+
+def map_path(path: str) -> str:
+    """把 qBittorrent（容器内）路径映射为本机实际路径"""
+    for pair in PATH_MAP.split(","):
+        if "=" not in pair:
+            continue
+        src, dst = pair.split("=", 1)
+        src, dst = src.strip().rstrip("/"), dst.strip().rstrip("/")
+        if src and (path == src or path.startswith(src + "/")):
+            return dst + path[len(src):]
+    return path
 
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 TRANSLATE_BATCH = 30
@@ -200,7 +216,9 @@ def run_pipeline(job: Job):
     wav = f"/tmp/orbix-sub-{job.id}.wav"
     try:
         if not os.path.isfile(job.video_path):
-            raise RuntimeError(f"视频文件不存在: {job.video_path}")
+            hint = "（qBittorrent 在 Docker 里时，请在 /etc/orbix-subtitle.env 配置 PATH_MAP 路径映射）" \
+                if not PATH_MAP else ""
+            raise RuntimeError(f"视频文件不存在: {job.video_path} {hint}")
 
         duration = probe_duration(job.video_path)
         extract_audio(job, job.video_path, wav, duration)
@@ -238,12 +256,13 @@ def health():
 @app.post("/api/jobs", status_code=202)
 def create_job(req: CreateJobRequest, x_api_key: str | None = Header(default=None)):
     check_auth(x_api_key)
+    video_path = map_path(req.video_path)
     with JOBS_LOCK:
         # 同一视频若已有进行中的任务，直接返回它
         for job in JOBS.values():
-            if job.video_path == req.video_path and job.stage not in ("done", "error"):
+            if job.video_path == video_path and job.stage not in ("done", "error"):
                 return asdict(job)
-        job = Job(id=uuid.uuid4().hex[:12], video_path=req.video_path)
+        job = Job(id=uuid.uuid4().hex[:12], video_path=video_path)
         JOBS[job.id] = job
     threading.Thread(target=run_pipeline, args=(job,), daemon=True).start()
     return asdict(job)
@@ -263,7 +282,8 @@ def list_jobs(video_path: str | None = None, x_api_key: str | None = Header(defa
     check_auth(x_api_key)
     jobs = sorted(JOBS.values(), key=lambda j: j.created_at, reverse=True)
     if video_path:
-        jobs = [j for j in jobs if j.video_path == video_path]
+        mapped = map_path(video_path)
+        jobs = [j for j in jobs if j.video_path == mapped]
     return [asdict(j) for j in jobs[:50]]
 
 
