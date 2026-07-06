@@ -19,6 +19,8 @@ struct TorrentListView: View {
     @State private var showErrorToast = false
     @State private var errorToastMessage = ""
     @State private var subtitleTorrent: TorrentInfo?
+    @State private var subtitleExportURL: URL?
+    @State private var showSubtitleExportSheet = false
     @State private var searchText = ""
     @Environment(\.scenePhase) private var scenePhase
 
@@ -106,6 +108,11 @@ struct TorrentListView: View {
         .sheet(item: $subtitleTorrent) { torrent in
             ServerSubtitleView(torrent: torrent)
         }
+        .sheet(isPresented: $showSubtitleExportSheet) {
+            if let subtitleExportURL {
+                ShareSheet(activityItems: [subtitleExportURL])
+            }
+        }
         .alert(OrbixStrings.miscDeleteTorrentTitle, isPresented: $showBatchDeleteAlert) {
                 Button(OrbixStrings.btnDeleteTaskFiles, role: .destructive) { executeBatchDelete(deleteFiles: true) }
                 Button(OrbixStrings.btnDeleteTaskOnly, role: .destructive) { executeBatchDelete(deleteFiles: false) }
@@ -184,6 +191,15 @@ struct TorrentListView: View {
                     executeSingleAction(.deleteFiles, torrent)
                 } label: {
                     Label(OrbixStrings.btnDelete, systemImage: "trash")
+                }
+
+                if SubtitleBadgeStore.shared.hashes.contains(torrent.hash) {
+                    Button {
+                        exportSubtitle(for: torrent)
+                    } label: {
+                        Label(String(localized: "导出字幕", comment: "Export subtitle"), systemImage: "captions.bubble")
+                    }
+                    .tint(.purple)
                 }
             }
             .swipeActions(edge: .leading) {
@@ -461,6 +477,34 @@ struct TorrentListView: View {
             executeSingleAction(.deleteFiles, torrent)
         } label: {
             Label(OrbixStrings.btnDeleteTaskFiles, systemImage: "trash.fill")
+        }
+    }
+
+    // MARK: - Subtitle Export
+
+    private func exportSubtitle(for torrent: TorrentInfo) {
+        AppHaptics.medium()
+        Task {
+            // 本地记录里找到该种子对应的字幕任务，取已完成的那个导出
+            let jobIds = PersistenceService.shared.subtitleJobMap
+                .filter { $0.value == torrent.hash }
+                .map(\.key)
+            for id in jobIds {
+                guard let job = try? await SubtitleServerApi.shared.getJob(id: id), job.stage == "done" else { continue }
+                if let url = try? await SubtitleExporter.export(job) {
+                    await MainActor.run {
+                        subtitleExportURL = url
+                        showSubtitleExportSheet = true
+                        AppHaptics.success()
+                    }
+                    return
+                }
+            }
+            await MainActor.run {
+                errorToastMessage = String(localized: "未找到字幕文件，请重新生成", comment: "Subtitle file not found")
+                showErrorToast = true
+                AppHaptics.error()
+            }
         }
     }
 
