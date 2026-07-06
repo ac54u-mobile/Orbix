@@ -206,15 +206,8 @@ enum OrbixStrings {
     static let serverSelect = String(localized: "选择服务器", comment: "Select server")
     static let serverNotAdded = String(localized: "还没有添加服务器", comment: "No servers added yet")
 
-    // MARK: - Filters / Sorts
+    // MARK: - Filters
     static let filterAll = String(localized: "全部", comment: "All")
-    static let sortDateAdded = String(localized: "添加时间", comment: "Date added")
-    static let sortName = String(localized: "名称", comment: "Name")
-    static let sortProgress = String(localized: "进度", comment: "Progress")
-    static let sortSize = String(localized: "大小", comment: "Size")
-    static let sortRatio = String(localized: "分享率", comment: "Ratio")
-    static let sortDLSpeed = String(localized: "下载速度", comment: "Download speed")
-    static let sortULSpeed = String(localized: "上传速度", comment: "Upload speed")
 
     // MARK: - Misc
     static let miscBiometric = String(localized: "生物识别", comment: "Biometric")

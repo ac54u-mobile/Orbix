@@ -11,7 +11,6 @@ struct TorrentListView: View {
     @State private var gDlLimitStr = ""
     @State private var gUlLimitStr = ""
     @State private var altSpeedEnabled = false
-    @State private var sortOrder: TorrentSort = .dateAdded
     @State private var selectedHash: String?
     @State private var editMode: EditMode = .inactive
     @State private var selectedHashes: Set<String> = []
@@ -24,40 +23,6 @@ struct TorrentListView: View {
     @State private var translateTorrentName = ""
     @State private var searchText = ""
     @Environment(\.scenePhase) private var scenePhase
-
-    enum TorrentSort: CaseIterable {
-        case dateAdded
-        case name
-        case progress
-        case size
-        case ratio
-        case dlSpeed
-        case upSpeed
-
-        var displayName: String {
-            switch self {
-            case .dateAdded: return OrbixStrings.sortDateAdded
-            case .name: return OrbixStrings.sortName
-            case .progress: return OrbixStrings.sortProgress
-            case .size: return OrbixStrings.sortSize
-            case .ratio: return OrbixStrings.sortRatio
-            case .dlSpeed: return OrbixStrings.sortDLSpeed
-            case .upSpeed: return OrbixStrings.sortULSpeed
-            }
-        }
-
-        var icon: String {
-            switch self {
-            case .dateAdded: return "calendar"
-            case .name: return "textformat.abc"
-            case .progress: return "chart.bar"
-            case .size: return "internaldrive"
-            case .ratio: return "chart.line.uptrend.xyaxis"
-            case .dlSpeed: return "arrow.down"
-            case .upSpeed: return "arrow.up"
-            }
-        }
-    }
 
     enum TorrentFilter: CaseIterable {
         case all
@@ -358,21 +323,6 @@ struct TorrentListView: View {
                 }
             }
         }
-        ToolbarItem(placement: .navigationBarLeading) {
-            if !isEditing {
-                Menu {
-                    Picker(OrbixStrings.sortName, selection: $sortOrder) {
-                        ForEach(TorrentSort.allCases, id: \.self) { sort in
-                            Label(sort.displayName, systemImage: sort.icon)
-                                .tag(sort)
-                        }
-                    }
-                } label: {
-                    Image(systemName: "arrow.up.arrow.down")
-                }
-                .accessibilityLabel(OrbixStrings.sortName)
-            }
-        }
         ToolbarItem(placement: .primaryAction) {
             if !isEditing {
                 Button {
@@ -668,16 +618,8 @@ struct TorrentListView: View {
     }
 
     private var filteredTorrents: [TorrentInfo] {
-        let base = applyFilter(filter, to: searchedTorrents)
-        switch sortOrder {
-        case .dateAdded: return base.sorted { $0.addedOn > $1.addedOn }
-        case .name: return base.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
-        case .progress: return base.sorted { $0.progress > $1.progress }
-        case .size: return base.sorted { $0.size > $1.size }
-        case .ratio: return base.sorted { $0.ratio > $1.ratio }
-        case .dlSpeed: return base.sorted { $0.dlspeed > $1.dlspeed }
-        case .upSpeed: return base.sorted { $0.upspeed > $1.upspeed }
-        }
+        applyFilter(filter, to: searchedTorrents)
+            .sorted { $0.addedOn > $1.addedOn }
     }
 
     private func refresh() {

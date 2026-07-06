@@ -21,6 +21,8 @@ struct SearchView: View {
     @State private var exportedFileURL: URL?
     @State private var showExportSheet = false
     @State private var showVideoSubtitle = false
+    @State private var showAddedToast = false
+    @State private var showAddFailedToast = false
 
     enum SearchState { case idle, loading, results, empty, error(String) }
 
@@ -85,6 +87,8 @@ struct SearchView: View {
             .sheet(isPresented: $showVideoSubtitle) {
                 VideoSubtitleView()
             }
+            .toast(isPresented: $showAddedToast, type: .success, message: String(localized: "已添加到下载队列", comment: "Added to download queue"))
+            .toast(isPresented: $showAddFailedToast, type: .error, message: String(localized: "添加失败", comment: "Add failed"))
         }
     }
 
@@ -342,7 +346,24 @@ struct SearchView: View {
     }
 
     private func addMagnet(_ torrent: ScrapedTorrent) {
-        Task { try? await QBitApi.shared.addMagnet([torrent.magnet]) }
+        Task {
+            do {
+                _ = try await QBitApi.shared.addMagnet([torrent.magnet])
+                await MainActor.run {
+                    AppHaptics.success()
+                    showAddedToast = true
+                }
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                await MainActor.run { showAddedToast = false }
+            } catch {
+                await MainActor.run {
+                    AppHaptics.error()
+                    showAddFailedToast = true
+                }
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                await MainActor.run { showAddFailedToast = false }
+            }
+        }
     }
 
     private func exportSRT() {

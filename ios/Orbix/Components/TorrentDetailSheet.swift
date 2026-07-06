@@ -7,6 +7,8 @@ struct TorrentDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var translatedDescription: String?
     @State private var showMediaViewer = false
+    @State private var showAddedToast = false
+    @State private var showAddFailedToast = false
 
     private var isBookmarked: Bool { bookmarks.contains(torrent.code) }
 
@@ -44,6 +46,8 @@ struct TorrentDetailSheet: View {
                 }
             }
         }
+        .toast(isPresented: $showAddedToast, type: .success, message: String(localized: "已添加到下载队列", comment: "Added to download queue"))
+        .toast(isPresented: $showAddFailedToast, type: .error, message: String(localized: "添加失败", comment: "Add failed"))
         .onAppear { translate() }
         .fullScreenCover(isPresented: $showMediaViewer) {
             if let thumb = torrent.thumbnail {
@@ -138,7 +142,7 @@ struct TorrentDetailSheet: View {
     private var actionSection: some View {
         Section {
             Button {
-                Task { _ = try? await QBitApi.shared.addMagnet([torrent.magnet]); dismiss() }
+                addToQueue()
             } label: {
                 Label(OrbixStrings.btnAddToQueue, systemImage: "square.and.arrow.down")
                     .fontWeight(.semibold)
@@ -224,6 +228,28 @@ struct TorrentDetailSheet: View {
     }
 
     // MARK: - Actions (privates)
+    private func addToQueue() {
+        Task {
+            do {
+                _ = try await QBitApi.shared.addMagnet([torrent.magnet])
+                await MainActor.run {
+                    AppHaptics.success()
+                    showAddedToast = true
+                }
+                // 让提示显示片刻再关闭
+                try? await Task.sleep(nanoseconds: 900_000_000)
+                await MainActor.run { dismiss() }
+            } catch {
+                await MainActor.run {
+                    AppHaptics.error()
+                    showAddFailedToast = true
+                }
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                await MainActor.run { showAddFailedToast = false }
+            }
+        }
+    }
+
     private func toggleBookmark() {
         if bookmarks.contains(torrent.code) { bookmarks.remove(torrent.code) }
         else { bookmarks.insert(torrent.code) }
