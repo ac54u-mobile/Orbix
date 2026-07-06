@@ -17,6 +17,10 @@ struct TorrentRow: View {
 
                 metadataLine
 
+                if torrent.addedOn > 0 || (torrent.isCompleted && torrent.completionOn > 0) {
+                    timeLine
+                }
+
                 if torrent.statusBadge.isError && !torrent.errorString.isEmpty {
                     Text(torrent.errorString)
                         .font(.caption)
@@ -105,6 +109,29 @@ struct TorrentRow: View {
         }
         .font(.caption)
         .foregroundStyle(.secondary)
+        .lineLimit(1)
+    }
+
+    private var timeLine: some View {
+        HStack(spacing: 10) {
+            if torrent.addedOn > 0 {
+                HStack(spacing: 3) {
+                    Image(systemName: "plus.circle")
+                        .font(.system(size: 9, weight: .medium))
+                    Text(String(format: String(localized: "添加于 %@", comment: "Added at"), relativeTime(from: torrent.addedOn)))
+                }
+            }
+
+            if torrent.isCompleted && torrent.completionOn > 0 {
+                HStack(spacing: 3) {
+                    Image(systemName: "checkmark.circle")
+                        .font(.system(size: 9, weight: .medium))
+                    Text(String(format: String(localized: "完成于 %@", comment: "Completed at"), relativeTime(from: torrent.completionOn)))
+                }
+            }
+        }
+        .font(.caption2)
+        .foregroundStyle(.tertiary)
         .lineLimit(1)
     }
 
