@@ -17,6 +17,13 @@ struct TorrentRow: View {
 
                 metadataLine
 
+                if torrent.statusBadge.isError && !torrent.errorString.isEmpty {
+                    Text(torrent.errorString)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .lineLimit(1)
+                }
+
                 if !torrent.isCompleted && torrent.progress > 0 {
                     HStack(spacing: 8) {
                         ProgressView(value: torrent.progress)
@@ -28,6 +35,10 @@ struct TorrentRow: View {
                             .foregroundStyle(.secondary)
                     }
                     .accessibilityHidden(true)
+                }
+
+                if !torrent.category.isEmpty || !tagList.isEmpty {
+                    tagRow
                 }
             }
 
@@ -78,6 +89,15 @@ struct TorrentRow: View {
                 }
             }
 
+            if !torrent.isCompleted && torrent.dlspeed > 0 && (torrent.numSeeds > 0 || torrent.numLeechs > 0) {
+                HStack(spacing: 2) {
+                    Image(systemName: "person.2")
+                        .font(.system(size: 9, weight: .medium))
+                    Text("\(torrent.numSeeds)/\(torrent.numLeechs)")
+                        .monospacedDigit()
+                }
+            }
+
             if torrent.isCompleted && torrent.ratio > 0 {
                 Text(String(format: String(localized: "比例 %.2f", comment: "Ratio"), torrent.ratio))
                     .monospacedDigit()
@@ -86,6 +106,34 @@ struct TorrentRow: View {
         .font(.caption)
         .foregroundStyle(.secondary)
         .lineLimit(1)
+    }
+
+    private var tagList: [String] {
+        torrent.tags
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
+    private var tagRow: some View {
+        HStack(spacing: 6) {
+            if !torrent.category.isEmpty {
+                chip(torrent.category, tint: .blue)
+            }
+            ForEach(tagList.prefix(3), id: \.self) { tag in
+                chip(tag, tint: .secondary)
+            }
+        }
+        .lineLimit(1)
+    }
+
+    private func chip(_ text: String, tint: Color) -> some View {
+        Text(text)
+            .font(.caption2.weight(.medium))
+            .foregroundStyle(tint)
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(Capsule().fill(tint.opacity(0.12)))
     }
 
     @ViewBuilder

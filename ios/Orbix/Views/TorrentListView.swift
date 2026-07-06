@@ -13,7 +13,7 @@ struct TorrentListView: View {
     @State private var altSpeedEnabled = false
     @State private var sortOrder: TorrentSort = .dateAdded
     @State private var selectedHash: String?
-    @State private var isEditMode = false
+    @State private var editMode: EditMode = .inactive
     @State private var selectedHashes: Set<String> = []
     @State private var showBatchDeleteAlert = false
     @State private var processingAction: String?
@@ -108,7 +108,7 @@ struct TorrentListView: View {
             .safeAreaInset(edge: .bottom) {
                 bottomInsetContent
             }
-            .animation(.default, value: isEditMode)
+            .animation(.default, value: editMode)
             .animation(.default, value: isLoading)
             .navigationTitle(OrbixStrings.tabTorrents)
             .navigationBarTitleDisplayMode(.inline)
@@ -156,61 +156,127 @@ struct TorrentListView: View {
 
     // MARK: - Torrent List
     private var torrentList: some View {
-        List {
-            ForEach(filteredTorrents) { torrent in
-                torrentRowView(torrent)
+        List(selection: $selectedHashes) {
+            if filter == .all {
+                ForEach(statusGroups) { group in
+                    Section {
+                        ForEach(group.torrents) { torrent in
+                            torrentRowView(torrent)
+                        }
+                    } header: {
+                        HStack {
+                            Text(group.title)
+                            Spacer()
+                            Text("\(group.torrents.count)")
+                                .monospacedDigit()
+                        }
+                    }
+                }
+            } else {
+                Section {
+                    ForEach(filteredTorrents) { torrent in
+                        torrentRowView(torrent)
+                    }
+                }
             }
         }
-        .listStyle(.plain)
+        .listStyle(.insetGrouped)
+        .environment(\.editMode, $editMode)
         .refreshable { await manualRefresh() }
         .navigationDestination(item: $selectedHash) { hash in
             // 相册式滑动 — 在详情页左右滑动即可切换相邻种子
             TorrentDetailPagerView(
-                hashes: filteredTorrents.map(\.hash),
+                hashes: visibleHashes,
                 initialHash: hash
             )
         }
     }
 
+    /// 与列表可见顺序一致（全部过滤时按状态分组展开）
+    private var visibleHashes: [String] {
+        filter == .all
+            ? statusGroups.flatMap { $0.torrents.map(\.hash) }
+            : filteredTorrents.map(\.hash)
+    }
+
+    @ViewBuilder
     private func torrentRowView(_ torrent: TorrentInfo) -> some View {
-        HStack(spacing: 0) {
-            if isEditMode {
-                selectionIcon(for: torrent)
-                    .padding(.trailing, 12)
+        let row = TorrentRow(torrent: torrent)
+            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                Button(role: .destructive) {
+                    executeSingleAction(.deleteFiles, torrent)
+                } label: {
+                    Label(OrbixStrings.btnDelete, systemImage: "trash")
+                }
             }
-            TorrentRow(torrent: torrent)
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-            Button(role: .destructive) {
-                executeSingleAction(.deleteFiles, torrent)
-            } label: {
-                Label(OrbixStrings.btnDelete, systemImage: "trash")
+            .swipeActions(edge: .leading) {
+                Button {
+                    executeSingleAction(torrent.statusBadge.isPaused ? .start : .stop, torrent)
+                } label: {
+                    Label(
+                        torrent.statusBadge.isPaused ? OrbixStrings.btnStart : OrbixStrings.btnPause,
+                        systemImage: torrent.statusBadge.isPaused ? "play.fill" : "pause.fill"
+                    )
+                }
+                .tint(torrent.statusBadge.isPaused ? .green : .orange)
             }
-        }
-        .swipeActions(edge: .leading) {
-            Button {
+            .contextMenu { contextMenuItems(for: torrent) }
+            .accessibilityAction(named: Text(torrent.statusBadge.isPaused ? OrbixStrings.btnStart : OrbixStrings.btnPause)) {
                 executeSingleAction(torrent.statusBadge.isPaused ? .start : .stop, torrent)
-            } label: {
-                Label(
-                    torrent.statusBadge.isPaused ? OrbixStrings.btnStart : OrbixStrings.btnPause,
-                    systemImage: torrent.statusBadge.isPaused ? "play.fill" : "pause.fill"
-                )
             }
-            .tint(torrent.statusBadge.isPaused ? .green : .orange)
+            .tag(torrent.hash)
+
+        // 编辑模式下由 List 原生处理选择，非编辑模式点按进入详情
+        if editMode == .inactive {
+            row
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    AppHaptics.light()
+                    selectedHash = torrent.hash
+                }
+        } else {
+            row
         }
-        .contextMenu { contextMenuItems(for: torrent) }
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if isEditMode {
-                toggleSelection(torrent.hash)
+    }
+
+    // MARK: - Status Groups
+    private struct StatusGroup: Identifiable {
+        let id: String
+        let title: String
+        let torrents: [TorrentInfo]
+    }
+
+    private var statusGroups: [StatusGroup] {
+        let list = filteredTorrents
+        var buckets: [(id: String, title: String, items: [TorrentInfo])] = [
+            ("error", OrbixStrings.statsError, []),
+            ("downloading", OrbixStrings.statsDownloading, []),
+            ("seeding", OrbixStrings.statsSeeding, []),
+            ("paused", OrbixStrings.statsPaused, []),
+            ("completed", OrbixStrings.filterCompleted, []),
+            ("other", String(localized: "其他", comment: "Other"), [])
+        ]
+        for t in list {
+            let badge = t.statusBadge
+            let index: Int
+            if badge.isError {
+                index = 0
+            } else if badge.isDownloadRelated && !badge.isPaused {
+                index = 1
+            } else if badge.isUploadRelated && !badge.isPaused {
+                index = 2
+            } else if badge.isPaused && !t.isCompleted {
+                index = 3
+            } else if t.isCompleted {
+                index = 4
             } else {
-                AppHaptics.light()
-                selectedHash = torrent.hash
+                index = 5
             }
+            buckets[index].items.append(t)
         }
-        .accessibilityAction(named: Text(torrent.statusBadge.isPaused ? OrbixStrings.btnStart : OrbixStrings.btnPause)) {
-            executeSingleAction(torrent.statusBadge.isPaused ? .start : .stop, torrent)
-        }
+        return buckets
+            .filter { !$0.items.isEmpty }
+            .map { StatusGroup(id: $0.id, title: $0.title, torrents: $0.items) }
     }
 
     private var loadingContent: some View {
@@ -234,14 +300,16 @@ struct TorrentListView: View {
         }
     }
 
+    private var isEditing: Bool { editMode == .active }
+
     private var bottomInsetContent: some View {
         VStack(spacing: 8) {
-            if isEditMode && !selectedHashes.isEmpty {
+            if isEditing && !selectedHashes.isEmpty {
                 batchActionBar
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
 
-            if !isEditMode && (globalDlSpeed > 0 || globalUpSpeed > 0) {
+            if !isEditing && (globalDlSpeed > 0 || globalUpSpeed > 0) {
                 GlobalSpeedPill(dl: globalDlSpeed, up: globalUpSpeed)
                     .padding(.bottom, 8)
                     .transition(.move(edge: .bottom).combined(with: .opacity).combined(with: .scale(scale: 0.9)))
@@ -254,19 +322,21 @@ struct TorrentListView: View {
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
                 AppHaptics.medium()
-                if isEditMode {
-                    selectedHashes.removeAll()
-                    isEditMode = false
-                } else {
-                    isEditMode = true
+                withAnimation {
+                    if isEditing {
+                        selectedHashes.removeAll()
+                        editMode = .inactive
+                    } else {
+                        editMode = .active
+                    }
                 }
             } label: {
-                Text(isEditMode ? OrbixStrings.btnDone : OrbixStrings.btnEdit)
+                Text(isEditing ? OrbixStrings.btnDone : OrbixStrings.btnEdit)
                     .fontWeight(.medium)
             }
         }
         ToolbarItem(placement: .navigationBarLeading) {
-            if !isEditMode {
+            if !isEditing {
                 Button { showSpeedPanel = true } label: {
                     Image(systemName: altSpeedEnabled ? "tortoise.fill" : "speedometer")
                         .foregroundStyle(altSpeedEnabled ? Color.orange : Color.accentColor)
@@ -287,7 +357,7 @@ struct TorrentListView: View {
             }
         }
         ToolbarItem(placement: .navigationBarLeading) {
-            if !isEditMode {
+            if !isEditing {
                 Menu {
                     Picker(OrbixStrings.sortName, selection: $sortOrder) {
                         ForEach(TorrentSort.allCases, id: \.self) { sort in
@@ -302,7 +372,7 @@ struct TorrentListView: View {
             }
         }
         ToolbarItem(placement: .primaryAction) {
-            if !isEditMode {
+            if !isEditing {
                 Button {
                     showAddTorrent = true
                 } label: {
@@ -370,24 +440,6 @@ struct TorrentListView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(f.displayName)
         .accessibilityValue("\(itemCount)")
-    }
-
-    // MARK: - Selection
-    private func selectionIcon(for torrent: TorrentInfo) -> some View {
-        let isSelected = selectedHashes.contains(torrent.hash)
-        return Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-            .font(.title3)
-            .foregroundStyle(isSelected ? Color.accentColor : Color(.tertiaryLabel))
-            .frame(width: 44, height: 44)
-    }
-
-    private func toggleSelection(_ hash: String) {
-        AppHaptics.selection()
-        if selectedHashes.contains(hash) {
-            selectedHashes.remove(hash)
-        } else {
-            selectedHashes.insert(hash)
-        }
     }
 
     // MARK: - Context Menu
