@@ -57,6 +57,8 @@ sudo systemctl restart orbix-subtitle
   service 文件里的 `User=`）。
 - Whisper 在 CPU 上运行，`small` 模型处理一部 2 小时电影约 20-60 分钟（取决于 CPU）。
   追求速度可改 `WHISPER_MODEL=base`，追求质量用 `medium`。
+- 默认按日语转写（`LANGUAGE=ja`），翻译提示词针对日译中调优；其他语种可改
+  `LANGUAGE`（如 en、ko）或设 `auto` 自动检测。
 - 端口 8788 需对 app 可访问（公网或内网均可），注意防火墙放行。
 
 ## API

@@ -8,6 +8,7 @@ Orbix 字幕服务
   ORBIX_API_KEY      app 调用本服务的鉴权 key（必填，自定义一串随机字符）
   DEEPSEEK_API_KEY   DeepSeek 平台的 API Key（必填）
   WHISPER_MODEL      whisper 模型，默认 small（可选 tiny/base/small/medium/large-v3）
+  LANGUAGE           源语言，默认 ja（日语）；设为 auto 则自动检测
   PORT               监听端口，默认 8788
   PATH_MAP           路径映射，qBittorrent 在 Docker 里时必填。
                      格式：容器路径=宿主机路径，多组用逗号分隔。
@@ -34,7 +35,12 @@ import uvicorn
 ORBIX_API_KEY = os.environ.get("ORBIX_API_KEY", "")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 WHISPER_MODEL = os.environ.get("WHISPER_MODEL", "small")
+LANGUAGE = os.environ.get("LANGUAGE", "ja")
 PORT = int(os.environ.get("PORT", "8788"))
+
+# 单条字幕显示上限（秒），防止"话说完了字幕还挂在屏幕上"
+MAX_SUB_DURATION = 6.0
+MIN_SUB_DURATION = 0.5
 PATH_MAP = os.environ.get("PATH_MAP", "")
 
 
@@ -181,34 +187,78 @@ def extract_audio(job: Job, video: str, wav: str, duration: float):
 def transcribe(job: Job, wav: str, duration: float) -> list[dict]:
     job.update(stage="transcribe", progress=0, message="Whisper 语音识别中")
     model = get_whisper()
-    # beam_size=1 贪心解码，CPU 上速度和内存都友好，字幕场景质量足够
-    segments_iter, _info = model.transcribe(wav, vad_filter=True, beam_size=1)
+    # beam_size=1 贪心解码，CPU 上速度和内存都友好，字幕场景质量足够；
+    # word_timestamps 用词级时间修正段落边界；condition_on_previous_text=False
+    # 避免幻觉复读；VAD 靠短静音切分，字幕不会一直挂着
+    segments_iter, _info = model.transcribe(
+        wav,
+        language=None if LANGUAGE == "auto" else LANGUAGE,
+        vad_filter=True,
+        vad_parameters={"min_silence_duration_ms": 400, "speech_pad_ms": 150},
+        beam_size=1,
+        word_timestamps=True,
+        condition_on_previous_text=False,
+    )
     segments = []
     for seg in segments_iter:
         text = seg.text.strip()
         if text:
-            segments.append({"start": seg.start, "end": seg.end, "text": text})
+            start, end = seg.start, seg.end
+            # 用词级时间戳收紧边界：话说完字幕就消失
+            if seg.words:
+                start = seg.words[0].start
+                end = seg.words[-1].end
+            segments.append({"start": start, "end": end, "text": text})
         if duration > 0:
             job.update(progress=min(99, int(seg.end / duration * 100)))
     job.update(progress=100)
-    return segments
+    return postprocess_segments(segments)
 
 
-def deepseek_translate_batch(lines: list[str]) -> list[str]:
+def postprocess_segments(segments: list[dict]) -> list[dict]:
+    """时间轴修正：限制单条时长、去重复读、消除重叠"""
+    cleaned: list[dict] = []
+    for seg in segments:
+        # Whisper 幻觉常表现为同一句连续复读，只保留第一条
+        if cleaned and seg["text"] == cleaned[-1]["text"] and seg["start"] - cleaned[-1]["end"] < 3.0:
+            continue
+        seg["end"] = min(seg["end"], seg["start"] + MAX_SUB_DURATION)
+        seg["end"] = max(seg["end"], seg["start"] + MIN_SUB_DURATION)
+        # 与下一条重叠时提前结束（循环后处理）
+        cleaned.append(seg)
+    for cur, nxt in zip(cleaned, cleaned[1:]):
+        if cur["end"] > nxt["start"]:
+            cur["end"] = max(cur["start"] + MIN_SUB_DURATION, nxt["start"] - 0.05)
+    return cleaned
+
+
+TRANSLATE_SYSTEM_PROMPT = (
+    "你是资深的日译中影视字幕翻译，正在翻译日本影片的对白字幕（逐条、带行号）。要求：\n"
+    "1. 译成地道的简体中文口语，简短干脆，符合字幕阅读习惯，避免书面腔和直译腔；\n"
+    "2. 结合上下文语境翻译：人称、称呼、语气要前后连贯，省略的主语按语境补全或保持省略；\n"
+    "3. 日语语气词、感叹词（あっ、んっ、はぁ、うん、ね、よ 等）译成自然的中文语气词（啊、嗯、哈、好、呢、哟等），"
+    "单独成句的短语气词直接给出对应中文，不要展开脑补；\n"
+    "4. 识别错误、无意义的音节或听不清的内容，输出最接近语境的合理短句，实在无法翻译就原样保留；\n"
+    "5. 不要合并、拆分或跳过任何一行；严格保持行数与行号不变；\n"
+    "6. 输出格式：行号|译文。除译文行外不要输出任何说明、注释或空行。"
+)
+
+
+def deepseek_translate_batch(lines: list[str], context: list[str] | None = None) -> list[str]:
     numbered = "\n".join(f"{i + 1}|{t}" for i, t in enumerate(lines))
+    user_content = numbered
+    if context:
+        ctx = "\n".join(context[-6:])
+        user_content = (
+            f"【上文（前几条字幕的译文，仅供语境参考，禁止输出、禁止编号）】\n{ctx}\n\n"
+            f"【待翻译字幕】\n{numbered}"
+        )
     payload = {
         "model": "deepseek-chat",
         "temperature": 1.3,
         "messages": [
-            {
-                "role": "system",
-                "content": (
-                    "你是专业字幕翻译。把下面每行竖线后的台词翻译成简体中文，"
-                    "口语自然、简洁。严格保持行数和行号不变，"
-                    "输出格式与输入相同：行号|译文。不要输出任何其他内容。"
-                ),
-            },
-            {"role": "user", "content": numbered},
+            {"role": "system", "content": TRANSLATE_SYSTEM_PROMPT},
+            {"role": "user", "content": user_content},
         ],
     }
     resp = requests.post(
@@ -236,12 +286,14 @@ def translate(job: Job, segments: list[dict]) -> list[str]:
     total = len(texts)
     for i in range(0, total, TRANSLATE_BATCH):
         batch = texts[i:i + TRANSLATE_BATCH]
+        # 把前一批的译文尾部作为上下文，保证跨批次语境连贯
+        context = out[-6:] if out else None
         try:
-            out.extend(deepseek_translate_batch(batch))
+            out.extend(deepseek_translate_batch(batch, context))
         except Exception:
             # 单批失败重试一次，再失败保留原文
             try:
-                out.extend(deepseek_translate_batch(batch))
+                out.extend(deepseek_translate_batch(batch, context))
             except Exception:
                 out.extend(batch)
         job.update(progress=min(99, int(len(out) / total * 100)))
