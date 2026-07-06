@@ -29,6 +29,14 @@ enum AppMotion {
 
     static let breathingScale: Animation = .timingCurve(0.2, 0.0, 0.2, 1.0, duration: 0.15)
 
+    // MARK: - iOS 26 Liquid Glass Fluid Animations
+    /// Fluid spring — for surface transitions, card expansions
+    static let fluidSpring: Animation = .spring(response: 0.5, dampingFraction: 0.82)
+    /// Quick fluid — for button taps, toggle switches
+    static let fluidQuick: Animation = .spring(response: 0.25, dampingFraction: 0.7)
+    /// Morph spring — for shape changes, matchedGeometryEffect
+    static let fluidMorph: Animation = .spring(response: 0.6, dampingFraction: 0.78)
+
     static let skeletonCycle: TimeInterval = 1.4
     static let shimmerDuration: TimeInterval = 1.2
 }

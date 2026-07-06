@@ -1,67 +1,106 @@
 import SwiftUI
 
-// MARK: - Semantic Color Tokens
+// MARK: - iOS 26 Liquid Glass Design System
 
 enum AppColors {
-    // Background — Light Mode
-    static let backgroundBase          = Color(red: 0.98, green: 0.96, blue: 0.98)
-    static let backgroundGradientStart = Color(red: 0.996, green: 0.949, blue: 0.965)
-    static let backgroundGradientEnd   = Color(red: 0.941, green: 0.957, blue: 1.0)
-    static let gridGradientStart       = Color(hex: "#FEF2F6")
-    static let gridGradientEnd         = Color(hex: "#F0F4FE")
+    // MARK: Background — Vibrant Base (shows through glass)
+    // Light Mode
+    static let backgroundBase           = Color(hex: "#F2F1F7")
+    static let backgroundGradientStart  = Color(hex: "#E8E4F0")
+    static let backgroundGradientEnd    = Color(hex: "#DEE8F5")
+    static let gridGradientStart        = Color(hex: "#EDE8F3")
+    static let gridGradientEnd          = Color(hex: "#DCE4F2")
 
-    // Background — Dark Mode
-    static let backgroundGradientStartDark = Color(hex: "#1A1A2E")
-    static let backgroundGradientEndDark   = Color(hex: "#16213E")
-    static let gridGradientStartDark       = Color(hex: "#1C1C30")
-    static let gridGradientEndDark         = Color(hex: "#1A2236")
+    // Dark Mode — deep vibrant tones that make glass pop
+    static let backgroundGradientStartDark = Color(hex: "#0D0D1A")
+    static let backgroundGradientEndDark   = Color(hex: "#101828")
+    static let gridGradientStartDark       = Color(hex: "#0F0F1E")
+    static let gridGradientEndDark         = Color(hex: "#121A2C")
 
-    // Surface — adapts automatically via .systemBackground
-    // Lighter glass effect in light mode, more opaque in dark mode
-    static let card                     = Color(.systemBackground).opacity(0.6)
-    static let elevated                 = Color(.systemBackground).opacity(0.72)
-    // Dark mode optimized: use .cardDark / .elevatedDark for better contrast
-    static let cardDark                 = Color(.systemBackground).opacity(0.85)
-    static let elevatedDark             = Color(.systemBackground).opacity(0.9)
+    // Old pastel tokens — kept for backward compatibility
+    static let backgroundGradientStartLight_Legacy = Color(red: 0.996, green: 0.949, blue: 0.965)
+    static let backgroundGradientEndLight_Legacy   = Color(red: 0.941, green: 0.957, blue: 1.0)
+    static let gridGradientStartLight_Legacy       = Color(hex: "#FEF2F6")
+    static let gridGradientEndLight_Legacy         = Color(hex: "#F0F4FE")
 
-    // Text
-    static let textPrimary              = Color(.label)
-    static let textSecondary            = Color(.secondaryLabel)
-    static let textTertiary             = Color(.tertiaryLabel)
+    // MARK: Liquid Glass Surface Layers
+    // Thickness levels — higher = more opaque, more elevated
 
-    // Accent
-    static let accentPrimary            = Color(hex: "#007AFF")
-    static let accentDark               = Color(hex: "#0056D6")
-    static let accentSoftBg             = Color(hex: "#E8F1FF")
+    /// Glass level 0 — near-transparent, for subtle background overlays
+    static func glassThin(for scheme: ColorScheme) -> Color {
+        scheme == .dark
+            ? Color.white.opacity(0.04)
+            : Color.white.opacity(0.35)
+    }
 
-    // Tag Backgrounds
-    static let tagBackgroundGreen       = Color(hex: "#34C759")
-    static let tagBackgroundBlue        = Color(hex: "#409CFF")
+    /// Glass level 1 — standard card surface
+    static func glassRegular(for scheme: ColorScheme) -> Color {
+        scheme == .dark
+            ? Color.white.opacity(0.06)
+            : Color.white.opacity(0.50)
+    }
 
-    // Semantic
-    static let success                  = Color(hex: "#34C759")
-    static let warning                  = Color(hex: "#FF9500")
-    static let danger                   = Color(hex: "#FF3B30")
+    /// Glass level 2 — elevated surface (sheets, dialogs)
+    static func glassThick(for scheme: ColorScheme) -> Color {
+        scheme == .dark
+            ? Color.white.opacity(0.09)
+            : Color.white.opacity(0.65)
+    }
 
-    // Chart / Waveform
-    static let statsWaveform            = Color(hex: "#34C759")
+    /// Glass level 3 — highest elevation (navigation bars, tab bars)
+    static func glassChrome(for scheme: ColorScheme) -> Color {
+        scheme == .dark
+            ? Color.white.opacity(0.12)
+            : Color.white.opacity(0.80)
+    }
 
-    // Separator / Divider
-    static let listDivider              = Color(.separator)
-    static let separator                = listDivider
-    static let hairlineDivider          = Color.primary.opacity(0.08)
-    static let placeholder              = Color(.placeholderText)
+    // MARK: Glass Borders
+    static func glassBorder(for scheme: ColorScheme) -> Color {
+        scheme == .dark
+            ? Color.white.opacity(0.06)
+            : Color.white.opacity(0.40)
+    }
 
-    // Skeleton
-    static let skeletonBase             = Color(.systemGray5)
-    static let skeletonHighlight        = Color(.systemGray6)
+    static func glassBorderSubtle(for scheme: ColorScheme) -> Color {
+        scheme == .dark
+            ? Color.white.opacity(0.03)
+            : Color.white.opacity(0.20)
+    }
 
-    // Glass / Translucent
-    static let glassBorder              = Color.primary.opacity(0.06)
+    // Legacy static glass border — light mode default
+    static let glassBorder = Color.primary.opacity(0.06)
 
-    // Empty State
-    static let emptyStateIconColor      = Color(.tertiaryLabel)
-    static let emptyStateTextColor      = Color(.secondaryLabel)
+    // MARK: Surface (backward-compatible with old code)
+    static let card     = Color(.systemBackground).opacity(0.6)
+    static let elevated = Color(.systemBackground).opacity(0.72)
+
+    // MARK: Text
+    static let textPrimary   = Color(.label)
+    static let textSecondary = Color(.secondaryLabel)
+    static let textTertiary  = Color(.tertiaryLabel)
+
+    // MARK: Accent
+    static let accentPrimary = Color(hex: "#007AFF")
+    static let accentDark    = Color(hex: "#0056D6")
+    static let accentSoftBg  = Color(hex: "#E8F1FF")
+
+    // MARK: Semantic
+    static let success = Color(hex: "#34C759")
+    static let warning = Color(hex: "#FF9500")
+    static let danger  = Color(hex: "#FF3B30")
+
+    // MARK: System mappings
+    static let tagBackgroundGreen = Color(hex: "#34C759")
+    static let tagBackgroundBlue  = Color(hex: "#409CFF")
+    static let statsWaveform      = Color(hex: "#34C759")
+    static let listDivider        = Color(.separator)
+    static let separator          = listDivider
+    static let hairlineDivider    = Color.primary.opacity(0.08)
+    static let placeholder        = Color(.placeholderText)
+    static let skeletonBase       = Color(.systemGray5)
+    static let skeletonHighlight  = Color(.systemGray6)
+    static let emptyStateIconColor = Color(.tertiaryLabel)
+    static let emptyStateTextColor = Color(.secondaryLabel)
 
     // Gradients — Light mode defaults (backward-compatible)
     static let backgroundGradient = LinearGradient(
@@ -161,18 +200,20 @@ extension View {
     }
 }
 
-// MARK: - Orbix Card Modifier
+// MARK: - Orbix Card Modifier (now powered by Liquid Glass)
 
 struct OrbixCard: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
+                    .fill(AppColors.glassRegular(for: colorScheme))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .stroke(AppColors.glassBorder, lineWidth: 1)
+                    .stroke(AppColors.glassBorder(for: colorScheme), lineWidth: 0.5)
             )
     }
 }
