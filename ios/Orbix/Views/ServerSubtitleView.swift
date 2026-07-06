@@ -17,6 +17,9 @@ struct ServerSubtitleView: View {
     @State private var startingPath: String?
     @State private var job: SubtitleJob?
     @State private var errorMessage: String?
+    @State private var exportURL: URL?
+    @State private var showExportSheet = false
+    @State private var isExporting = false
 
     var body: some View {
         NavigationStack {
@@ -60,6 +63,11 @@ struct ServerSubtitleView: View {
         }
         .task { await prepare() }
         .task(id: job?.id) { await pollJob() }
+        .sheet(isPresented: $showExportSheet) {
+            if let exportURL {
+                ShareSheet(activityItems: [exportURL])
+            }
+        }
     }
 
     // MARK: - Views
@@ -214,10 +222,44 @@ struct ServerSubtitleView: View {
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
+
+            Button {
+                exportSrt(job)
+            } label: {
+                if isExporting {
+                    ProgressView()
+                } else {
+                    Label(String(localized: "导出字幕文件", comment: "Export subtitle"), systemImage: "square.and.arrow.up")
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .disabled(isExporting)
+
             Spacer()
         }
         .frame(maxWidth: .infinity)
         .background(Color(.systemGroupedBackground))
+    }
+
+    private func exportSrt(_ job: SubtitleJob) {
+        isExporting = true
+        AppHaptics.medium()
+        Task {
+            defer { Task { @MainActor in isExporting = false } }
+            do {
+                let url = try await SubtitleExporter.export(job)
+                await MainActor.run {
+                    exportURL = url
+                    showExportSheet = true
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
+                    AppHaptics.error()
+                }
+            }
+        }
     }
 
     private func failedView(_ job: SubtitleJob) -> some View {
@@ -274,7 +316,13 @@ struct ServerSubtitleView: View {
         // 若某个视频已有任务（进行中或已完成），直接续接展示
         for file in videoFiles {
             if let existing = try? await SubtitleServerApi.shared.findJob(videoPath: fullPath(file)) {
-                await MainActor.run { job = existing }
+                await MainActor.run {
+                    job = existing
+                    SubtitleBadgeStore.shared.recordJob(existing.id, torrentHash: torrent.hash)
+                    if existing.stage == "done" {
+                        SubtitleBadgeStore.shared.markSubtitled(torrent.hash)
+                    }
+                }
                 return
             }
         }
@@ -291,6 +339,7 @@ struct ServerSubtitleView: View {
                 await MainActor.run {
                     startingPath = nil
                     job = created
+                    SubtitleBadgeStore.shared.recordJob(created.id, torrentHash: torrent.hash)
                     AppHaptics.success()
                 }
             } catch {
@@ -312,7 +361,12 @@ struct ServerSubtitleView: View {
                 await MainActor.run { job = updated }
                 if updated.isFinished {
                     await MainActor.run {
-                        updated.stage == "done" ? AppHaptics.success() : AppHaptics.error()
+                        if updated.stage == "done" {
+                            SubtitleBadgeStore.shared.markSubtitled(torrent.hash)
+                            AppHaptics.success()
+                        } else {
+                            AppHaptics.error()
+                        }
                     }
                     return
                 }

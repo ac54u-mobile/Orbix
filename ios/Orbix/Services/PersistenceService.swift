@@ -75,4 +75,15 @@ final class PersistenceService {
         get { defaults.object(forKey: "subtitle_port") as? Int ?? 8788 }
         set { defaults.set(newValue, forKey: "subtitle_port") }
     }
+
+    /// 字幕任务 id → 种子 hash（用于给种子卡片打"已翻译字幕"标记）
+    var subtitleJobMap: [String: String] {
+        get { defaults.dictionary(forKey: "subtitle_job_map") as? [String: String] ?? [:] }
+        set { defaults.set(newValue, forKey: "subtitle_job_map") }
+    }
+
+    var subtitledHashes: [String] {
+        get { defaults.stringArray(forKey: "subtitled_hashes") ?? [] }
+        set { defaults.set(newValue, forKey: "subtitled_hashes") }
+    }
 }

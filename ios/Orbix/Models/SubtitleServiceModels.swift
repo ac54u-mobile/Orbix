@@ -25,6 +25,43 @@ struct SubtitleServiceConfig: Equatable {
     }
 }
 
+// MARK: - 已翻译字幕标记
+
+/// 记录哪些种子已生成过字幕，供种子卡片显示"已翻译字幕"徽标。
+/// 所有调用都在主线程（视图或 MainActor.run 中）发生。
+final class SubtitleBadgeStore: ObservableObject {
+    static let shared = SubtitleBadgeStore()
+
+    @Published private(set) var hashes: Set<String>
+
+    private init() {
+        hashes = Set(PersistenceService.shared.subtitledHashes)
+    }
+
+    /// 发起/续接任务时记录 任务id → 种子hash 的关联
+    func recordJob(_ jobId: String, torrentHash: String) {
+        var map = PersistenceService.shared.subtitleJobMap
+        map[jobId] = torrentHash
+        PersistenceService.shared.subtitleJobMap = map
+    }
+
+    func markSubtitled(_ hash: String) {
+        guard !hashes.contains(hash) else { return }
+        hashes.insert(hash)
+        PersistenceService.shared.subtitledHashes = Array(hashes)
+    }
+
+    /// 用服务器任务列表同步：已完成的任务给对应种子打标
+    func sync(with jobs: [SubtitleJob]) {
+        let map = PersistenceService.shared.subtitleJobMap
+        for job in jobs where job.stage == "done" {
+            if let hash = map[job.id] {
+                markSubtitled(hash)
+            }
+        }
+    }
+}
+
 // MARK: - 字幕任务
 
 struct SubtitleJob: Codable, Identifiable, Equatable {

@@ -114,6 +114,13 @@ struct TorrentListView: View {
                 Text(String(format: OrbixStrings.infoBatchDeleteConfirm, selectedHashes.count))
         }
         .toast(isPresented: $showErrorToast, type: .error, message: errorToastMessage)
+        .task {
+            // 同步字幕任务完成状态，给卡片打"已翻译字幕"标
+            guard SubtitleServiceConfig.load().isConfigured else { return }
+            if let jobs = try? await SubtitleServerApi.shared.listJobs() {
+                await MainActor.run { SubtitleBadgeStore.shared.sync(with: jobs) }
+            }
+        }
     }
 
     // MARK: - Torrent List

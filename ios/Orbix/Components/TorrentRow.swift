@@ -4,6 +4,9 @@ import SwiftUI
 
 struct TorrentRow: View {
     let torrent: TorrentInfo
+    @ObservedObject private var subtitleBadges = SubtitleBadgeStore.shared
+
+    private var hasSubtitle: Bool { subtitleBadges.hashes.contains(torrent.hash) }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -17,7 +20,7 @@ struct TorrentRow: View {
 
                 metadataLine
 
-                if torrent.addedOn > 0 || (torrent.isCompleted && torrent.completionOn > 0) {
+                if torrent.addedOn > 0 || (torrent.isCompleted && torrent.completionOn > 0) || hasSubtitle {
                     timeLine
                 }
 
@@ -124,6 +127,15 @@ struct TorrentRow: View {
                         .font(.system(size: 9, weight: .medium))
                     Text(String(format: String(localized: "完成于 %@", comment: "Completed at"), relativeTime(from: torrent.completionOn)))
                 }
+            }
+
+            if hasSubtitle {
+                HStack(spacing: 3) {
+                    Image(systemName: "captions.bubble.fill")
+                        .font(.system(size: 9, weight: .medium))
+                    Text(String(localized: "已翻译字幕", comment: "Subtitle translated"))
+                }
+                .foregroundStyle(.purple)
             }
         }
         .font(.caption2)

@@ -25,6 +25,7 @@ from dataclasses import dataclass, field, asdict
 
 import requests
 from fastapi import FastAPI, HTTPException, Header
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 import uvicorn
 
@@ -317,6 +318,16 @@ def get_job(job_id: str, x_api_key: str | None = Header(default=None)):
     if job is None:
         raise HTTPException(status_code=404, detail="job not found")
     return asdict(job)
+
+
+@app.get("/api/jobs/{job_id}/srt", response_class=PlainTextResponse)
+def get_srt(job_id: str, x_api_key: str | None = Header(default=None)):
+    check_auth(x_api_key)
+    job = JOBS.get(job_id)
+    if job is None or job.stage != "done" or not os.path.isfile(job.srt_path):
+        raise HTTPException(status_code=404, detail="srt not found")
+    with open(job.srt_path, encoding="utf-8") as f:
+        return f.read()
 
 
 @app.get("/api/jobs")

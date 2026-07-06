@@ -86,4 +86,21 @@ actor SubtitleServerApi {
         let data = try await request("jobs")
         return try JSONDecoder().decode([SubtitleJob].self, from: data)
     }
+
+    /// 下载已完成任务的 srt 字幕内容
+    func downloadSrt(jobId: String) async throws -> String {
+        let data = try await request("jobs/\(jobId)/srt")
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+}
+
+/// 把服务器上的字幕下载为本地临时 .srt 文件，供分享导出
+enum SubtitleExporter {
+    static func export(_ job: SubtitleJob) async throws -> URL {
+        let content = try await SubtitleServerApi.shared.downloadSrt(jobId: job.id)
+        let base = ((job.videoPath as NSString).lastPathComponent as NSString).deletingPathExtension
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(base).zh.srt")
+        try content.write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
 }

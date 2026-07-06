@@ -5,6 +5,9 @@ struct SubtitleJobsListView: View {
     @State private var jobs: [SubtitleJob] = []
     @State private var isLoading = true
     @State private var errorMessage: String?
+    @State private var exportURL: URL?
+    @State private var showExportSheet = false
+    @State private var exportingJobId: String?
 
     var body: some View {
         Group {
@@ -34,6 +37,11 @@ struct SubtitleJobsListView: View {
         .navigationTitle(String(localized: "字幕任务", comment: "Subtitle jobs"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await refreshLoop() }
+        .sheet(isPresented: $showExportSheet) {
+            if let exportURL {
+                ShareSheet(activityItems: [exportURL])
+            }
+        }
     }
 
     private func jobRow(_ job: SubtitleJob) -> some View {
@@ -44,10 +52,29 @@ struct SubtitleJobsListView: View {
 
             switch job.stage {
             case "done":
-                Label(job.message.isEmpty ? String(localized: "已完成", comment: "") : job.message,
-                      systemImage: "checkmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.green)
+                HStack {
+                    Label(job.message.isEmpty ? String(localized: "已完成", comment: "") : job.message,
+                          systemImage: "checkmark.circle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.green)
+
+                    Spacer()
+
+                    Button {
+                        exportSrt(job)
+                    } label: {
+                        if exportingJobId == job.id {
+                            ProgressView().controlSize(.mini)
+                        } else {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.body)
+                                .foregroundStyle(.blue)
+                        }
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(exportingJobId != nil)
+                    .accessibilityLabel(String(localized: "导出字幕文件", comment: "Export subtitle"))
+                }
             case "error":
                 Label(job.error.isEmpty ? String(localized: "失败", comment: "") : job.error,
                       systemImage: "xmark.circle.fill")
@@ -72,6 +99,22 @@ struct SubtitleJobsListView: View {
         .padding(.vertical, 4)
     }
 
+    private func exportSrt(_ job: SubtitleJob) {
+        exportingJobId = job.id
+        AppHaptics.medium()
+        Task {
+            defer { Task { @MainActor in exportingJobId = nil } }
+            if let url = try? await SubtitleExporter.export(job) {
+                await MainActor.run {
+                    exportURL = url
+                    showExportSheet = true
+                }
+            } else {
+                await MainActor.run { AppHaptics.error() }
+            }
+        }
+    }
+
     private func refreshLoop() async {
         while !Task.isCancelled {
             do {
@@ -80,6 +123,7 @@ struct SubtitleJobsListView: View {
                     jobs = list
                     isLoading = false
                     errorMessage = nil
+                    SubtitleBadgeStore.shared.sync(with: list)
                 }
             } catch {
                 await MainActor.run {
