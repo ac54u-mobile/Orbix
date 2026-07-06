@@ -6,45 +6,39 @@ struct ScrapedTorrentRow: View {
     @State private var loadedThumbnail: UIImage?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            // 完整海报 — 原图比例不裁切，对齐站点原版卡片
-            ZStack(alignment: .topTrailing) {
-                posterView
+        HStack(spacing: 12) {
+            // Thumbnail
+            ZStack(alignment: .topLeading) {
+                thumbnailView
                 if isBookmarked {
-                    Circle().fill(Color.red).frame(width: 20, height: 20)
-                        .overlay(Image(systemName: "heart.fill").font(.system(size: 10)).foregroundStyle(.white))
-                        .padding(8)
+                    Circle().fill(Color.red).frame(width: 14, height: 14)
+                        .overlay(Image(systemName: "heart.fill").font(.system(size: 7)).foregroundStyle(.white))
+                        .offset(x: -4, y: -4)
                 }
             }
 
-            HStack(alignment: .firstTextBaseline) {
+            // Text
+            VStack(alignment: .leading, spacing: 3) {
                 Text(torrent.code)
                     .font(.headline)
                     .lineLimit(1)
 
-                Spacer()
-
-                if !torrent.size.isEmpty {
-                    Text(torrent.size)
-                        .font(.subheadline)
+                let subtitle = subtitleText
+                if !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .lineLimit(2)
                 }
             }
 
-            if !torrent.date.isEmpty {
-                Text(torrent.date)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+            Spacer()
 
-            if let desc = torrent.description, !desc.isEmpty {
-                Text(desc)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
-            }
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(torrent.code)
         .accessibilityValue(subtitleText)
@@ -63,25 +57,23 @@ struct ScrapedTorrentRow: View {
         return parts.joined(separator: " / ")
     }
 
-    @ViewBuilder
-    private var posterView: some View {
-        if let img = loadedThumbnail {
-            Image(uiImage: img)
-                .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        } else {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color(.tertiarySystemFill))
-                Image(systemName: "photo")
-                    .font(.largeTitle)
-                    .foregroundStyle(.tertiary)
+    private var thumbnailView: some View {
+        Group {
+            if let img = loadedThumbnail {
+                Image(uiImage: img)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } else {
+                ZStack {
+                    Color(.tertiarySystemFill)
+                    Image(systemName: "photo")
+                        .font(.body)
+                        .foregroundStyle(.tertiary)
+                }
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: 180)
         }
+        .frame(width: 52, height: 52)
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func loadPoster() async {

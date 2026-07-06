@@ -45,46 +45,58 @@ struct TorrentDetailSheet: View {
             }
         }
         .onAppear { translate() }
-    }
-
-    // MARK: - Cover Image
-    private var coverSection: some View {
-        Group {
+        .fullScreenCover(isPresented: $showMediaViewer) {
             if let thumb = torrent.thumbnail {
-                AsyncImage(url: URL(string: thumb)) { phase in
-                    switch phase {
-                    case .success(let img):
-                        img.resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(height: 240)
-                            .clipped()
-                            .overlay(coverGradient, alignment: .bottom)
-                            .overlay(alignment: .bottomLeading) {
-                                Text(torrent.size)
-                                    .font(.caption2.weight(.semibold))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(.black.opacity(0.55), in: Capsule())
-                                    .padding(12)
-                            }
-                            .onTapGesture { showMediaViewer = true }
-                    default:
-                        placeholderCover
-                    }
-                }
-            } else {
-                placeholderCover
+                MediaViewer(images: [thumb], initialIndex: 0)
             }
         }
     }
 
-    private var coverGradient: some View {
-        LinearGradient(
-            colors: [.clear, .black.opacity(0.5)],
-            startPoint: .center,
-            endPoint: .bottom
-        )
+    // MARK: - Cover Image
+    @ViewBuilder
+    private var coverSection: some View {
+        if let thumb = torrent.thumbnail {
+            AsyncImage(url: URL(string: thumb)) { phase in
+                switch phase {
+                case .success(let img):
+                    fullCover(img)
+                case .failure:
+                    // 主图源失效时尝试站点备用海报
+                    if let fb = torrent.fallbackThumbnail, fb != thumb {
+                        AsyncImage(url: URL(string: fb)) { fbPhase in
+                            if case .success(let img) = fbPhase {
+                                fullCover(img)
+                            } else {
+                                placeholderCover
+                            }
+                        }
+                    } else {
+                        placeholderCover
+                    }
+                default:
+                    placeholderCover
+                }
+            }
+        } else {
+            placeholderCover
+        }
+    }
+
+    /// 原图比例完整显示，不裁切
+    private func fullCover(_ img: Image) -> some View {
+        img.resizable()
+            .scaledToFit()
+            .frame(maxWidth: .infinity)
+            .overlay(alignment: .bottomLeading) {
+                Text(torrent.size)
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.black.opacity(0.55), in: Capsule())
+                    .padding(12)
+            }
+            .onTapGesture { showMediaViewer = true }
     }
 
     private var placeholderCover: some View {
