@@ -43,6 +43,10 @@ struct TorrentRow: View {
                     }
                     .accessibilityHidden(true)
                 }
+
+                if let subtitleJob = subtitleBadges.activeJobs[torrent.hash] {
+                    subtitleProgressLine(subtitleJob)
+                }
             }
 
             Spacer(minLength: 0)
@@ -109,6 +113,28 @@ struct TorrentRow: View {
         .font(.caption)
         .foregroundStyle(.secondary)
         .lineLimit(1)
+    }
+
+    private func subtitleProgressLine(_ job: SubtitleJob) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "captions.bubble")
+                .font(.system(size: 9, weight: .medium))
+
+            Text(job.stageTitle)
+                .font(.caption2.weight(.medium))
+                .lineLimit(1)
+                .fixedSize()
+
+            ProgressView(value: job.overallProgress)
+                .tint(.purple)
+
+            Text("\(Int(job.overallProgress * 100))%")
+                .font(.caption2.weight(.medium))
+                .monospacedDigit()
+        }
+        .foregroundStyle(.purple)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(String(format: String(localized: "字幕翻译中，%@，%d%%", comment: "Subtitle translating"), job.stageTitle, Int(job.overallProgress * 100)))
     }
 
     private var timeLine: some View {

@@ -319,9 +319,7 @@ struct ServerSubtitleView: View {
                 await MainActor.run {
                     job = existing
                     SubtitleBadgeStore.shared.recordJob(existing.id, torrentHash: torrent.hash)
-                    if existing.stage == "done" {
-                        SubtitleBadgeStore.shared.markSubtitled(torrent.hash)
-                    }
+                    SubtitleBadgeStore.shared.updateActive(existing, torrentHash: torrent.hash)
                 }
                 return
             }
@@ -340,6 +338,7 @@ struct ServerSubtitleView: View {
                     startingPath = nil
                     job = created
                     SubtitleBadgeStore.shared.recordJob(created.id, torrentHash: torrent.hash)
+                    SubtitleBadgeStore.shared.updateActive(created, torrentHash: torrent.hash)
                     AppHaptics.success()
                 }
             } catch {
@@ -358,15 +357,13 @@ struct ServerSubtitleView: View {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
             guard let id = job?.id else { return }
             if let updated = try? await SubtitleServerApi.shared.getJob(id: id) {
-                await MainActor.run { job = updated }
+                await MainActor.run {
+                    job = updated
+                    SubtitleBadgeStore.shared.updateActive(updated, torrentHash: torrent.hash)
+                }
                 if updated.isFinished {
                     await MainActor.run {
-                        if updated.stage == "done" {
-                            SubtitleBadgeStore.shared.markSubtitled(torrent.hash)
-                            AppHaptics.success()
-                        } else {
-                            AppHaptics.error()
-                        }
+                        updated.stage == "done" ? AppHaptics.success() : AppHaptics.error()
                     }
                     return
                 }

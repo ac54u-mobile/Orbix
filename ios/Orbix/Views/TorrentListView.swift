@@ -115,10 +115,18 @@ struct TorrentListView: View {
         }
         .toast(isPresented: $showErrorToast, type: .error, message: errorToastMessage)
         .task {
-            // 同步字幕任务完成状态，给卡片打"已翻译字幕"标
+            // 轮询字幕任务：进行中的在卡片上显示进度，完成的打"已翻译字幕"标
             guard SubtitleServiceConfig.load().isConfigured else { return }
-            if let jobs = try? await SubtitleServerApi.shared.listJobs() {
-                await MainActor.run { SubtitleBadgeStore.shared.sync(with: jobs) }
+            while !Task.isCancelled {
+                var hasActive = false
+                if let jobs = try? await SubtitleServerApi.shared.listJobs() {
+                    hasActive = await MainActor.run {
+                        SubtitleBadgeStore.shared.sync(with: jobs)
+                        return !SubtitleBadgeStore.shared.activeJobs.isEmpty
+                    }
+                }
+                // 有任务跑着时 3 秒刷新，空闲时放慢
+                try? await Task.sleep(nanoseconds: hasActive ? 3_000_000_000 : 30_000_000_000)
             }
         }
     }

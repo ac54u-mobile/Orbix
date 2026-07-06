@@ -33,6 +33,8 @@ final class SubtitleBadgeStore: ObservableObject {
     static let shared = SubtitleBadgeStore()
 
     @Published private(set) var hashes: Set<String>
+    /// 进行中的任务：种子 hash → 任务（用于卡片上直接显示翻译进度）
+    @Published private(set) var activeJobs: [String: SubtitleJob] = [:]
 
     private init() {
         hashes = Set(PersistenceService.shared.subtitledHashes)
@@ -46,19 +48,36 @@ final class SubtitleBadgeStore: ObservableObject {
     }
 
     func markSubtitled(_ hash: String) {
+        activeJobs.removeValue(forKey: hash)
         guard !hashes.contains(hash) else { return }
         hashes.insert(hash)
         PersistenceService.shared.subtitledHashes = Array(hashes)
     }
 
-    /// 用服务器任务列表同步：已完成的任务给对应种子打标
+    /// 单个任务的即时更新（提取字幕页轮询时同步给卡片）
+    func updateActive(_ job: SubtitleJob, torrentHash: String) {
+        if job.isFinished {
+            activeJobs.removeValue(forKey: torrentHash)
+            if job.stage == "done" { markSubtitled(torrentHash) }
+        } else {
+            activeJobs[torrentHash] = job
+        }
+    }
+
+    /// 用服务器任务列表整体同步：进行中的显示进度，完成的打标
     func sync(with jobs: [SubtitleJob]) {
         let map = PersistenceService.shared.subtitleJobMap
-        for job in jobs where job.stage == "done" {
-            if let hash = map[job.id] {
+        var active: [String: SubtitleJob] = [:]
+        for job in jobs {
+            guard let hash = map[job.id] else { continue }
+            if job.stage == "done" {
                 markSubtitled(hash)
+            } else if job.stage != "error" {
+                // 服务器返回按时间倒序，同一种子只保留最新任务
+                if active[hash] == nil { active[hash] = job }
             }
         }
+        activeJobs = active
     }
 }
 
