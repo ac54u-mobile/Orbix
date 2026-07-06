@@ -158,7 +158,7 @@ struct TorrentListView: View {
                 torrentRowView(torrent)
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .background(Color.clear)
         .refreshable { await manualRefresh() }
