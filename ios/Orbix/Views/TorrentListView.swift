@@ -149,7 +149,6 @@ struct TorrentListView: View {
                 Text(String(format: OrbixStrings.infoBatchDeleteConfirm, selectedHashes.count))
         }
         .toast(isPresented: $showErrorToast, type: .error, message: errorToastMessage)
-        .preferredColorScheme(.light)
     }
 
     // MARK: - Torrent List

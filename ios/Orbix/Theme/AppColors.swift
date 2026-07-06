@@ -4,15 +4,15 @@ import SwiftUI
 
 enum AppColors {
     // Background
-    static let backgroundBase          = Color(red: 0.98, green: 0.96, blue: 0.98)
-    static let backgroundGradientStart = Color(red: 0.996, green: 0.949, blue: 0.965)
-    static let backgroundGradientEnd   = Color(red: 0.941, green: 0.957, blue: 1.0)
-    static let gridGradientStart       = Color(hex: "#FEF2F6")
-    static let gridGradientEnd         = Color(hex: "#F0F4FE")
+    static let backgroundBase          = Color(red: 0.95, green: 0.96, blue: 0.98)
+    static let backgroundGradientStart = Color(red: 0.95, green: 0.96, blue: 0.98)
+    static let backgroundGradientEnd   = Color(red: 0.91, green: 0.94, blue: 0.98)
+    static let gridGradientStart       = Color(hex: "#EDF1F7")
+    static let gridGradientEnd         = Color(hex: "#E4EAF2")
 
     // Surface
-    static let card                     = Color(.systemBackground).opacity(0.6)
-    static let elevated                 = Color(.systemBackground).opacity(0.72)
+    static let card                     = Color(.systemBackground).opacity(0.78)
+    static let elevated                 = Color(.systemBackground).opacity(0.85)
 
     // Text
     static let textPrimary              = Color(.label)

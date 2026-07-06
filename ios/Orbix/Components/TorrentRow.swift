@@ -54,7 +54,7 @@ struct TorrentRow: View {
     @ViewBuilder
     private var trailingBadge: some View {
         if torrent.isCompleted {
-            Text("已完成")
+            Text(String(localized: "已完成", comment: "Torrent completed status"))
                 .caption(AppColors.success)
                 .fontWeight(.medium)
         } else {

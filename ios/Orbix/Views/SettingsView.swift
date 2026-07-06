@@ -78,7 +78,6 @@ struct SettingsView: View {
             .navigationTitle(OrbixStrings.navSettings)
             .onAppear { loadInfo() }
         }
-        .preferredColorScheme(.light)
     }
 
     // MARK: - Server Profile Card
