@@ -4,10 +4,11 @@ struct ConnectingDialog: View {
     let message: String
 
     @State private var isVisible = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
-            AppColors.gridBackgroundGradient.opacity(0.6)
+            AppColors.gridBackgroundGradient(for: colorScheme).opacity(0.6)
                 .background(.ultraThinMaterial)
                 .ignoresSafeArea()
 
@@ -21,11 +22,7 @@ struct ConnectingDialog: View {
             }
             .padding(.horizontal, 40)
             .padding(.vertical, 32)
-            .background(
-                    RoundedRectangle(cornerRadius: AppRadius.xxl)
-                    .fill(.regularMaterial)
-                    .shadow(color: .black.opacity(0.1), radius: 24, x: 0, y: 8)
-            )
+            .liquidGlass(.thick)
             .scaleEffect(isVisible ? 1 : 0.8)
             .opacity(isVisible ? 1 : 0)
         }

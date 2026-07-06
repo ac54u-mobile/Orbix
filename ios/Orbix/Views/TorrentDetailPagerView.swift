@@ -3,6 +3,7 @@ import SwiftUI
 struct TorrentDetailPagerView: View {
     let hashes: [String]
     @State private var currentHash: String
+    @Environment(\.colorScheme) private var colorScheme
 
     init(hashes: [String], initialHash: String) {
         self.hashes = hashes
@@ -51,7 +52,7 @@ struct TorrentDetailPagerView: View {
             .foregroundColor(AppColors.textSecondary)
             .padding(.horizontal, AppSpacing.md)
             .padding(.vertical, 5)
-            .background(Capsule().fill(.ultraThinMaterial))
+            .background(Capsule().fill(AppColors.glassThick(for: colorScheme)))
             .padding(.bottom, 4)
             .transition(.opacity)
     }

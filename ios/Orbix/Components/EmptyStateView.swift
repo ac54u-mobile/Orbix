@@ -39,7 +39,7 @@ struct EmptyStateView: View {
         }
         .padding(AppSpacing.xxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AppColors.gridBackgroundGradient)
+        .background(Color.clear)
     }
 }
 
