@@ -17,8 +17,11 @@ struct StatsView: View {
                 AppColors.backgroundGradient
                     .ignoresSafeArea()
 
-                List {
-                    if !isLoading {
+                if isLoading {
+                    SkeletonList(count: 5)
+                        .padding(.top, AppSpacing.lg)
+                } else {
+                    List {
                         speedBannerSection
                         historySection
                         sessionSection
@@ -26,19 +29,19 @@ struct StatsView: View {
                         torrentStatusSection
                         serverSection
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
                 }
-                .listStyle(.plain)
-                .scrollContentBackground(.hidden)
-                .background(Color.clear)
-                .navigationTitle(OrbixStrings.navTransferStats)
-                .onAppear { refresh() }
-                .onReceive(timer) { _ in
-                    guard !refreshSuppressed else { return }
-                    refresh()
-                }
-                .onChange(of: scenePhase) { _, phase in
-                    refreshSuppressed = phase != .active
-                }
+            }
+            .navigationTitle(OrbixStrings.navTransferStats)
+            .onAppear { refresh() }
+            .onReceive(timer) { _ in
+                guard !refreshSuppressed else { return }
+                refresh()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                refreshSuppressed = phase != .active
             }
         }
     }
@@ -76,18 +79,16 @@ struct StatsView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             VStack(alignment: .leading, spacing: 2) {
                 Text(value)
-                    .font(.system(size: 17, weight: .semibold, design: .monospaced))
-                    .foregroundColor(.primary)
+                    .monoValue(AppColors.textPrimary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Text(label)
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
+                    .caption(AppColors.textSecondary)
             }
             Spacer()
         }
         .padding(12)
-        .background(Color(.systemBackground).opacity(0.7))
+        .background(AppColors.card)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .frame(maxWidth: .infinity)
     }
@@ -132,7 +133,7 @@ struct StatsView: View {
     // MARK: - Current Session
     private var sessionSection: some View {
         let t = transfer
-        return Section {
+        Section {
             statRow(icon: "tray.and.arrow.down", color: AppColors.accentPrimary.opacity(0.7),
                     label: String(localized: "已下载", comment: "Downloaded"),
                     value: t.flatMap { formatBytes($0.dlInfoData) } ?? "—")
@@ -188,7 +189,7 @@ struct StatsView: View {
         let paused = torrents.filter { $0.statusBadge.isPaused }.count
         let errored = torrents.filter { $0.statusBadge.isError }.count
 
-        return Section {
+        Section {
             statRow(icon: "square.stack", color: .primary,
                     label: String(localized: "种子总数", comment: "Total torrents"),
                     value: "\(torrents.count)")
@@ -239,28 +240,28 @@ struct StatsView: View {
 
     // MARK: - Helpers
     private func sectionHeaderText(_ text: String) -> some View {
-        Text(text.uppercased())
+        Text(text)
             .font(AppTypography.caption())
-            .foregroundColor(.secondary)
+            .foregroundColor(AppColors.textSecondary)
     }
 
     private func statRow(icon: String, color: Color, label: String, value: String, monospaced: Bool = false) -> some View {
         HStack(spacing: StatsViewConfig.elementSpacing) {
             Image(systemName: icon)
-                .font(.system(size: 17, weight: .medium))
+                .font(AppTypography.body())
                 .foregroundColor(color)
                 .frame(width: 28)
             Text(label)
-                .font(AppTypography.body())
-                .foregroundColor(.secondary)
+                .bodyFont(AppColors.textSecondary)
             Spacer()
             Text(value)
-                .font(monospaced
-                    ? .system(size: 17, weight: .regular, design: .monospaced)
-                    : AppTypography.body())
-                .foregroundColor(.primary)
+                .font(monospaced ? AppTypography.monoValue() : AppTypography.body())
+                .foregroundColor(AppColors.textPrimary)
         }
         .frame(minHeight: StatsViewConfig.listRowHeight)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label)
+        .accessibilityValue(value)
     }
 
     private func connectionColor(_ status: String) -> Color {
