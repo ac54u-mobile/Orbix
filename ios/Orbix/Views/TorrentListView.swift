@@ -354,7 +354,6 @@ struct TorrentListView: View {
             .padding(.vertical, 10)
         }
         .background(.ultraThinMaterial)
-        .ignoresSafeArea(edges: .horizontal)
     }
 
     // MARK: - Selection
