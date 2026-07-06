@@ -48,4 +48,20 @@ final class PersistenceService {
         get { defaults.bool(forKey: "app_lock_face_id") }
         set { defaults.set(newValue, forKey: "app_lock_face_id") }
     }
+
+    // MARK: - Radarr
+    var radarrHost: String {
+        get { defaults.string(forKey: "radarr_host") ?? "" }
+        set { defaults.set(newValue, forKey: "radarr_host") }
+    }
+
+    var radarrPort: Int {
+        get { defaults.object(forKey: "radarr_port") as? Int ?? 7878 }
+        set { defaults.set(newValue, forKey: "radarr_port") }
+    }
+
+    var radarrHttps: Bool {
+        get { defaults.bool(forKey: "radarr_https") }
+        set { defaults.set(newValue, forKey: "radarr_https") }
+    }
 }

@@ -11,7 +11,6 @@ struct QBitSearchView: View {
     @State private var searchTask: Task<Void, Never>?
 
     @State private var searchError: String?
-    @ObservedObject private var searchMode = SearchModeState.shared
 
     @State private var downloadingNum: Int?
 
@@ -46,11 +45,7 @@ struct QBitSearchView: View {
             .navigationTitle(OrbixStrings.navExplore)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        searchMode.use141.toggle()
-                    } label: {
-                        Image(systemName: "globe")
-                    }
+                    SearchSourceMenu()
                 }
             }
             .searchable(text: $query, placement: .automatic, prompt: OrbixStrings.phSearchKeyword)

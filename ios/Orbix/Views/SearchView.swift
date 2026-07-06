@@ -42,11 +42,7 @@ struct SearchView: View {
             .navigationTitle(OrbixStrings.navSearch)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        SearchModeState.shared.use141 = false
-                    } label: {
-                        Image(systemName: "antenna.radiowaves.left.and.right")
-                    }
+                    SearchSourceMenu()
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {

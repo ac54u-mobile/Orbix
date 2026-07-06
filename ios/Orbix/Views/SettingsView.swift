@@ -24,6 +24,26 @@ struct SettingsView: View {
             List {
                 serverProfileSection
 
+                Section(String(localized: "集成", comment: "Integrations")) {
+                    NavigationLink {
+                        RadarrSettingsView()
+                    } label: {
+                        HStack {
+                            Label {
+                                Text("Radarr")
+                            } icon: {
+                                Image(systemName: "film.stack")
+                                    .foregroundStyle(.orange)
+                            }
+                            Spacer()
+                            Text(RadarrConfig.load().isConfigured
+                                 ? String(localized: "已配置", comment: "Configured")
+                                 : String(localized: "未配置", comment: "Not configured"))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+
                 if appLock.isDeviceSupported {
                     Section(String(localized: "安全", comment: "Security")) {
                         appLockToggle
