@@ -3,16 +3,26 @@ import SwiftUI
 // MARK: - Semantic Color Tokens
 
 enum AppColors {
-    // Background
+    // Background — Light Mode
     static let backgroundBase          = Color(red: 0.98, green: 0.96, blue: 0.98)
     static let backgroundGradientStart = Color(red: 0.996, green: 0.949, blue: 0.965)
     static let backgroundGradientEnd   = Color(red: 0.941, green: 0.957, blue: 1.0)
     static let gridGradientStart       = Color(hex: "#FEF2F6")
     static let gridGradientEnd         = Color(hex: "#F0F4FE")
 
-    // Surface
+    // Background — Dark Mode
+    static let backgroundGradientStartDark = Color(hex: "#1A1A2E")
+    static let backgroundGradientEndDark   = Color(hex: "#16213E")
+    static let gridGradientStartDark       = Color(hex: "#1C1C30")
+    static let gridGradientEndDark         = Color(hex: "#1A2236")
+
+    // Surface — adapts automatically via .systemBackground
+    // Lighter glass effect in light mode, more opaque in dark mode
     static let card                     = Color(.systemBackground).opacity(0.6)
     static let elevated                 = Color(.systemBackground).opacity(0.72)
+    // Dark mode optimized: use .cardDark / .elevatedDark for better contrast
+    static let cardDark                 = Color(.systemBackground).opacity(0.85)
+    static let elevatedDark             = Color(.systemBackground).opacity(0.9)
 
     // Text
     static let textPrimary              = Color(.label)
@@ -53,18 +63,26 @@ enum AppColors {
     static let emptyStateIconColor      = Color(.tertiaryLabel)
     static let emptyStateTextColor      = Color(.secondaryLabel)
 
-    // Gradients
-    static let backgroundGradient = LinearGradient(
-        colors: [backgroundGradientStart, backgroundGradientEnd],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    // Gradients — colorScheme-aware
+    static func backgroundGradient(for colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [backgroundGradientStartDark, backgroundGradientEndDark]
+                : [backgroundGradientStart, backgroundGradientEnd],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 
-    static let gridBackgroundGradient = LinearGradient(
-        colors: [gridGradientStart, gridGradientEnd],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    static func gridBackgroundGradient(for colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [gridGradientStartDark, gridGradientEndDark]
+                : [gridGradientStart, gridGradientEnd],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 
     static let logoGradient = LinearGradient(
         colors: [accentPrimary, accentDark],

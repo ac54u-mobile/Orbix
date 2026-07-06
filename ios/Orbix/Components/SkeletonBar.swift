@@ -6,29 +6,33 @@ struct SkeletonBar: View {
     var height: CGFloat = 12
     var width: CGFloat? = nil
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shimmerOffset: CGFloat = -200
 
     var body: some View {
         RoundedRectangle(cornerRadius: height / 2, style: .continuous)
             .fill(AppColors.skeletonBase)
             .overlay {
-                RoundedRectangle(cornerRadius: height / 2, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [.clear, Color.white.opacity(0.6), .clear],
-                            startPoint: .leading,
-                            endPoint: .trailing
+                if !reduceMotion {
+                    RoundedRectangle(cornerRadius: height / 2, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [.clear, Color.primary.opacity(0.3), .clear],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
                         )
-                    )
-                    .offset(x: shimmerOffset)
-                    .mask {
-                        RoundedRectangle(cornerRadius: height / 2, style: .continuous)
-                    }
+                        .offset(x: shimmerOffset)
+                        .mask {
+                            RoundedRectangle(cornerRadius: height / 2, style: .continuous)
+                        }
+                }
             }
             .frame(width: width, height: height)
             .frame(maxWidth: width == nil ? .infinity : nil)
             .clipped()
             .onAppear {
+                guard !reduceMotion else { return }
                 withAnimation(
                     .linear(duration: AppMotion.shimmerDuration)
                     .repeatForever(autoreverses: false)

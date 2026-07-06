@@ -42,6 +42,11 @@ struct ScrapedTorrentRow: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 11)
         .background(Color.clear)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(torrent.code)
+        .accessibilityValue(subtitleText)
+        .accessibilityHint(String(localized: "Double-tap to view details"))
+        .accessibilityAddTraits(isBookmarked ? .isSelected : [])
         .task(id: torrent.id) {
             guard let urlStr = torrent.thumbnail, let url = URL(string: urlStr) else {
                 loadedThumbnail = nil

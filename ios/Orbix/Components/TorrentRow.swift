@@ -27,6 +27,10 @@ struct TorrentRow: View {
             .padding(.vertical, AppSpacing.sm)
             .padding(.horizontal, AppSpacing.lg)
             .frame(minHeight: 60)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(torrent.name)
+            .accessibilityValue(torrent.secondaryInfoLine)
+            .accessibilityHint(String(localized: "Double-tap to view details"))
 
             Rectangle()
                 .fill(AppColors.hairlineDivider)

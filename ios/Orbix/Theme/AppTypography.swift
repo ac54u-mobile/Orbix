@@ -1,44 +1,42 @@
 import SwiftUI
 
 enum AppTypography {
-    // MARK: - HIG Semantic Tokens
+    // MARK: - HIG Semantic Tokens (Dynamic Type native via Apple built-in styles)
 
-    static func titleLarge() -> Font {
-        .system(size: 34, weight: .bold)
+    static func titleLarge() -> Font { .largeTitle }
+    static func titleMedium() -> Font { .title2 }
+    static func titleSmall() -> Font { .headline }
+    static func body() -> Font { .body }
+    static func descriptionSmall() -> Font { .footnote }
+    static func caption() -> Font { .caption }
+    static func tagCaption() -> Font { .caption2 }
+    static func sectionHeader() -> Font { .footnote }
+
+    // MARK: - Custom Semantic Tokens
+
+    static func heroProgress() -> Font {
+        .system(size: 42, weight: .bold, design: .rounded)
     }
 
-    static func titleMedium() -> Font {
-        .system(size: 22, weight: .semibold)
+    static func monoValue() -> Font {
+        .system(.body, design: .monospaced)
     }
 
-    static func titleSmall() -> Font {
-        .system(size: 17, weight: .semibold)
+    static func detailHeadline() -> Font {
+        .system(.callout)
     }
 
-    static func body() -> Font {
-        .system(size: 17, weight: .regular)
+    static func filterLabel() -> Font {
+        .system(size: 14, weight: .semibold)
     }
 
-    static func descriptionSmall() -> Font {
-        .system(size: 13, weight: .regular)
-    }
-
-    static func caption() -> Font {
-        .system(size: 12, weight: .regular)
-    }
-
-    static func tagCaption() -> Font {
-        .system(size: 11, weight: .semibold)
-    }
-
-    // MARK: - Extended
-
-    static func sectionHeader() -> Font {
-        descriptionSmall()
+    // Legacy
+    static func hero() -> Font {
+        .system(size: 56, weight: .ultraLight)
     }
 }
 
-// MARK: - View Extensions
+// MARK: - View Extensions (Dynamic Type native)
 
 extension View {
     func titleLarge(_ color: Color = AppColors.textPrimary) -> some View {
@@ -65,6 +63,15 @@ extension View {
     func sectionHeader(_ color: Color = AppColors.textSecondary) -> some View {
         self.font(AppTypography.sectionHeader()).foregroundColor(color)
     }
+    func heroProgress(_ color: Color = AppColors.textPrimary) -> some View {
+        self.font(AppTypography.heroProgress()).foregroundColor(color)
+    }
+    func monoValue(_ color: Color = AppColors.textPrimary) -> some View {
+        self.font(AppTypography.monoValue()).foregroundColor(color)
+    }
+    func detailHeadline(_ color: Color = AppColors.textPrimary) -> some View {
+        self.font(AppTypography.detailHeadline()).foregroundColor(color)
+    }
 
     func iconSymbol(_ color: Color = AppColors.textPrimary) -> some View {
         self
@@ -75,6 +82,6 @@ extension View {
 
     // Legacy
     func hero(_ color: Color = AppColors.textPrimary) -> some View {
-        self.font(.system(size: 56, weight: .ultraLight)).foregroundColor(color)
+        self.font(AppTypography.hero()).foregroundColor(color)
     }
 }

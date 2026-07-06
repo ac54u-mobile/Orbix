@@ -12,10 +12,12 @@ struct EmptyStateView: View {
             Image(systemName: icon)
                 .font(.system(size: 44, weight: .light))
                 .foregroundColor(AppColors.emptyStateIconColor)
+                .accessibilityHidden(true)
 
             Text(title)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(AppColors.textPrimary)
+                .accessibilityAddTraits(.isHeader)
 
             Text(subtitle)
                 .font(.system(size: 13, weight: .regular))

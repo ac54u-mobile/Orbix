@@ -3,12 +3,13 @@ import SwiftUI
 // MARK: - Orbix Grid Background
 
 struct OrbixGridBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
     @State private var cachedGrid: [GridLine] = []
     private let gridSpacing: CGFloat = 120
 
     var body: some View {
         ZStack {
-            AppColors.gridBackgroundGradient
+            AppColors.gridBackgroundGradient(for: colorScheme)
 
             Canvas { context, size in
                 let lines = cachedGrid.isEmpty ? generateGridLines(size: size) : cachedGrid
@@ -73,19 +74,23 @@ private struct GridLine {
 // MARK: - Pure Gradient Background (Fallback)
 
 struct GradientBackground: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
-        AppColors.gridBackgroundGradient.ignoresSafeArea()
+        AppColors.gridBackgroundGradient(for: colorScheme).ignoresSafeArea()
     }
 }
 
 // MARK: - View Modifier
 
 struct OrbixBackgroundModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
     func body(content: Content) -> some View {
         content
             .background(
                 ZStack {
-                    AppColors.gridBackgroundGradient
+                    AppColors.gridBackgroundGradient(for: colorScheme)
 
                     Canvas { context, size in
                         let spacing: CGFloat = 120

@@ -149,7 +149,6 @@ struct TorrentListView: View {
                 Text(String(format: OrbixStrings.infoBatchDeleteConfirm, selectedHashes.count))
         }
         .toast(isPresented: $showErrorToast, type: .error, message: errorToastMessage)
-        .preferredColorScheme(.light)
     }
 
     // MARK: - Torrent List
@@ -210,6 +209,9 @@ struct TorrentListView: View {
                 AppHaptics.light()
                 selectedHash = torrent.hash
             }
+        }
+        .accessibilityAction(named: Text(torrent.statusBadge.isPaused ? OrbixStrings.btnStart : OrbixStrings.btnPause)) {
+            executeSingleAction(torrent.statusBadge.isPaused ? .start : .stop, torrent)
         }
     }
 
@@ -329,7 +331,7 @@ struct TorrentListView: View {
                             Image(systemName: f.icon)
                                 .sfSymbolFrame()
                             Text(f.displayName)
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(AppTypography.filterLabel())
                         }
                         .foregroundColor(filter == f ? .white : AppColors.textPrimary)
                         .padding(.vertical, 7)
@@ -364,7 +366,7 @@ struct TorrentListView: View {
         return Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
             .font(.system(size: 22))
             .foregroundColor(isSelected ? AppColors.accentPrimary : AppColors.textTertiary)
-            .frame(width: 28)
+            .frame(width: 44, height: 44)
     }
 
     private func toggleSelection(_ hash: String) {

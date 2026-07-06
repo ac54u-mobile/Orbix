@@ -41,7 +41,6 @@ struct StatsView: View {
                 }
             }
         }
-        .preferredColorScheme(.light)
     }
 
     // MARK: - Speed Banner
