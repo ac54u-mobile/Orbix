@@ -133,7 +133,7 @@ struct StatsView: View {
     // MARK: - Current Session
     private var sessionSection: some View {
         let t = transfer
-        Section {
+        return Section {
             statRow(icon: "tray.and.arrow.down", color: AppColors.accentPrimary.opacity(0.7),
                     label: String(localized: "已下载", comment: "Downloaded"),
                     value: t.flatMap { formatBytes($0.dlInfoData) } ?? "—")
@@ -189,7 +189,7 @@ struct StatsView: View {
         let paused = torrents.filter { $0.statusBadge.isPaused }.count
         let errored = torrents.filter { $0.statusBadge.isError }.count
 
-        Section {
+        return Section {
             statRow(icon: "square.stack", color: .primary,
                     label: String(localized: "种子总数", comment: "Total torrents"),
                     value: "\(torrents.count)")
