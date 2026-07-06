@@ -22,6 +22,7 @@ struct TorrentListView: View {
     @State private var showSubtitleTranslate = false
     @State private var showVideoSubtitle = false
     @State private var translateTorrentName = ""
+    @State private var searchText = ""
     @Environment(\.scenePhase) private var scenePhase
 
     enum TorrentSort: CaseIterable {
@@ -111,6 +112,11 @@ struct TorrentListView: View {
             .animation(.default, value: isLoading)
             .navigationTitle(OrbixStrings.tabTorrents)
             .navigationBarTitleDisplayMode(.inline)
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .automatic),
+                prompt: Text(String(localized: "搜索任务名称", comment: "Search torrent name"))
+            )
             .toolbar { toolbarContent }
             .onAppear { refresh() }
             .onReceive(timer) { _ in
@@ -213,14 +219,19 @@ struct TorrentListView: View {
             .transition(.opacity)
     }
 
+    @ViewBuilder
     private var emptyContent: some View {
-        EmptyStateView(
-            icon: filter == .all ? "tray" : "line.3.horizontal.decrease.circle",
-            title: filter == .all ? OrbixStrings.msgNoTorrents : OrbixStrings.msgNoMatchingTorrents,
-            subtitle: filter == .all ? String(localized: "点击右上角 + 添加新任务", comment: "") : String(localized: "尝试切换到其他过滤条件", comment: ""),
-            actionTitle: filter == .all ? OrbixStrings.navAddTorrent : nil,
-            action: filter == .all ? { showAddTorrent = true } : nil
-        )
+        if !searchText.isEmpty {
+            ContentUnavailableView.search(text: searchText)
+        } else {
+            EmptyStateView(
+                icon: filter == .all ? "tray" : "line.3.horizontal.decrease.circle",
+                title: filter == .all ? OrbixStrings.msgNoTorrents : OrbixStrings.msgNoMatchingTorrents,
+                subtitle: filter == .all ? String(localized: "点击右上角 + 添加新任务", comment: "") : String(localized: "尝试切换到其他过滤条件", comment: ""),
+                actionTitle: filter == .all ? OrbixStrings.navAddTorrent : nil,
+                action: filter == .all ? { showAddTorrent = true } : nil
+            )
+        }
     }
 
     private var bottomInsetContent: some View {
@@ -306,33 +317,7 @@ struct TorrentListView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(TorrentFilter.allCases, id: \.self) { f in
-                    Button {
-                        AppHaptics.selection()
-                        withAnimation(.snappy) { filter = f }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: f.icon)
-                            Text(f.displayName)
-                        }
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(filter == f ? Color.white : Color.primary)
-                        .padding(.vertical, 7)
-                        .padding(.horizontal, 13)
-                        .background(
-                            ZStack {
-                                if filter == f {
-                                    Capsule()
-                                        .fill(Color.accentColor)
-                                        .matchedGeometryEffect(id: "filterPill", in: animationNamespace)
-                                } else {
-                                    Capsule()
-                                        .fill(Color(.secondarySystemFill))
-                                }
-                            }
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(f.displayName)
+                    filterChip(f)
                 }
             }
             .padding(.horizontal, 16)
@@ -342,6 +327,49 @@ struct TorrentListView: View {
         .overlay(alignment: .bottom) {
             Divider()
         }
+    }
+
+    private func filterChip(_ f: TorrentFilter) -> some View {
+        let isSelected = filter == f
+        let itemCount = count(for: f)
+        return Button {
+            AppHaptics.selection()
+            withAnimation(.snappy) { filter = f }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: f.icon)
+                Text(f.displayName)
+                if itemCount > 0 {
+                    Text("\(itemCount)")
+                        .font(.caption2.weight(.semibold))
+                        .monospacedDigit()
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 1)
+                        .background(
+                            Capsule().fill(isSelected ? Color.white.opacity(0.25) : Color(.tertiarySystemFill))
+                        )
+                }
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(isSelected ? Color.white : Color.primary)
+            .padding(.vertical, 7)
+            .padding(.horizontal, 13)
+            .background(
+                ZStack {
+                    if isSelected {
+                        Capsule()
+                            .fill(Color.accentColor)
+                            .matchedGeometryEffect(id: "filterPill", in: animationNamespace)
+                    } else {
+                        Capsule()
+                            .fill(Color(.secondarySystemFill))
+                    }
+                }
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(f.displayName)
+        .accessibilityValue("\(itemCount)")
     }
 
     // MARK: - Selection
@@ -563,15 +591,28 @@ struct TorrentListView: View {
 
     // MARK: - Filter & Sort
 
-    private var filteredTorrents: [TorrentInfo] {
-        let base = switch filter {
-        case .all: torrents
-        case .downloading: torrents.filter { $0.statusBadge.isDownloadRelated }
-        case .seeding: torrents.filter { $0.statusBadge.isUploadRelated }
-        case .active: torrents.filter { $0.isActive }
-        case .paused: torrents.filter { $0.statusBadge.isPaused }
-        case .completed: torrents.filter { $0.isCompleted }
+    private func applyFilter(_ f: TorrentFilter, to list: [TorrentInfo]) -> [TorrentInfo] {
+        switch f {
+        case .all: list
+        case .downloading: list.filter { $0.statusBadge.isDownloadRelated }
+        case .seeding: list.filter { $0.statusBadge.isUploadRelated }
+        case .active: list.filter { $0.isActive }
+        case .paused: list.filter { $0.statusBadge.isPaused }
+        case .completed: list.filter { $0.isCompleted }
         }
+    }
+
+    private var searchedTorrents: [TorrentInfo] {
+        guard !searchText.isEmpty else { return torrents }
+        return torrents.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+    }
+
+    private func count(for f: TorrentFilter) -> Int {
+        applyFilter(f, to: searchedTorrents).count
+    }
+
+    private var filteredTorrents: [TorrentInfo] {
+        let base = applyFilter(filter, to: searchedTorrents)
         switch sortOrder {
         case .dateAdded: return base.sorted { $0.addedOn > $1.addedOn }
         case .name: return base.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }

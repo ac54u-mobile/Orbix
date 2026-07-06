@@ -6,29 +6,35 @@ struct TorrentRow: View {
     let torrent: TorrentInfo
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .top, spacing: 12) {
             StatusIcon(status: torrent.statusBadge)
+                .padding(.top, 2)
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text(torrent.name)
                     .font(.subheadline.weight(.medium))
                     .lineLimit(2)
 
-                Text(torrent.secondaryInfoLine)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                metadataLine
 
                 if !torrent.isCompleted && torrent.progress > 0 {
-                    ProgressView(value: torrent.progress)
-                        .tint(torrent.lineStatusColor)
-                        .accessibilityHidden(true)
+                    HStack(spacing: 8) {
+                        ProgressView(value: torrent.progress)
+                            .tint(torrent.lineStatusColor)
+
+                        Text("\(torrent.progressPercent)%")
+                            .font(.caption2.weight(.medium))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                    .accessibilityHidden(true)
                 }
             }
 
             Spacer(minLength: 0)
 
             trailingBadge
+                .padding(.top, 6)
         }
         .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
@@ -37,12 +43,58 @@ struct TorrentRow: View {
         .accessibilityHint(String(localized: "Double-tap to view details"))
     }
 
+    private var metadataLine: some View {
+        HStack(spacing: 10) {
+            Text(torrent.statusBadge.displayName)
+
+            Text(formatBytes(torrent.size))
+
+            if torrent.dlspeed > 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: "arrow.down")
+                        .font(.system(size: 9, weight: .bold))
+                    Text(formatSpeed(torrent.dlspeed))
+                        .monospacedDigit()
+                }
+                .foregroundStyle(.blue)
+            }
+
+            if torrent.upspeed > 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: "arrow.up")
+                        .font(.system(size: 9, weight: .bold))
+                    Text(formatSpeed(torrent.upspeed))
+                        .monospacedDigit()
+                }
+                .foregroundStyle(.green)
+            }
+
+            if torrent.dlspeed > 0 && torrent.eta > 0 && !torrent.isCompleted {
+                HStack(spacing: 2) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 9, weight: .medium))
+                    Text(torrent.etaFormatted)
+                        .monospacedDigit()
+                }
+            }
+
+            if torrent.isCompleted && torrent.ratio > 0 {
+                Text(String(format: String(localized: "比例 %.2f", comment: "Ratio"), torrent.ratio))
+                    .monospacedDigit()
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .lineLimit(1)
+    }
+
     @ViewBuilder
     private var trailingBadge: some View {
         if torrent.isCompleted {
-            Text(OrbixStrings.filterCompleted)
-                .font(.caption.weight(.medium))
+            Image(systemName: "checkmark.circle.fill")
+                .font(.subheadline)
                 .foregroundStyle(.green)
+                .accessibilityLabel(OrbixStrings.filterCompleted)
         } else {
             Image(systemName: "chevron.right")
                 .font(.caption.weight(.semibold))
