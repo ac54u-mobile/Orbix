@@ -101,13 +101,13 @@ struct RadarrSettingsView: View {
     }
 
     private func testConnection() {
-        save()
         isTesting = true
         testResult = nil
         AppHaptics.light()
+        let testConfig = config
         Task {
             do {
-                let version = try await RadarrApi.shared.systemStatus()
+                let version = try await RadarrApi.shared.systemStatus(config: testConfig)
                 await MainActor.run {
                     isTesting = false
                     testResult = .success(version: version)

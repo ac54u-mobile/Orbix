@@ -26,8 +26,15 @@ actor RadarrApi {
         }
     }
 
-    private func request(_ path: String, query: [URLQueryItem] = [], method: String = "GET", body: Data? = nil) async throws -> Data {
-        let config = RadarrConfig.load()
+    private func request(
+        _ path: String,
+        query: [URLQueryItem] = [],
+        method: String = "GET",
+        body: Data? = nil,
+        timeout: TimeInterval = 15,
+        config overrideConfig: RadarrConfig? = nil
+    ) async throws -> Data {
+        let config = overrideConfig ?? RadarrConfig.load()
         guard config.isConfigured else { throw RadarrError.notConfigured }
 
         var comps = URLComponents(string: "\(config.baseURL)/api/v3/\(path)")
@@ -36,6 +43,7 @@ actor RadarrApi {
 
         var req = URLRequest(url: url)
         req.httpMethod = method
+        req.timeoutInterval = timeout
         req.setValue(config.apiKey, forHTTPHeaderField: "X-Api-Key")
         if let body {
             req.httpBody = body
@@ -53,9 +61,9 @@ actor RadarrApi {
 
     // MARK: - API
 
-    /// 连接测试，成功返回 Radarr 版本号
-    func systemStatus() async throws -> String {
-        let data = try await request("system/status")
+    /// 连接测试，成功返回 Radarr 版本号。传入 config 时用给定配置测试（不要求已保存）
+    func systemStatus(config: RadarrConfig? = nil) async throws -> String {
+        let data = try await request("system/status", config: config)
         let status = try JSONDecoder().decode(RadarrSystemStatus.self, from: data)
         return status.version ?? "?"
     }
@@ -76,18 +84,45 @@ actor RadarrApi {
         return try JSONDecoder().decode([RadarrRootFolder].self, from: data)
     }
 
-    /// 添加电影到 Radarr 并让其自动搜索下载资源
-    func addMovie(_ movie: RadarrMovie, qualityProfileId: Int, rootFolderPath: String) async throws {
+    /// 确保电影在 Radarr 片库中（不存在则以"不监控、不自动下载"方式登记），返回片库 id。
+    /// 登记是调用资源搜索接口的前提，不会触发 Radarr 自己下载。
+    func ensureInLibrary(_ movie: RadarrMovie) async throws -> Int {
+        if let id = movie.libraryId, id > 0 { return id }
+
+        // 可能之前已登记过，先按 tmdbId 查
+        if let data = try? await request("movie", query: [URLQueryItem(name: "tmdbId", value: String(movie.tmdbId))]),
+           let existing = try? JSONDecoder().decode([RadarrMovie].self, from: data),
+           let id = existing.first?.libraryId, id > 0 {
+            return id
+        }
+
+        async let profiles = qualityProfiles()
+        async let folders = rootFolders()
+        guard let profile = try await profiles.first, let folder = try await folders.first else {
+            throw RadarrError.noDefaults
+        }
         let payload: [String: Any] = [
             "title": movie.title,
             "tmdbId": movie.tmdbId,
             "year": movie.year,
-            "qualityProfileId": qualityProfileId,
-            "rootFolderPath": rootFolderPath,
-            "monitored": true,
-            "addOptions": ["searchForMovie": true]
+            "qualityProfileId": profile.id,
+            "rootFolderPath": folder.path,
+            "monitored": false,
+            "addOptions": ["searchForMovie": false]
         ]
         let body = try JSONSerialization.data(withJSONObject: payload)
-        _ = try await request("movie", method: "POST", body: body)
+        let data = try await request("movie", method: "POST", body: body)
+        struct Added: Codable { let id: Int }
+        return try JSONDecoder().decode(Added.self, from: data).id
+    }
+
+    /// 通过 Radarr 的索引器交互式搜索电影的下载资源（可能需要几十秒）
+    func releases(movieId: Int) async throws -> [RadarrRelease] {
+        let data = try await request(
+            "release",
+            query: [URLQueryItem(name: "movieId", value: String(movieId))],
+            timeout: 120
+        )
+        return try JSONDecoder().decode([RadarrRelease].self, from: data)
     }
 }

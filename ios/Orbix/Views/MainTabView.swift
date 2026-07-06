@@ -2,26 +2,26 @@ import SwiftUI
 import UIKit
 
 enum SearchSource: String, CaseIterable {
-    case ppv141
     case radarr
+    case ppv141
 
     var displayName: String {
         switch self {
-        case .ppv141: return "141PPV"
         case .radarr: return "Radarr"
+        case .ppv141: return "141PPV"
         }
     }
 
     var icon: String {
         switch self {
-        case .ppv141: return "globe"
-        case .radarr: return "film"
+        case .radarr: return "movieclapper"
+        case .ppv141: return "network"
         }
     }
 }
 
 final class SearchModeState: ObservableObject {
-    @Published var source: SearchSource = .ppv141
+    @Published var source: SearchSource = .radarr
     static let shared = SearchModeState()
 }
 
@@ -67,8 +67,8 @@ struct MainTabView: View {
 
             Group {
                 switch searchMode.source {
-                case .ppv141: SearchView()
                 case .radarr: RadarrSearchView()
+                case .ppv141: SearchView()
                 }
             }
             .tabItem {

@@ -98,3 +98,37 @@ struct RadarrRootFolder: Codable, Identifiable {
 struct RadarrSystemStatus: Codable {
     let version: String?
 }
+
+// MARK: - 下载资源（release）
+
+struct RadarrRelease: Codable, Identifiable {
+    let guid: String
+    let title: String
+    let size: Int64?
+    let indexer: String?
+    let seeders: Int?
+    let leechers: Int?
+    let quality: RadarrReleaseQuality?
+    let magnetUrl: String?
+    let downloadUrl: String?
+    let rejected: Bool?
+
+    var id: String { guid }
+
+    /// 优先磁力链接，其次种子文件链接，交给 qBittorrent 均可
+    var downloadLink: String? {
+        if let magnetUrl, !magnetUrl.isEmpty { return magnetUrl }
+        if let downloadUrl, !downloadUrl.isEmpty { return downloadUrl }
+        return nil
+    }
+
+    var qualityName: String? { quality?.quality?.name }
+}
+
+struct RadarrReleaseQuality: Codable {
+    let quality: RadarrReleaseQualityInner?
+}
+
+struct RadarrReleaseQualityInner: Codable {
+    let name: String?
+}
