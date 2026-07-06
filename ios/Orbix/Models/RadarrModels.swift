@@ -106,14 +106,19 @@ struct RadarrRelease: Codable, Identifiable {
     let title: String
     let size: Int64?
     let indexer: String?
+    let indexerId: Int?
     let seeders: Int?
     let leechers: Int?
     let quality: RadarrReleaseQuality?
     let magnetUrl: String?
     let downloadUrl: String?
     let rejected: Bool?
+    /// "torrent" 或 "usenet"，qBittorrent 只能下载 torrent
+    let protocolName: String?
 
     var id: String { guid }
+
+    var isTorrent: Bool { (protocolName ?? "torrent") == "torrent" }
 
     /// 优先磁力链接，其次种子文件链接，交给 qBittorrent 均可
     var downloadLink: String? {
@@ -123,6 +128,11 @@ struct RadarrRelease: Codable, Identifiable {
     }
 
     var qualityName: String? { quality?.quality?.name }
+
+    enum CodingKeys: String, CodingKey {
+        case guid, title, size, indexer, indexerId, seeders, leechers, quality, magnetUrl, downloadUrl, rejected
+        case protocolName = "protocol"
+    }
 }
 
 struct RadarrReleaseQuality: Codable {

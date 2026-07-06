@@ -125,4 +125,11 @@ actor RadarrApi {
         )
         return try JSONDecoder().decode([RadarrRelease].self, from: data)
     }
+
+    /// 让 Radarr 抓取该资源并推送给它配置的下载器（兜底方案，适用于 app 拿不到种子文件的场景）
+    func grabRelease(guid: String, indexerId: Int) async throws {
+        let payload: [String: Any] = ["guid": guid, "indexerId": indexerId]
+        let body = try JSONSerialization.data(withJSONObject: payload)
+        _ = try await request("release", method: "POST", body: body, timeout: 60)
+    }
 }

@@ -244,7 +244,7 @@ struct RadarrMovieDetailSheet: View {
                 let found = try await RadarrApi.shared.releases(movieId: movieId)
                 await MainActor.run {
                     releases = found
-                        .filter { $0.downloadLink != nil }
+                        .filter { $0.isTorrent && ($0.downloadLink != nil || $0.indexerId != nil) }
                         .sorted { ($0.seeders ?? 0) > ($1.seeders ?? 0) }
                     isSearchingReleases = false
                 }
@@ -260,13 +260,24 @@ struct RadarrMovieDetailSheet: View {
 
     // MARK: - Add to Queue
 
+    private enum AddError: LocalizedError {
+        case qbitRejected
+        case noUsableLink
+
+        var errorDescription: String? {
+            switch self {
+            case .qbitRejected: return String(localized: "qBittorrent 拒绝了该资源", comment: "qBittorrent rejected")
+            case .noUsableLink: return String(localized: "该资源没有可用的下载链接", comment: "No usable link")
+            }
+        }
+    }
+
     private func addToQueue(_ release: RadarrRelease) {
-        guard let link = release.downloadLink else { return }
         addingGuid = release.guid
         AppHaptics.medium()
         Task {
             do {
-                _ = try await QBitApi.shared.addMagnet([link])
+                try await performAdd(release)
                 await MainActor.run {
                     addingGuid = nil
                     addedGuids.insert(release.guid)
@@ -286,5 +297,39 @@ struct RadarrMovieDetailSheet: View {
                 await MainActor.run { showErrorToast = false }
             }
         }
+    }
+
+    private func performAdd(_ release: RadarrRelease) async throws {
+        // 磁力链接：直接交给 qBittorrent
+        if let magnet = release.magnetUrl, !magnet.isEmpty {
+            let resp = try await QBitApi.shared.addMagnet([magnet])
+            if resp?.contains("Fails") == true { throw AddError.qbitRejected }
+            return
+        }
+
+        // 种子文件链接：app 自己下载字节再上传。
+        // 之前直接把 URL 丢给 qBittorrent，它后台抓取失败也不报错，种子列表就一直不出现。
+        if let urlStr = release.downloadUrl, let url = URL(string: urlStr) {
+            if let data = try? await fetchTorrentFile(url) {
+                let resp = try await QBitApi.shared.addTorrent(bytes: data, filename: "\(release.guid).torrent")
+                if resp?.contains("Fails") == true { throw AddError.qbitRejected }
+                return
+            }
+        }
+
+        // 兜底：app 下载不到种子文件（如内网地址、需要跳转磁力），让 Radarr 抓取并推送给它配置的下载器
+        guard let indexerId = release.indexerId else { throw AddError.noUsableLink }
+        try await RadarrApi.shared.grabRelease(guid: release.guid, indexerId: indexerId)
+    }
+
+    /// 下载 .torrent 文件字节；若地址跳转到磁力链接，直接改走 qBittorrent
+    private func fetchTorrentFile(_ url: URL) async throws -> Data? {
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 30
+        let (data, response) = try await URLSession.shared.data(for: req)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return nil }
+        // bencode 编码的种子文件一定以 'd' 开头
+        guard data.first == UInt8(ascii: "d") else { return nil }
+        return data
     }
 }
