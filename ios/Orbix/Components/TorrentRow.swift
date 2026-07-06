@@ -40,10 +40,6 @@ struct TorrentRow: View {
                     }
                     .accessibilityHidden(true)
                 }
-
-                if !torrent.category.isEmpty || !tagList.isEmpty {
-                    tagRow
-                }
             }
 
             Spacer(minLength: 0)
@@ -133,34 +129,6 @@ struct TorrentRow: View {
         .font(.caption2)
         .foregroundStyle(.tertiary)
         .lineLimit(1)
-    }
-
-    private var tagList: [String] {
-        torrent.tags
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
-    }
-
-    private var tagRow: some View {
-        HStack(spacing: 6) {
-            if !torrent.category.isEmpty {
-                chip(torrent.category, tint: .blue)
-            }
-            ForEach(tagList.prefix(3), id: \.self) { tag in
-                chip(tag, tint: .secondary)
-            }
-        }
-        .lineLimit(1)
-    }
-
-    private func chip(_ text: String, tint: Color) -> some View {
-        Text(text)
-            .font(.caption2.weight(.medium))
-            .foregroundStyle(tint)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 2)
-            .background(Capsule().fill(tint.opacity(0.12)))
     }
 
     @ViewBuilder
