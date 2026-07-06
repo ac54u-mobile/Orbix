@@ -301,20 +301,6 @@ struct SettingsView: View {
                 .monoValue(AppColors.textSecondary)
         }
     }
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 15))
-                .foregroundColor(AppColors.textTertiary)
-                .frame(width: 26)
-            Text(label)
-                .font(.system(size: 15))
-                .foregroundColor(.primary)
-            Spacer()
-            Text(value)
-                .font(.system(size: 15, design: .monospaced))
-                .foregroundColor(.secondary)
-        }
-    }
 
     // MARK: - Data
     private func loadInfo() {
