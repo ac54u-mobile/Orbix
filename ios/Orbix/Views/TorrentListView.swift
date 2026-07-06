@@ -108,9 +108,7 @@ struct TorrentListView: View {
             .safeAreaInset(edge: .bottom) {
                 bottomInsetContent
             }
-            .animation(AppMotion.standardCurve, value: globalDlSpeed > 0 || globalUpSpeed > 0)
             .animation(AppMotion.mediumAnim(), value: isEditMode)
-            .animation(AppMotion.mediumAnim(), value: selectedHashes.count)
             .animation(AppMotion.mediumAnim(), value: isLoading)
             .navigationTitle(OrbixStrings.tabTorrents)
             .navigationBarTitleDisplayMode(.inline)
@@ -327,14 +325,14 @@ struct TorrentListView: View {
                         AppHaptics.selection()
                         withAnimation(AppMotion.fastAnim()) { filter = f }
                     } label: {
-                        HStack(spacing: 5) {
+                        HStack(spacing: AppSpacing.xs) {
                             Image(systemName: f.icon)
                                 .sfSymbolFrame()
                             Text(f.displayName)
                                 .font(AppTypography.filterLabel())
                         }
                         .foregroundColor(filter == f ? .white : AppColors.textPrimary)
-                        .padding(.vertical, 7)
+                        .padding(.vertical, AppSpacing.sm)
                         .padding(.horizontal, 13)
                         .background(
                             ZStack {

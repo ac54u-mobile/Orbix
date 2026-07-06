@@ -27,16 +27,19 @@ struct TorrentCard: View {
 
             if !torrent.size.isEmpty {
                 Text(torrent.size)
-                    .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 4)
+                    .tagCaption(.white)
+                    .padding(.horizontal, AppSpacing.xs)
                     .padding(.vertical, 2)
                     .background(RoundedRectangle(cornerRadius: AppRadius.xs).fill(.black.opacity(0.65)))
-                    .padding([.bottom, .trailing], 4)
+                    .padding([.bottom, .trailing], AppSpacing.xs)
             }
         }
         .aspectRatio(1, contentMode: .fit)
         .clipped()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(torrent.code)
+        .accessibilityValue(torrent.size.isEmpty ? "" : torrent.size)
+        .accessibilityHint(String(localized: "Double-tap to view details"))
         .task(id: torrent.id) {
             guard let url = thumbnailURL else {
                 loadedImage = nil

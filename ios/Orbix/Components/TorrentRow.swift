@@ -5,6 +5,9 @@ import SwiftUI
 struct TorrentRow: View {
     let torrent: TorrentInfo
 
+    private static let separatorOffset: CGFloat =
+        AppSpacing.lg + IconLayout.sfSymbolSize + AppSpacing.md
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: AppSpacing.md) {
@@ -32,10 +35,15 @@ struct TorrentRow: View {
             .accessibilityValue(torrent.secondaryInfoLine)
             .accessibilityHint(String(localized: "Double-tap to view details"))
 
-            Rectangle()
-                .fill(AppColors.hairlineDivider)
-                .frame(height: 0.5)
-                .padding(.leading, AppSpacing.lg + IconLayout.sfSymbolSize + AppSpacing.md)
+            // Progress bar — shows for non-completed torrents
+            if !torrent.isCompleted && torrent.progress > 0 {
+                ProgressBar(progress: torrent.progress, color: torrent.lineStatusColor)
+                    .padding(.horizontal, AppSpacing.lg)
+                    .padding(.top, 2)
+                    .accessibilityHidden(true)
+            }
+
+            HairlineDivider(leadingPadding: Self.separatorOffset)
         }
     }
 
@@ -58,13 +66,12 @@ struct TorrentRow: View {
     @ViewBuilder
     private var trailingBadge: some View {
         if torrent.isCompleted {
-            Text("已完成")
+            Text(OrbixStrings.filterCompleted)
                 .caption(AppColors.success)
                 .fontWeight(.medium)
         } else {
             Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(AppColors.textTertiary)
+                .iconSymbol(AppColors.textTertiary)
         }
     }
 }
