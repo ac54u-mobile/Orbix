@@ -31,6 +31,8 @@ struct StatsView: View {
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
                 .navigationTitle(OrbixStrings.navTransferStats)
+                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
                 .onAppear { refresh() }
                 .onReceive(timer) { _ in
                     guard !refreshSuppressed else { return }
@@ -41,7 +43,6 @@ struct StatsView: View {
                 }
             }
         }
-        .preferredColorScheme(.light)
     }
 
     // MARK: - Speed Banner
