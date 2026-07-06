@@ -6,7 +6,11 @@ struct ScrapedTorrent: Codable, Identifiable, Equatable {
     let title: String
     let size: String
     let date: String
+    /// yyyy-MM-dd，用于按日期分组排序（站点显示格式无法直接比较）
+    var dateISO: String? = nil
     let thumbnail: String?
+    /// 站点 onerror 里的备用海报地址
+    var fallbackThumbnail: String? = nil
     let magnet: String
     let torrentUrl: String?
     let pageUrl: String?

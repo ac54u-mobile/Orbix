@@ -102,11 +102,16 @@ actor TorrentSearchService {
         let title = extract(from: card, pattern: #"class="title is-4 is-spaced">.*?<a[^>]*>([^<]+)</a>"#)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? code
         let thumbnail = extract(from: card, pattern: #"<img[^>]*src="([^"]+\.(?:jpg|jpeg|png|webp|avif))"#)
+        let fallbackThumbnail = extract(from: card, pattern: #"this\.src='([^']+)'"#)
         let magnet = extract(from: card, pattern: #"href="(magnet:\?[^"]+)""#) ?? ""
         let torrentUrl = extract(from: card, pattern: #"href="(/download/[^"]+\.torrent)"#)
         let pageUrl = extract(from: card, pattern: #"href="(/torrent/[^"]+)""#)
         let size = extract(from: card, pattern: #"class="is-size-6 has-text-grey">([^<]+)"#) ?? "N/A"
-        let date = extract(from: card, pattern: #"subtitle is-6">.*?<a[^>]*>([^<]+)</a>"#) ?? ""
+        let date = (extract(from: card, pattern: #"subtitle is-6">.*?<a[^>]*>([^<]+)</a>"#) ?? "")
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        // 站点日期链接 /date/2026/07/06 自带可排序格式
+        let dateISO = extract(from: card, pattern: #"href="/date/(\d{4}/\d{2}/\d{2})""#)?
+            .replacingOccurrences(of: "/", with: "-")
         let desc = extract(from: card, pattern: #"class="level has-text-grey-dark">(.*?)</p>"#)
 
         return ScrapedTorrent(
@@ -114,7 +119,9 @@ actor TorrentSearchService {
             title: title,
             size: size,
             date: date,
+            dateISO: dateISO,
             thumbnail: thumbnail,
+            fallbackThumbnail: fallbackThumbnail,
             magnet: magnet,
             torrentUrl: torrentUrl,
             pageUrl: pageUrl,

@@ -131,9 +131,12 @@ struct SearchView: View {
     }
 
     private var sections: [(date: String, items: [ScrapedTorrent])] {
-        let grouped = Dictionary(grouping: displayResults, by: { $0.date })
-        return grouped.keys.sorted(by: >).compactMap { date in
-            grouped[date].map { (date, $0) }
+        // 按 ISO 日期 (yyyy-MM-dd) 分组排序，站点显示格式 "Jul. 6, 2026" 无法字符串比较
+        let grouped = Dictionary(grouping: displayResults, by: { $0.dateISO ?? $0.date })
+        return grouped.keys.sorted(by: >).compactMap { key in
+            grouped[key].map { items in
+                (items.first?.date.isEmpty == false ? items.first!.date : key, items)
+            }
         }
     }
 

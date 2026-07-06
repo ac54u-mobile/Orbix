@@ -6,64 +6,52 @@ struct ScrapedTorrentRow: View {
     @State private var loadedThumbnail: UIImage?
 
     var body: some View {
-        HStack(spacing: 12) {
-            // Thumbnail
-            ZStack(alignment: .topLeading) {
-                thumbnailView
+        VStack(alignment: .leading, spacing: 10) {
+            // 完整海报 — 原图比例不裁切，对齐站点原版卡片
+            ZStack(alignment: .topTrailing) {
+                posterView
                 if isBookmarked {
-                    Circle().fill(Color.red).frame(width: 14, height: 14)
-                        .overlay(Image(systemName: "heart.fill").font(.system(size: 7)).foregroundStyle(.white))
-                        .offset(x: -4, y: -4)
+                    Circle().fill(Color.red).frame(width: 20, height: 20)
+                        .overlay(Image(systemName: "heart.fill").font(.system(size: 10)).foregroundStyle(.white))
+                        .padding(8)
                 }
             }
 
-            // Text
-            VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .firstTextBaseline) {
                 Text(torrent.code)
                     .font(.headline)
                     .lineLimit(1)
 
-                let subtitle = subtitleText
-                if !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.footnote)
+                Spacer()
+
+                if !torrent.size.isEmpty {
+                    Text(torrent.size)
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
                 }
             }
 
-            Spacer()
+            if !torrent.date.isEmpty {
+                Text(torrent.date)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
 
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.tertiary)
+            if let desc = torrent.description, !desc.isEmpty {
+                Text(desc)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 6)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(torrent.code)
         .accessibilityValue(subtitleText)
         .accessibilityHint(String(localized: "Double-tap to view details"))
         .accessibilityAddTraits(isBookmarked ? .isSelected : [])
         .task(id: torrent.id) {
-            guard let urlStr = torrent.thumbnail, let url = URL(string: urlStr) else {
-                loadedThumbnail = nil
-                return
-            }
-            if let cached = ImageCache.shared.get(url.absoluteString) {
-                loadedThumbnail = cached
-                return
-            }
-            do {
-                let (data, _) = try await URLSession.shared.data(from: url)
-                if let img = UIImage(data: data) {
-                    ImageCache.shared.set(url.absoluteString, image: img)
-                    loadedThumbnail = img
-                }
-            } catch {
-#if DEBUG
-                print("[ScrapedTorrentRow] thumbnail load error: \(error)")
-#endif
-            }
+            await loadPoster()
         }
     }
 
@@ -75,23 +63,54 @@ struct ScrapedTorrentRow: View {
         return parts.joined(separator: " / ")
     }
 
-    private var thumbnailView: some View {
-        Group {
-            if let img = loadedThumbnail {
-                Image(uiImage: img)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } else {
-                ZStack {
-                    Color(.tertiarySystemFill)
-                    Image(systemName: "photo")
-                        .font(.body)
-                        .foregroundStyle(.tertiary)
+    @ViewBuilder
+    private var posterView: some View {
+        if let img = loadedThumbnail {
+            Image(uiImage: img)
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity)
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        } else {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color(.tertiarySystemFill))
+                Image(systemName: "photo")
+                    .font(.largeTitle)
+                    .foregroundStyle(.tertiary)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 180)
+        }
+    }
+
+    private func loadPoster() async {
+        let candidates = [torrent.thumbnail, torrent.fallbackThumbnail].compactMap { $0 }.filter { !$0.isEmpty }
+        guard !candidates.isEmpty else {
+            loadedThumbnail = nil
+            return
+        }
+
+        for urlStr in candidates {
+            guard let url = URL(string: urlStr) else { continue }
+            if let cached = ImageCache.shared.get(url.absoluteString) {
+                loadedThumbnail = cached
+                return
+            }
+            do {
+                let (data, response) = try await URLSession.shared.data(from: url)
+                if let http = response as? HTTPURLResponse, http.statusCode != 200 { continue }
+                if let img = UIImage(data: data) {
+                    ImageCache.shared.set(url.absoluteString, image: img)
+                    loadedThumbnail = img
+                    return
                 }
+            } catch {
+#if DEBUG
+                print("[ScrapedTorrentRow] poster load error: \(error)")
+#endif
             }
         }
-        .frame(width: 52, height: 52)
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
