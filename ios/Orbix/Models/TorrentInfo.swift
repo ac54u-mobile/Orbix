@@ -452,7 +452,7 @@ struct TorrentProperties: Codable {
 }
 
 struct TorrentFile: Codable, Identifiable {
-    var id: Int { index }
+    var id: String { name }
     let index: Int
     let name: String
     let size: Int64
@@ -463,6 +463,27 @@ struct TorrentFile: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case index, name, size, progress, priority
         case isSeed = "is_seed"
+    }
+
+    init(index: Int, name: String, size: Int64, progress: Double, priority: Int, isSeed: Bool) {
+        self.index = index
+        self.name = name
+        self.size = size
+        self.progress = progress
+        self.priority = priority
+        self.isSeed = isSeed
+    }
+
+    // qBittorrent 旧版本 files 接口没有 index 字段，is_seed 往往只出现在第一个文件上，
+    // 必填解码会让整个列表解析失败，因此这里全部按可缺省处理
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        index = (try? c.decode(Int.self, forKey: .index)) ?? -1
+        name = try c.decode(String.self, forKey: .name)
+        size = (try? c.decode(Int64.self, forKey: .size)) ?? 0
+        progress = (try? c.decode(Double.self, forKey: .progress)) ?? 0
+        priority = (try? c.decode(Int.self, forKey: .priority)) ?? 1
+        isSeed = (try? c.decode(Bool.self, forKey: .isSeed)) ?? false
     }
 
     var progressPercent: Int { Int(progress * 100) }

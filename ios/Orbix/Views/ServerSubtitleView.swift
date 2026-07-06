@@ -7,7 +7,8 @@ struct ServerSubtitleView: View {
     @Environment(\.dismiss) private var dismiss
 
     private static let videoExtensions: Set<String> = [
-        "mkv", "mp4", "avi", "mov", "m4v", "ts", "wmv", "flv", "webm"
+        "mkv", "mp4", "avi", "mov", "m4v", "ts", "m2ts", "wmv", "flv", "webm",
+        "rmvb", "rm", "mpg", "mpeg", "vob", "3gp", "ogv"
     ]
 
     @State private var isConfigured = SubtitleServiceConfig.load().isConfigured
@@ -28,9 +29,14 @@ struct ServerSubtitleView: View {
                     ProgressView(String(localized: "读取文件列表…", comment: "Loading files"))
                 } else if videoFiles.isEmpty {
                     ContentUnavailableView {
-                        Label(String(localized: "没有视频文件", comment: "No video files"), systemImage: "film")
+                        Label(
+                            errorMessage == nil
+                                ? String(localized: "没有视频文件", comment: "No video files")
+                                : String(localized: "读取文件失败", comment: "Failed to load files"),
+                            systemImage: errorMessage == nil ? "film" : "exclamationmark.triangle"
+                        )
                     } description: {
-                        Text(String(localized: "该种子内未找到可处理的视频", comment: "No video description"))
+                        Text(errorMessage ?? String(localized: "该种子内未找到可处理的视频", comment: "No video description"))
                     }
                 } else {
                     fileList
@@ -239,7 +245,16 @@ struct ServerSubtitleView: View {
         isConfigured = SubtitleServiceConfig.load().isConfigured
         guard isConfigured else { return }
 
-        let files = (try? await QBitApi.shared.getTorrentFiles(torrent.hash)) ?? []
+        var files: [TorrentFile] = []
+        do {
+            files = try await QBitApi.shared.getTorrentFiles(torrent.hash)
+        } catch {
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+                isLoadingFiles = false
+            }
+            return
+        }
         let videos = files.filter {
             Self.videoExtensions.contains(($0.name as NSString).pathExtension.lowercased())
         }
