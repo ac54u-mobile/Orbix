@@ -1,18 +1,27 @@
 import SwiftUI
 
-// MARK: - Semantic Color Tokens
+// MARK: - Semantic Color Tokens — iOS Native Design
 
 enum AppColors {
-    // Background
-    static let backgroundBase          = Color(red: 0.95, green: 0.96, blue: 0.98)
-    static let backgroundGradientStart = Color(red: 0.95, green: 0.96, blue: 0.98)
-    static let backgroundGradientEnd   = Color(red: 0.91, green: 0.94, blue: 0.98)
-    static let gridGradientStart       = Color(hex: "#EDF1F7")
-    static let gridGradientEnd         = Color(hex: "#E4EAF2")
+    // Background — System-native
+    static let backgroundBase          = Color(.systemBackground)
+    static let backgroundGradientStart = Color(.systemBackground)
+    static let backgroundGradientEnd   = Color(.systemGroupedBackground)
+    static let gridGradientStart       = Color(.systemBackground)
+    static let gridGradientEnd         = Color(.systemGroupedBackground)
 
-    // Surface
-    static let card                     = Color(.systemBackground).opacity(0.78)
-    static let elevated                 = Color(.systemBackground).opacity(0.85)
+    // Background — Dark Mode
+    static let backgroundGradientStartDark = Color(.systemBackground)
+    static let backgroundGradientEndDark   = Color(.systemGroupedBackground)
+    static let gridGradientStartDark       = Color(.systemBackground)
+    static let gridGradientEndDark         = Color(.systemGroupedBackground)
+
+    // Surface — frosted glass via system materials
+    static let card                     = Color(.systemBackground)
+    static let elevated                 = Color(.secondarySystemGroupedBackground)
+    // Dark mode optimized
+    static let cardDark                 = Color(.systemBackground)
+    static let elevatedDark             = Color(.secondarySystemGroupedBackground)
 
     // Text
     static let textPrimary              = Color(.label)
@@ -20,57 +29,82 @@ enum AppColors {
     static let textTertiary             = Color(.tertiaryLabel)
 
     // Accent
-    static let accentPrimary            = Color(hex: "#007AFF")
-    static let accentDark               = Color(hex: "#0056D6")
-    static let accentSoftBg             = Color(hex: "#E8F1FF")
+    static let accentPrimary            = Color.blue
+    static let accentDark               = Color.blue.opacity(0.8)
+    static let accentSoftBg             = Color.blue.opacity(0.1)
 
     // Tag Backgrounds
-    static let tagBackgroundGreen       = Color(hex: "#34C759")
-    static let tagBackgroundBlue        = Color(hex: "#409CFF")
+    static let tagBackgroundGreen       = Color.green
+    static let tagBackgroundBlue        = Color.blue
 
     // Semantic
-    static let success                  = Color(hex: "#34C759")
-    static let warning                  = Color(hex: "#FF9500")
-    static let danger                   = Color(hex: "#FF3B30")
+    static let success                  = Color.green
+    static let warning                  = Color.orange
+    static let danger                   = Color.red
 
     // Chart / Waveform
-    static let statsWaveform            = Color(hex: "#34C759")
+    static let statsWaveform            = Color.green
 
     // Separator / Divider
     static let listDivider              = Color(.separator)
     static let separator                = listDivider
-    static let hairlineDivider          = Color.primary.opacity(0.08)
+    static let hairlineDivider          = Color(.separator).opacity(0.5)
     static let placeholder              = Color(.placeholderText)
 
     // Skeleton
     static let skeletonBase             = Color(.systemGray5)
-    static let skeletonHighlight        = Color(.systemGray6)
+    static let skeletonHighlight        = Color(.systemGray4)
 
     // Glass / Translucent
-    static let glassBorder              = Color.primary.opacity(0.06)
+    static let glassBorder              = Color(.separator).opacity(0.3)
 
     // Empty State
     static let emptyStateIconColor      = Color(.tertiaryLabel)
     static let emptyStateTextColor      = Color(.secondaryLabel)
 
-    // Gradients
+    // Gradients — Light mode defaults (backward-compatible)
     static let backgroundGradient = LinearGradient(
-        colors: [backgroundGradientStart, backgroundGradientEnd],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        colors: [Color(.systemBackground), Color(.systemGroupedBackground)],
+        startPoint: .top,
+        endPoint: .bottom
     )
 
     static let gridBackgroundGradient = LinearGradient(
-        colors: [gridGradientStart, gridGradientEnd],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
+        colors: [Color(.systemBackground), Color(.systemGroupedBackground)],
+        startPoint: .top,
+        endPoint: .bottom
     )
 
+    // Gradients — ColorScheme-aware variants
+    static func backgroundGradient(for colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            colors: [Color(.systemBackground), Color(.systemGroupedBackground)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    static func gridBackgroundGradient(for colorScheme: ColorScheme) -> LinearGradient {
+        LinearGradient(
+            colors: [Color(.systemBackground), Color(.systemGroupedBackground)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
     static let logoGradient = LinearGradient(
-        colors: [accentPrimary, accentDark],
+        colors: [Color.blue, Color.blue.opacity(0.7)],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+}
+
+// MARK: - System Color Helpers
+
+extension Color {
+    static let systemBackgroundGrouped = Color(.systemGroupedBackground)
+    static let systemBackgroundSecondaryGrouped = Color(.secondarySystemGroupedBackground)
+    static let systemFillTertiary = Color(.tertiarySystemFill)
 }
 
 // MARK: - 8pt Grid Layout Constants
@@ -130,14 +164,14 @@ extension View {
     }
 }
 
-// MARK: - Orbix Card Modifier
+// MARK: - Orbix Card Modifier — Frosted Glass
 
 struct OrbixCard: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
+                    .fill(.ultraThinMaterial)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
