@@ -109,12 +109,12 @@ struct TorrentListView: View {
                 bottomInsetContent
             }
             .animation(.default, value: editMode)
-            .animation(.default, value: isLoading)
             .navigationTitle(OrbixStrings.tabTorrents)
             .navigationBarTitleDisplayMode(.inline)
+            // .always 固定搜索栏，避免下拉刷新时搜索栏被拉出、启动时布局跳动
             .searchable(
                 text: $searchText,
-                placement: .navigationBarDrawer(displayMode: .automatic),
+                placement: .navigationBarDrawer(displayMode: .always),
                 prompt: Text(String(localized: "搜索任务名称", comment: "Search torrent name"))
             )
             .toolbar { toolbarContent }
@@ -388,11 +388,15 @@ struct TorrentListView: View {
             HStack(spacing: 8) {
                 ForEach(TorrentFilter.allCases, id: \.self) { f in
                     filterChip(f)
+                        // 一屏恰好并排 4 个，其余向右滑动查看
+                        .containerRelativeFrame(.horizontal, count: 4, spacing: 8)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .scrollTargetLayout()
+            .padding(.vertical, 8)
         }
+        .contentMargins(.horizontal, 16, for: .scrollContent)
+        .scrollTargetBehavior(.viewAligned)
         .background(.bar)
         .overlay(alignment: .bottom) {
             Divider()
@@ -406,24 +410,22 @@ struct TorrentListView: View {
             AppHaptics.selection()
             withAnimation(.snappy) { filter = f }
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: 3) {
                 Image(systemName: f.icon)
+                    .font(.caption)
                 Text(f.displayName)
                 if itemCount > 0 {
                     Text("\(itemCount)")
                         .font(.caption2.weight(.semibold))
                         .monospacedDigit()
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 1)
-                        .background(
-                            Capsule().fill(isSelected ? Color.white.opacity(0.25) : Color(.tertiarySystemFill))
-                        )
+                        .foregroundStyle(isSelected ? Color.white.opacity(0.85) : Color.secondary)
                 }
             }
-            .font(.subheadline.weight(.medium))
+            .font(.footnote.weight(.medium))
             .foregroundStyle(isSelected ? Color.white : Color.primary)
-            .padding(.vertical, 7)
-            .padding(.horizontal, 13)
+            .lineLimit(1)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity)
             .background(
                 ZStack {
                     if isSelected {
