@@ -105,6 +105,8 @@ struct TorrentListView: View {
                     torrentList
                 }
             }
+            // 撑满屏幕，防止加载/空状态时容器收缩导致顶部过滤栏悬在屏幕中间
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .safeAreaInset(edge: .bottom) {
                 bottomInsetContent
             }
