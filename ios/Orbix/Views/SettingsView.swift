@@ -299,7 +299,7 @@ struct SettingsView: View {
     private func checkUpdate() {
         isCheckingUpdate = true
         Task {
-            let check = await UpdateService.shared.check()
+            let check = await UpdateService.shared.check(force: true)
             await MainActor.run {
                 updateCheck = check
                 isCheckingUpdate = false

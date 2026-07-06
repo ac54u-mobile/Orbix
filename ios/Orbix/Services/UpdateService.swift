@@ -7,10 +7,12 @@ actor UpdateService {
     private let session = URLSession(configuration: .ephemeral)
     private let repo = "ac54u-mobile/Orbix"
 
-    func check() async -> UpdateCheck {
+    /// - Parameter force: 用户手动触发时传 true，跳过 30 分钟缓存直接请求
+    func check(force: Bool = false) async -> UpdateCheck {
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
 
-        if let lastCheck = PersistenceService.shared.lastUpdateCheckTime,
+        if !force,
+           let lastCheck = PersistenceService.shared.lastUpdateCheckTime,
            Date().timeIntervalSince(lastCheck) < UpdateConstants.checkCacheInterval,
            let cachedTag = PersistenceService.shared.cachedUpdateTag {
             let cachedVersion = cachedTag.trimmingCharacters(in: CharacterSet(charactersIn: "vV"))
