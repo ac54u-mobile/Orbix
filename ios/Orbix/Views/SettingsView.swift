@@ -9,7 +9,6 @@ struct SettingsView: View {
     @State private var serverURL: String = ""
     @State private var serverVersion: String = ""
     @State private var username: String = ""
-    @State private var isLoading = true
     @State private var serverOnline: Bool?
     @State private var serverHttps: Bool = false
 
@@ -22,50 +21,43 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            Group {
-                if isLoading {
-                    ProgressView()
-                        .controlSize(.large)
-                } else {
-                    List {
-                        serverProfileSection
+            List {
+                serverProfileSection
 
-                        if appLock.isDeviceSupported {
-                            Section(String(localized: "安全", comment: "Security")) {
-                                appLockToggle
-                            }
-                        }
-
-                        Section(String(localized: "更新", comment: "Update")) {
-                            updateRow
-                            if let release = updateCheck?.latest {
-                                releaseRow(release)
-                            }
-                            if isDownloading {
-                                downloadRow
-                            }
-                        }
-
-                        Section(String(localized: "关于", comment: "About")) {
-                            LabeledContent(String(localized: "版本", comment: "Version")) {
-                                Text(appVersion).monospacedDigit()
-                            }
-                            LabeledContent(String(localized: "构建号", comment: "Build")) {
-                                Text(buildNumber).monospacedDigit()
-                            }
-                        }
-
-                        Section {
-                            Button(role: .destructive) {
-                                logout()
-                            } label: {
-                                Label(OrbixStrings.btnSwitchServer, systemImage: "rectangle.portrait.and.arrow.right")
-                            }
-                        }
+                if appLock.isDeviceSupported {
+                    Section(String(localized: "安全", comment: "Security")) {
+                        appLockToggle
                     }
-                    .listStyle(.insetGrouped)
+                }
+
+                Section(String(localized: "更新", comment: "Update")) {
+                    updateRow
+                    if let release = updateCheck?.latest {
+                        releaseRow(release)
+                    }
+                    if isDownloading {
+                        downloadRow
+                    }
+                }
+
+                Section(String(localized: "关于", comment: "About")) {
+                    LabeledContent(String(localized: "版本", comment: "Version")) {
+                        Text(appVersion).monospacedDigit()
+                    }
+                    LabeledContent(String(localized: "构建号", comment: "Build")) {
+                        Text(buildNumber).monospacedDigit()
+                    }
+                }
+
+                Section {
+                    Button(role: .destructive) {
+                        logout()
+                    } label: {
+                        Label(OrbixStrings.btnSwitchServer, systemImage: "rectangle.portrait.and.arrow.right")
+                    }
                 }
             }
+            .listStyle(.insetGrouped)
             .navigationTitle(OrbixStrings.navSettings)
             .onAppear { loadInfo() }
         }
@@ -265,31 +257,32 @@ struct SettingsView: View {
 
     // MARK: - Data
     private func loadInfo() {
-        Task {
-            let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
-            let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
-            let config = await QBitApi.shared.loadSavedConfig()
-            let qbitVersion = try? await QBitApi.shared.getAppVersion()
+        appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+        buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
 
-            let configForTest = config
-            let sR = await {
-                guard let cfg = configForTest else { return nil as CredentialsManager.TestResult? }
+        // 本地配置先展示，网络请求（qBit 版本、连接测试）后台补齐，页面不转圈
+        Task {
+            let config = await QBitApi.shared.loadSavedConfig()
+            await MainActor.run {
+                serverName = config?.name ?? "-"
+                serverURL = config?.url ?? "-"
+                username = config?.username ?? "-"
+                serverHttps = config?.https ?? false
+            }
+
+            async let qbitVersion = try? QBitApi.shared.getAppVersion()
+            async let testResult: CredentialsManager.TestResult? = {
+                guard let cfg = config else { return nil }
                 return await CredentialsManager.testConnection(
                     kind: .qBittorrent, host: cfg.host, port: cfg.port, https: cfg.https,
                     username: cfg.username, password: cfg.password
                 )
             }()
 
+            let (version, sR) = await (qbitVersion, testResult)
             await MainActor.run {
-                appVersion = version
-                buildNumber = build
-                serverName = config?.name ?? "-"
-                serverURL = config?.url ?? "-"
-                username = config?.username ?? "-"
-                serverVersion = qbitVersion ?? ""
-                serverHttps = config?.https ?? false
+                serverVersion = version ?? ""
                 serverOnline = sR?.isSuccess
-                isLoading = false
             }
         }
     }
