@@ -319,7 +319,7 @@ struct TorrentListView: View {
 
     private var filterBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: AppSpacing.sm) {
+            HStack(spacing: AppSpacing.sm) {
                 ForEach(TorrentFilter.allCases, id: \.self) { f in
                     Button {
                         AppHaptics.selection()
@@ -355,7 +355,6 @@ struct TorrentListView: View {
             .padding(.vertical, 10)
         }
         .background(.ultraThinMaterial)
-        .ignoresSafeArea(edges: .horizontal)
     }
 
     // MARK: - Selection
