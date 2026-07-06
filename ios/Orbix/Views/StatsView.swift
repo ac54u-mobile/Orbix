@@ -7,6 +7,7 @@ struct StatsView: View {
     @State private var isLoading = true
     @State private var serverVersion: String = ""
     @State private var refreshSuppressed = false
+    @State private var firstLoad = true
     @Environment(\.scenePhase) private var scenePhase
 
     private let timer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
@@ -17,7 +18,7 @@ struct StatsView: View {
                 AppColors.backgroundGradient
                     .ignoresSafeArea()
 
-                if isLoading {
+                if firstLoad {
                     SkeletonList(count: 5)
                         .padding(.top, AppSpacing.lg)
                 } else {
@@ -32,6 +33,12 @@ struct StatsView: View {
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
+                    .transaction { t in
+                        // Prevent animation flicker on timer-driven data refresh
+                        if !firstLoad && !isLoading {
+                            t.disablesAnimations = true
+                        }
+                    }
                 }
             }
             .navigationTitle(OrbixStrings.navTransferStats)
@@ -300,9 +307,13 @@ struct StatsView: View {
                     torrents = list
                     serverVersion = ver ?? ""
                     isLoading = false
+                    firstLoad = false
                 }
             } catch {
-                await MainActor.run { isLoading = false }
+                await MainActor.run {
+                    isLoading = false
+                    firstLoad = false
+                }
             }
         }
     }
