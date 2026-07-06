@@ -7,15 +7,11 @@ struct OrbixGridBackground: View {
 
     var body: some View {
         ZStack {
-            // Native gradient backdrop
-            AppColors.gridBackgroundGradient
+            AppColors.gridBackgroundGradient(for: colorScheme)
 
-            // Frosted glass overlay
             Rectangle()
                 .fill(.ultraThinMaterial)
-                .ignoresSafeArea()
 
-            // Subtle grid lines (SF Symbol style)
             Canvas { context, size in
                 let spacing: CGFloat = 120
                 let path = Path { p in
@@ -40,7 +36,6 @@ struct OrbixGridBackground: View {
             }
             .drawingGroup()
         }
-        .ignoresSafeArea()
     }
 }
 
@@ -51,10 +46,9 @@ struct GradientBackground: View {
 
     var body: some View {
         ZStack {
-            AppColors.gridBackgroundGradient
+            AppColors.gridBackgroundGradient(for: colorScheme)
             Rectangle()
                 .fill(.ultraThinMaterial)
-                .ignoresSafeArea()
         }
     }
 }
@@ -72,7 +66,6 @@ struct OrbixBackgroundModifier: ViewModifier {
 
                     Rectangle()
                         .fill(.ultraThinMaterial)
-                        .ignoresSafeArea()
 
                     Canvas { context, size in
                         let spacing: CGFloat = 120
@@ -98,7 +91,6 @@ struct OrbixBackgroundModifier: ViewModifier {
                     }
                     .drawingGroup()
                 }
-                .ignoresSafeArea()
             )
     }
 }
