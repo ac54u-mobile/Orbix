@@ -5,7 +5,7 @@ actor UpdateService {
     private init() {}
 
     private let session = URLSession(configuration: .ephemeral)
-    private let repo = "ac54u/Orbix"
+    private let repo = "ac54u-mobile/Orbix"
 
     func check() async -> UpdateCheck {
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
