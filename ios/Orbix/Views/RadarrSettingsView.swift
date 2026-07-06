@@ -2,9 +2,11 @@ import SwiftUI
 
 struct RadarrSettingsView: View {
     @State private var config = RadarrConfig.load()
+    @State private var savedConfig = RadarrConfig.load()
     @State private var portText = ""
     @State private var isTesting = false
     @State private var testResult: TestOutcome?
+    @State private var showSavedToast = false
 
     private enum TestOutcome {
         case success(version: String)
@@ -67,13 +69,25 @@ struct RadarrSettingsView: View {
         }
         .navigationTitle("Radarr")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(OrbixStrings.btnSave) {
+                    save()
+                    AppHaptics.success()
+                    showSavedToast = true
+                    Task {
+                        try? await Task.sleep(nanoseconds: 2_000_000_000)
+                        showSavedToast = false
+                    }
+                }
+                .fontWeight(.semibold)
+                .disabled(config == savedConfig)
+            }
+        }
+        .toast(isPresented: $showSavedToast, type: .success, message: String(localized: "已保存", comment: "Saved"))
         .onAppear {
             portText = String(config.port)
         }
-        .onDisappear {
-            save()
-        }
-        .onChange(of: config) { _, _ in save() }
         .onChange(of: portText) { _, new in
             if let port = Int(new), port > 0 {
                 config.port = port
@@ -83,6 +97,7 @@ struct RadarrSettingsView: View {
 
     private func save() {
         config.save()
+        savedConfig = config
     }
 
     private func testConnection() {
