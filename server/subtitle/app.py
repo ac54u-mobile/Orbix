@@ -14,11 +14,13 @@ Orbix 字幕服务
                      例：PATH_MAP=/downloads=/mnt/user/downloads
 """
 
+import gc
 import os
 import re
 import json
 import time
 import uuid
+import queue
 import threading
 import subprocess
 from dataclasses import dataclass, field, asdict
@@ -108,10 +110,11 @@ def load_jobs():
             job = Job(**d)
         except TypeError:
             continue
-        # 重启后进行中的任务已无法恢复，标记为中断
+        # 重启后进行中的任务自动重新排队（从头处理）
         if job.stage not in ("done", "error"):
-            job.stage = "error"
-            job.error = "服务重启，任务中断，请重新发起"
+            job.stage = "queued"
+            job.progress = 0
+            job.message = "服务重启，已自动重新排队"
         JOBS[job.id] = job
 
 
@@ -126,8 +129,20 @@ def get_whisper():
     with _whisper_lock:
         if _whisper_model is None:
             from faster_whisper import WhisperModel
-            _whisper_model = WhisperModel(WHISPER_MODEL, device="cpu", compute_type="int8")
+            # 限制线程数，避免和其他服务抢资源
+            _whisper_model = WhisperModel(
+                WHISPER_MODEL, device="cpu", compute_type="int8",
+                cpu_threads=max(2, (os.cpu_count() or 4) // 2),
+            )
         return _whisper_model
+
+
+def release_whisper():
+    """任务做完释放模型，空闲时不占着 1GB 内存（服务器内存紧张，OOM 会被内核杀掉）"""
+    global _whisper_model
+    with _whisper_lock:
+        _whisper_model = None
+    gc.collect()
 
 
 # ---------------------------------------------------------------- pipeline
@@ -166,7 +181,8 @@ def extract_audio(job: Job, video: str, wav: str, duration: float):
 def transcribe(job: Job, wav: str, duration: float) -> list[dict]:
     job.update(stage="transcribe", progress=0, message="Whisper 语音识别中")
     model = get_whisper()
-    segments_iter, _info = model.transcribe(wav, vad_filter=True, beam_size=5)
+    # beam_size=1 贪心解码，CPU 上速度和内存都友好，字幕场景质量足够
+    segments_iter, _info = model.transcribe(wav, vad_filter=True, beam_size=1)
     segments = []
     for seg in segments_iter:
         text = seg.text.strip()
@@ -254,8 +270,24 @@ def write_srt(job: Job, segments: list[dict], translated: list[str], video: str)
     return srt_path
 
 
+# /tmp 常为 tmpfs（内存盘），440MB 的 wav 会直接吃内存，必须放磁盘目录
+WORK_DIR = os.environ.get("WORK_DIR", "/var/tmp/orbix-subtitle")
+os.makedirs(WORK_DIR, exist_ok=True)
+
+
+def cleanup_workdir():
+    for name in os.listdir(WORK_DIR):
+        try:
+            os.remove(os.path.join(WORK_DIR, name))
+        except OSError:
+            pass
+
+
+cleanup_workdir()
+
+
 def run_pipeline(job: Job):
-    wav = f"/tmp/orbix-sub-{job.id}.wav"
+    wav = os.path.join(WORK_DIR, f"orbix-sub-{job.id}.wav")
     try:
         if not os.path.isfile(job.video_path):
             hint = "（qBittorrent 在 Docker 里时，请在 /etc/orbix-subtitle.env 配置 PATH_MAP 路径映射）" \
@@ -276,6 +308,36 @@ def run_pipeline(job: Job):
     finally:
         if os.path.exists(wav):
             os.remove(wav)
+        # 队列空了就释放模型，把内存还给系统
+        if JOB_QUEUE.empty():
+            release_whisper()
+
+
+# ------------------------------------------------------------ serial worker
+# 内存有限（whisper 模型 1GB+），任务串行执行，同一时间只跑一个
+
+JOB_QUEUE: "queue.Queue[str]" = queue.Queue()
+
+
+def worker_loop():
+    while True:
+        job_id = JOB_QUEUE.get()
+        job = JOBS.get(job_id)
+        if job is not None and job.stage == "queued":
+            run_pipeline(job)
+        JOB_QUEUE.task_done()
+
+
+def enqueue(job: Job):
+    JOB_QUEUE.put(job.id)
+
+
+threading.Thread(target=worker_loop, daemon=True).start()
+
+# 服务启动时，把上次中断后重新排队的任务塞回队列自动继续
+for _j in list(JOBS.values()):
+    if _j.stage == "queued":
+        enqueue(_j)
 
 
 # ---------------------------------------------------------------- HTTP API
@@ -307,7 +369,7 @@ def create_job(req: CreateJobRequest, x_api_key: str | None = Header(default=Non
         job = Job(id=uuid.uuid4().hex[:12], video_path=video_path)
         JOBS[job.id] = job
     save_jobs()
-    threading.Thread(target=run_pipeline, args=(job,), daemon=True).start()
+    enqueue(job)
     return asdict(job)
 
 
