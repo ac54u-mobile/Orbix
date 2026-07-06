@@ -63,7 +63,20 @@ enum AppColors {
     static let emptyStateIconColor      = Color(.tertiaryLabel)
     static let emptyStateTextColor      = Color(.secondaryLabel)
 
-    // Gradients — colorScheme-aware
+    // Gradients — Light mode defaults (backward-compatible)
+    static let backgroundGradient = LinearGradient(
+        colors: [backgroundGradientStart, backgroundGradientEnd],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    static let gridBackgroundGradient = LinearGradient(
+        colors: [gridGradientStart, gridGradientEnd],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+    )
+
+    // Gradients — ColorScheme-aware variants
     static func backgroundGradient(for colorScheme: ColorScheme) -> LinearGradient {
         LinearGradient(
             colors: colorScheme == .dark
