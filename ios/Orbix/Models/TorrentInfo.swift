@@ -126,19 +126,19 @@ struct TorrentInfo: Codable, Identifiable {
     }
 
     var progressColor: Color {
-        if statusBadge.isError { return AppColors.danger }
-        if isCompleted { return AppColors.success }
-        return AppColors.accentPrimary
+        if statusBadge.isError { return .red }
+        if isCompleted { return .green }
+        return .blue
     }
 
     var lineStatusColor: Color {
         switch statusBadge {
-        case .downloading, .forcedDL, .metaDL, .allocating: return AppColors.accentPrimary
-        case .uploading, .forcedUP, .stalledUP:             return AppColors.success
-        case .stalledDL:                                    return AppColors.warning
+        case .downloading, .forcedDL, .metaDL, .allocating: return .blue
+        case .uploading, .forcedUP, .stalledUP:             return .green
+        case .stalledDL:                                    return .orange
         case .checkingDL, .checkingUP, .checkingResumeData, .moving: return .purple
         case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP: return Color(.systemGray2)
-        case .error, .missingFiles:                         return AppColors.danger
+        case .error, .missingFiles:                         return .red
         case .unknown:                                      return Color(.systemGray3)
         }
     }
@@ -268,11 +268,11 @@ enum TorrentStatus: String {
 
     var statusColor: Color {
         switch self {
-        case .uploading, .stalledUP, .forcedUP: return AppColors.success
-        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accentPrimary
-        case .error, .missingFiles: return AppColors.danger
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.textSecondary
-        default: return AppColors.textSecondary
+        case .uploading, .stalledUP, .forcedUP: return .green
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return .blue
+        case .error, .missingFiles: return .red
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return .secondary
+        default: return .secondary
         }
     }
 
@@ -501,10 +501,10 @@ struct TorrentTracker: Codable, Identifiable {
 
     var statusColor: Color {
         switch status {
-        case 0, 1: return AppColors.danger
-        case 2, 4: return AppColors.success
-        case 3: return AppColors.warning
-        default: return AppColors.textSecondary
+        case 0, 1: return .red
+        case 2, 4: return .green
+        case 3: return .orange
+        default: return .secondary
         }
     }
 }

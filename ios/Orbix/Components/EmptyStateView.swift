@@ -8,38 +8,19 @@ struct EmptyStateView: View {
     var action: (() -> Void)? = nil
 
     var body: some View {
-        VStack(spacing: AppSpacing.md) {
-            Image(systemName: icon)
-                .font(.system(size: 44, weight: .light))
-                .foregroundColor(AppColors.emptyStateIconColor)
-                .accessibilityHidden(true)
-
-            Text(title)
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(AppColors.textPrimary)
-                .accessibilityAddTraits(.isHeader)
-
+        ContentUnavailableView {
+            Label(title, systemImage: icon)
+        } description: {
             Text(subtitle)
-                .font(.system(size: 13, weight: .regular))
-                .foregroundColor(AppColors.emptyStateTextColor)
-                .multilineTextAlignment(.center)
-
+        } actions: {
             if let actionTitle, let action {
-                Button {
+                Button(actionTitle) {
                     AppHaptics.light()
                     action()
-                } label: {
-                    Text(actionTitle)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(AppColors.accentPrimary)
                 }
-                .buttonStyle(ScaleButtonStyle())
-                .padding(.top, AppSpacing.sm)
+                .buttonStyle(.borderedProminent)
             }
         }
-        .padding(AppSpacing.xxl)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.clear)
     }
 }
 

@@ -4,30 +4,26 @@ struct ConnectingDialog: View {
     let message: String
 
     @State private var isVisible = false
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
-            AppColors.gridBackgroundGradient(for: colorScheme).opacity(0.6)
-                .background(.ultraThinMaterial)
+            Color.black.opacity(0.2)
                 .ignoresSafeArea()
 
             VStack(spacing: 16) {
                 ProgressView()
-                    .scaleEffect(1.2)
-                    .tint(AppColors.accentPrimary)
+                    .controlSize(.large)
 
                 Text(message)
-                    .bodyFont()
             }
             .padding(.horizontal, 40)
             .padding(.vertical, 32)
-            .liquidGlass(.thick)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
             .scaleEffect(isVisible ? 1 : 0.8)
             .opacity(isVisible ? 1 : 0)
         }
         .onAppear {
-            withAnimation(AppMotion.mediumAnim()) {
+            withAnimation(.easeOut(duration: 0.3)) {
                 isVisible = true
             }
         }
@@ -53,7 +49,7 @@ struct ConnectingDialogModifier: ViewModifier {
                         .zIndex(100)
                 }
             }
-            .animation(AppMotion.fastAnim(), value: isPresented)
+            .animation(.easeOut(duration: 0.22), value: isPresented)
     }
 }
 

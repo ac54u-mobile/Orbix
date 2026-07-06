@@ -32,12 +32,12 @@ struct MediaViewer: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.title2)
-                            .foregroundColor(AppColors.textPrimary.opacity(0.8))
+                            .foregroundStyle(.white.opacity(0.8))
                     }
                     Spacer()
                     if images.count > 1 {
                         Text("\(currentIndex + 1) / \(images.count)")
-                            .bodyFont(AppColors.textPrimary.opacity(0.8))
+                            .foregroundStyle(.white.opacity(0.8))
                     }
                 }
                 .padding(.horizontal, 20)
@@ -101,11 +101,11 @@ private struct ImagePage: View {
                 VStack {
                     Image(systemName: "photo.badge.exclamationmark")
                         .font(.largeTitle)
-                        .foregroundColor(AppColors.textPrimary.opacity(0.5))
+                        .foregroundStyle(.white.opacity(0.5))
                 }
             case .empty:
                 ProgressView()
-                    .tint(AppColors.accentPrimary)
+                    .tint(.white)
             @unknown default:
                 EmptyView()
             }

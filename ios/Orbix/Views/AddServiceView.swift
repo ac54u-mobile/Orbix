@@ -54,95 +54,76 @@ struct AddServiceView: View {
                     }
                 }
 
-                Section {
-                    HStack {
-                        Text(OrbixStrings.sectionName).foregroundColor(AppColors.textSecondary)
-                        Spacer()
+                Section(OrbixStrings.sectionConnection) {
+                    LabeledContent(OrbixStrings.sectionName) {
                         TextField(OrbixStrings.phOptional, text: $name)
                             .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.textPrimary)
                     }
 
-                    HStack {
-                        Text(OrbixStrings.sectionHost).foregroundColor(AppColors.textSecondary)
-                        Spacer()
+                    LabeledContent(OrbixStrings.sectionHost) {
                         TextField(OrbixStrings.phIP, text: $host)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.URL)
                             .autocapitalization(.none)
-                            .foregroundColor(AppColors.textPrimary)
                     }
 
-                    HStack {
-                        Text(OrbixStrings.miscPort).foregroundColor(AppColors.textSecondary)
-                        Spacer()
+                    LabeledContent(OrbixStrings.miscPort) {
                         TextField(defaultPort, text: $port)
                             .multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad)
-                            .foregroundColor(AppColors.textPrimary)
                     }
 
-                    Toggle(isOn: $https) {
-                        Text(OrbixStrings.labelHTTPS).foregroundColor(AppColors.textSecondary)
-                    }
-                    .tint(AppColors.accentPrimary)
-                } header: {
-                    Text(OrbixStrings.sectionConnection)
+                    Toggle(OrbixStrings.labelHTTPS, isOn: $https)
                 }
 
                 if kind == .qBittorrent {
-                    Section {
-                        HStack {
-                            Text(OrbixStrings.miscUsername).foregroundColor(AppColors.textSecondary)
-                            Spacer()
+                    Section(OrbixStrings.sectionAuth) {
+                        LabeledContent(OrbixStrings.miscUsername) {
                             TextField(OrbixStrings.phUsername, text: $username)
                                 .multilineTextAlignment(.trailing)
                                 .autocapitalization(.none)
-                                .foregroundColor(AppColors.textPrimary)
                         }
-                        HStack {
-                            Text(OrbixStrings.miscPassword).foregroundColor(AppColors.textSecondary)
-                            Spacer()
-                            Group {
-                                if showPassword {
-                                    TextField("", text: $password)
-                                } else {
-                                    SecureField("", text: $password)
+                        LabeledContent(OrbixStrings.miscPassword) {
+                            HStack {
+                                Group {
+                                    if showPassword {
+                                        TextField("", text: $password)
+                                    } else {
+                                        SecureField("", text: $password)
+                                    }
                                 }
-                            }
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.textPrimary)
-                            Button {
-                                showPassword.toggle()
-                            } label: {
-                                Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .font(.caption)
-                                    .foregroundColor(AppColors.textTertiary)
+                                .multilineTextAlignment(.trailing)
+                                Button {
+                                    showPassword.toggle()
+                                } label: {
+                                    Image(systemName: showPassword ? "eye.slash" : "eye")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
-                    } header: {
-                        Text(OrbixStrings.sectionAuth)
                     }
                 } else {
                     Section {
-                        HStack {
-                            Text(OrbixStrings.labelAPIKey).foregroundColor(AppColors.textSecondary)
-                            Spacer()
-                            Group {
-                                if showApiKey {
-                                    TextField("", text: $apiKey)
-                                } else {
-                                    SecureField("", text: $apiKey)
+                        LabeledContent(OrbixStrings.labelAPIKey) {
+                            HStack {
+                                Group {
+                                    if showApiKey {
+                                        TextField("", text: $apiKey)
+                                    } else {
+                                        SecureField("", text: $apiKey)
+                                    }
                                 }
-                            }
-                            .multilineTextAlignment(.trailing)
-                            .foregroundColor(AppColors.textPrimary)
-                            Button {
-                                showApiKey.toggle()
-                            } label: {
-                                Image(systemName: showApiKey ? "eye.slash" : "eye")
-                                    .font(.caption)
-                                    .foregroundColor(AppColors.textTertiary)
+                                .multilineTextAlignment(.trailing)
+                                Button {
+                                    showApiKey.toggle()
+                                } label: {
+                                    Image(systemName: showApiKey ? "eye.slash" : "eye")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
                     } header: {
@@ -153,24 +134,20 @@ struct AddServiceView: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.immediately)
-            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(existing != nil ? OrbixStrings.navEditService : OrbixStrings.navAddService)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button(OrbixStrings.btnCancel) { dismiss() }
-                        .foregroundColor(AppColors.textSecondary)
                         .disabled(isTesting)
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     if isTesting {
-                        ProgressView().tint(AppColors.accentPrimary)
+                        ProgressView()
                     } else {
                         Button(OrbixStrings.btnConnect) { Task { await testAndSave() } }
-                            .fontWeight(.bold)
-                            .foregroundColor(host.isEmpty ? AppColors.textSecondary : AppColors.accentPrimary)
+                            .fontWeight(.semibold)
                             .disabled(host.isEmpty)
                     }
                 }

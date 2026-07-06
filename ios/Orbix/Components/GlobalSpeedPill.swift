@@ -1,45 +1,28 @@
 import SwiftUI
 
-// MARK: - Global Speed Pill (iOS 26 Liquid Glass)
+// MARK: - Global Speed Pill (system material)
 
 struct GlobalSpeedPill: View {
     let dl: Int64
     let up: Int64
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        HStack(spacing: AppSpacing.lg) {
+        HStack(spacing: 16) {
             if dl > 0 {
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "arrow.down")
-                        .iconSymbol(AppColors.accentPrimary)
-                    Text(formatSpeed(dl))
-                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                        .foregroundColor(AppColors.accentPrimary)
-                }
+                Label(formatSpeed(dl), systemImage: "arrow.down")
+                    .font(.footnote.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.blue)
             }
 
             if up > 0 {
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "arrow.up")
-                        .iconSymbol(AppColors.success)
-                    Text(formatSpeed(up))
-                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
-                        .foregroundColor(AppColors.success)
-                }
+                Label(formatSpeed(up), systemImage: "arrow.up")
+                    .font(.footnote.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.green)
             }
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, AppSpacing.md)
-        .background(
-            Capsule()
-                .fill(AppColors.glassThick(for: colorScheme))
-        )
-        .overlay(
-            Capsule()
-                .stroke(AppColors.glassBorder(for: colorScheme), lineWidth: 0.5)
-        )
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(.regularMaterial, in: Capsule())
     }
 }
 

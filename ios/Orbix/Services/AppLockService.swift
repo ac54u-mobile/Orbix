@@ -119,21 +119,21 @@ private struct LockScreen: View {
 
     var body: some View {
         ZStack {
-            AppColors.backgroundGradient.ignoresSafeArea()
+            Color(.systemBackground).ignoresSafeArea()
 
-            VStack(spacing: AppSpacing.lg) {
+            VStack(spacing: 16) {
                 Button {
                     appLock.authenticate()
                 } label: {
                     Image(systemName: biometricIcon)
                         .font(.system(size: 40, weight: .regular))
-                        .foregroundColor(AppColors.accentPrimary)
+                        .foregroundStyle(Color.accentColor)
                 }
-                .buttonStyle(ScaleButtonStyle())
+                .buttonStyle(.plain)
 
                 Text(String(localized: "轻点以验证身份", comment: "Tap to verify identity"))
-                    .font(.system(size: 15))
-                    .foregroundColor(AppColors.textTertiary)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
             }
         }
     }

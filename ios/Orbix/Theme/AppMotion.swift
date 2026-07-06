@@ -1,58 +1,4 @@
-import SwiftUI
 import UIKit
-
-enum AppMotion {
-    static let standardCurve: Animation = .timingCurve(0.2, 0.8, 0.2, 1.0, duration: 0.35)
-
-    static let fast: TimeInterval = 0.22
-    static let medium: TimeInterval = 0.35
-    static let slow: TimeInterval = 0.45
-
-    static func fastAnim() -> Animation {
-        .timingCurve(0.2, 0.8, 0.2, 1.0, duration: fast)
-    }
-
-    static func mediumAnim() -> Animation {
-        .timingCurve(0.2, 0.8, 0.2, 1.0, duration: medium)
-    }
-
-    static func slowAnim() -> Animation {
-        .timingCurve(0.2, 0.8, 0.2, 1.0, duration: slow)
-    }
-
-    static let spring: Animation        = .spring(response: 0.4, dampingFraction: 0.8)
-    static let springSnappy: Animation  = .spring(response: 0.3, dampingFraction: 0.75)
-    static let springGentle: Animation  = .spring(response: 0.55, dampingFraction: 0.85)
-    static let interactive: Animation   = .interactiveSpring(response: 0.28, dampingFraction: 0.86)
-
-    static let draggingCurve: Animation = .spring(response: 0.15, dampingFraction: 1.0)
-
-    static let breathingScale: Animation = .timingCurve(0.2, 0.0, 0.2, 1.0, duration: 0.15)
-
-    // MARK: - iOS 26 Liquid Glass Fluid Animations
-    /// Fluid spring — for surface transitions, card expansions
-    static let fluidSpring: Animation = .spring(response: 0.5, dampingFraction: 0.82)
-    /// Quick fluid — for button taps, toggle switches
-    static let fluidQuick: Animation = .spring(response: 0.25, dampingFraction: 0.7)
-    /// Morph spring — for shape changes, matchedGeometryEffect
-    static let fluidMorph: Animation = .spring(response: 0.6, dampingFraction: 0.78)
-
-    static let skeletonCycle: TimeInterval = 1.4
-    static let shimmerDuration: TimeInterval = 1.2
-}
-
-// MARK: - Scale Button Style
-
-struct ScaleButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
-            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.5)
-            .animation(AppMotion.breathingScale, value: configuration.isPressed)
-    }
-}
 
 // MARK: - Unified Haptic Feedback
 
@@ -77,11 +23,6 @@ enum AppHaptics {
         UIImpactFeedbackGenerator(style: .soft).impactOccurred()
     }
 
-    static func breathing() {
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred(intensity: 0.3)
-    }
-
     static func success() {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
@@ -94,13 +35,3 @@ enum AppHaptics {
         UINotificationFeedbackGenerator().notificationOccurred(.error)
     }
 }
-
-#if DEBUG
-#Preview {
-    VStack(spacing: 20) {
-        Button("Tap") {}.buttonStyle(ScaleButtonStyle())
-        Button("Disabled") {}.buttonStyle(ScaleButtonStyle()).disabled(true)
-    }
-    .padding()
-}
-#endif

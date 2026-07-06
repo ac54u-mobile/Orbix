@@ -1,14 +1,6 @@
 import SwiftUI
 
 extension View {
-    func insetGroupedStyle() -> some View {
-        self
-            .scrollContentBackground(.hidden)
-            .background(AppColors.gridBackgroundGradient)
-    }
-}
-
-extension View {
     func toast(isPresented: Binding<Bool>, type: ToastType = .neutral, message: String) -> some View {
         self.overlay(alignment: .top) {
             if isPresented.wrappedValue {

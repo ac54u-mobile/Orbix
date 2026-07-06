@@ -28,8 +28,7 @@ struct SearchView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppColors.gridBackgroundGradient.ignoresSafeArea()
+            Group {
                 switch state {
                 case .idle: idleView
                 case .loading: loadingView
@@ -45,8 +44,6 @@ struct SearchView: View {
                         SearchModeState.shared.use141 = false
                     } label: {
                         Image(systemName: "antenna.radiowaves.left.and.right")
-                            .foregroundColor(AppColors.accentPrimary)
-                            .font(.system(size: 14))
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -55,7 +52,6 @@ struct SearchView: View {
                         withAnimation(.none) { showingBookmarks.toggle() }
                     } label: {
                         Image(systemName: showingBookmarks ? "heart.fill" : (bookmarks.isEmpty ? "heart" : "heart.fill"))
-                            .foregroundColor(AppColors.accentPrimary)
                     }
                     .accessibilityLabel(OrbixStrings.navSearch)
                     .id("bookmark_\(bookmarks.hashValue)_\(showingBookmarks)")
@@ -94,40 +90,39 @@ struct SearchView: View {
 
     // MARK: - Idle / Trending
     private var idleView: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.lg) {
-                HStack {
-                    Image(systemName: "flame.fill").foregroundColor(AppColors.warning)
-                    Text(OrbixStrings.msgBrowseHot).sectionHeader()
-                }
-                .padding(.top, AppSpacing.lg)
-
-                Text(OrbixStrings.msgSearchSuggestion)
-                    .descriptionSmall(AppColors.textTertiary)
-
+        List {
+            Section {
                 if results.isEmpty {
-                    listSkeleton
+                    loadingPlaceholderRows
                 } else {
-                    sectionGroup(results)
+                    torrentRows(results)
+                }
+            } header: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Label(OrbixStrings.msgBrowseHot, systemImage: "flame.fill")
+                    Text(OrbixStrings.msgSearchSuggestion)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
             }
-            .padding(.horizontal, AppSpacing.lg)
         }
+        .listStyle(.insetGrouped)
         .refreshable { await refreshSearch() }
     }
 
     // MARK: - Loading
     private var loadingView: some View {
-        VStack(spacing: AppSpacing.sm) {
-            HStack(spacing: AppSpacing.sm) {
-                ProgressView().tint(AppColors.accentPrimary)
-                Text(OrbixStrings.msgFetchingLatest).descriptionSmall(AppColors.textTertiary)
+        List {
+            Section {
+                loadingPlaceholderRows
+            } header: {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text(OrbixStrings.msgFetchingLatest)
+                }
             }
-            .padding(.top, AppSpacing.lg)
-
-            listSkeleton
-                .padding(.horizontal, AppSpacing.lg)
         }
+        .listStyle(.insetGrouped)
     }
 
     // MARK: - Results
@@ -143,93 +138,70 @@ struct SearchView: View {
     }
 
     private var resultsView: some View {
-        ScrollView {
+        List {
             if showingBookmarks && displayResults.isEmpty {
-                VStack(spacing: 12) {
-                    Spacer().frame(height: 80)
-                    Image(systemName: "heart.slash")
-                        .font(.system(size: 40))
-                        .foregroundColor(AppColors.placeholder)
-                    Text(OrbixStrings.msgNoBookmarked)
-                        .foregroundColor(AppColors.textSecondary)
-                }
-                .frame(maxWidth: .infinity)
+                ContentUnavailableView(OrbixStrings.msgNoBookmarked, systemImage: "heart.slash")
+                    .listRowBackground(Color.clear)
             }
 
-            LazyVStack(spacing: AppSpacing.lg) {
-                ForEach(sections, id: \.date) { section in
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(section.date)
-                            .descriptionSmall(AppColors.textSecondary)
-                            .padding(.bottom, AppSpacing.xs)
-
-                        sectionGroup(section.items)
-                    }
+            ForEach(sections, id: \.date) { section in
+                Section(section.date) {
+                    torrentRows(section.items)
                 }
+            }
 
-                if !results.isEmpty, !showingBookmarks {
-                    VStack(spacing: 4) {
+            if !results.isEmpty, !showingBookmarks {
+                Section {
+                    HStack {
+                        Spacer()
                         if isLoadingMore {
-                            ProgressView().tint(AppColors.accentPrimary)
+                            ProgressView()
                         } else if hasMorePages {
                             Color.clear.frame(height: 1).onAppear { loadMore() }
                         } else {
                             Text(OrbixStrings.msgAllLoaded)
                                 .font(.caption)
-                                .foregroundColor(AppColors.textTertiary)
+                                .foregroundStyle(.tertiary)
                         }
+                        Spacer()
                     }
-                    .padding(.vertical, 20)
+                    .listRowBackground(Color.clear)
                 }
             }
-            .padding(.horizontal, AppSpacing.lg)
-            .padding(.top, AppSpacing.sm)
         }
+        .listStyle(.insetGrouped)
         .refreshable { await refreshSearch() }
         .animation(.none, value: results.count)
     }
 
-    // MARK: - Grouped Section Container (Glass Card)
+    // MARK: - Rows
+
     @ViewBuilder
-    private func sectionGroup(_ items: [ScrapedTorrent]) -> some View {
-        VStack(spacing: 0) {
-            ForEach(Array(items.enumerated()), id: \.element.id) { idx, torrent in
-                ScrapedTorrentRow(torrent: torrent, isBookmarked: bookmarks.contains(torrent.code))
-                    .contentShape(Rectangle())
-                    .onTapGesture { selectedTorrent = torrent }
-                    .contextMenu { cardContextMenu(torrent) }
-                if idx < items.count - 1 {
-                    HairlineDivider(leadingPadding: 80)
-                }
-            }
+    private func torrentRows(_ items: [ScrapedTorrent]) -> some View {
+        ForEach(items) { torrent in
+            ScrapedTorrentRow(torrent: torrent, isBookmarked: bookmarks.contains(torrent.code))
+                .contentShape(Rectangle())
+                .onTapGesture { selectedTorrent = torrent }
+                .contextMenu { cardContextMenu(torrent) }
         }
-        .liquidGlass(.regular)
     }
 
-    // MARK: - Skeleton (Glass Card)
-    private var listSkeleton: some View {
-        VStack(spacing: 0) {
-            ForEach(0..<6, id: \.self) { i in
-                HStack(spacing: 16) {
-                    RoundedRectangle(cornerRadius: AppRadius.sm)
-                        .fill(AppColors.skeletonBase)
-                        .frame(width: 52, height: 52)
-                    VStack(alignment: .leading, spacing: 6) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(AppColors.skeletonBase)
-                            .frame(height: 14).frame(maxWidth: 150)
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(AppColors.skeletonHighlight)
-                            .frame(height: 11).frame(maxWidth: 220)
-                    }
-                    Spacer()
+    // MARK: - Loading Placeholder
+    private var loadingPlaceholderRows: some View {
+        ForEach(0..<6, id: \.self) { _ in
+            HStack(spacing: 16) {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 52, height: 52)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Placeholder Title")
+                    Text("Placeholder subtitle text")
+                        .font(.footnote)
                 }
-                .padding(.horizontal, AppSpacing.lg)
-                .padding(.vertical, 11)
-                if i < 5 { HairlineDivider(leadingPadding: 80) }
+                Spacer()
             }
+            .redacted(reason: .placeholder)
         }
-        .liquidGlass(.regular)
     }
 
     // MARK: - Context Menu
@@ -421,16 +393,11 @@ struct SearchView: View {
         PersistenceService.shared.saveBookmarks(Array(bookmarks))
     }
 
-    // MARK: - Empty / Error (Glass Card)
+    // MARK: - Empty / Error
     private func emptyHint(_ text: String, icon: String, isError: Bool = false) -> some View {
-        VStack(spacing: AppSpacing.md) {
-            Spacer().frame(height: 60)
-            Image(systemName: icon).font(.system(size: 48))
-                .foregroundColor(isError ? AppColors.danger : AppColors.placeholder)
-            Text(text).descriptionSmall(isError ? AppColors.danger : AppColors.textSecondary)
-            Spacer()
+        ContentUnavailableView {
+            Label(text, systemImage: icon)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

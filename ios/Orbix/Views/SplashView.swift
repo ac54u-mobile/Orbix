@@ -8,7 +8,7 @@ struct SplashView: View {
 
     var body: some View {
         ZStack {
-            AppColors.backgroundGradient.ignoresSafeArea()
+            Color(.systemBackground).ignoresSafeArea()
 
             VStack(spacing: 20) {
                 GlowingLogo(size: 88)
@@ -16,28 +16,27 @@ struct SplashView: View {
                     .opacity(isAnimating ? 1 : 0)
 
                 Text("Orbix")
-                    .titleLarge()
+                    .font(.largeTitle.bold())
                     .opacity(isAnimating ? 1 : 0)
                     .offset(y: isAnimating ? 0 : 20)
 
                 if let msg = statusMessage {
                     Text(msg)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(AppColors.warning)
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.orange)
                         .multilineTextAlignment(.center)
                         .padding(.top, 8)
                         .opacity(isAnimating ? 1 : 0)
                 }
 
                 ProgressView()
-                    .tint(AppColors.textSecondary)
                     .padding(.top, 40)
                     .opacity(isAnimating ? 1 : 0)
             }
             .padding(.horizontal, 40)
         }
         .onAppear {
-            withAnimation(AppMotion.slowAnim()) {
+            withAnimation(.easeOut(duration: 0.45)) {
                 isAnimating = true
             }
 

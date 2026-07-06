@@ -59,7 +59,7 @@ struct SubtitleTranslateView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: AppSpacing.xl) {
+            VStack(spacing: 24) {
                 switch state {
                 case .idle:
                     idleView
@@ -72,7 +72,7 @@ struct SubtitleTranslateView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(AppColors.gridBackgroundGradient)
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(String(localized: "字幕翻译", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -97,18 +97,19 @@ struct SubtitleTranslateView: View {
     }
 
     private var idleView: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: 24) {
             Spacer()
 
             Image(systemName: "translate")
                 .font(.system(size: 56, weight: .light))
-                .foregroundColor(AppColors.accentPrimary)
+                .foregroundStyle(Color.accentColor)
 
-            VStack(spacing: AppSpacing.sm) {
+            VStack(spacing: 8) {
                 Text(String(localized: "导入日文字幕文件", comment: ""))
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.title2.weight(.semibold))
                 Text(String(localized: "支持 .srt / .ass 格式，将逐条翻译为简体中文", comment: ""))
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
 
@@ -117,35 +118,28 @@ struct SubtitleTranslateView: View {
                 showFilePicker = true
             } label: {
                 Label(String(localized: "选择字幕文件", comment: ""), systemImage: "doc.badge.plus")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, AppSpacing.xl)
-                    .padding(.vertical, AppSpacing.md)
-                    .background(
-                        RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                            .fill(AppColors.accentPrimary)
-                    )
             }
-            .buttonStyle(ScaleButtonStyle())
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
 
             Spacer()
         }
-        .padding(AppSpacing.xl)
+        .padding(24)
     }
 
     private var translatingView: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: 24) {
             Spacer()
 
             ProgressView(value: Double(progress), total: Double(total))
-                .progressViewStyle(LinearProgressViewStyle(tint: AppColors.accentPrimary))
-                .padding(.horizontal, AppSpacing.xl)
+                .padding(.horizontal, 24)
 
-            VStack(spacing: AppSpacing.sm) {
+            VStack(spacing: 8) {
                 Text(String(localized: "翻译中…", comment: ""))
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.headline)
                 Text("\(progress) / \(total) \(String(localized: "条", comment: ""))")
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -153,18 +147,19 @@ struct SubtitleTranslateView: View {
     }
 
     private var doneView: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: 24) {
             Spacer()
 
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 56))
-                .foregroundColor(AppColors.success)
+                .foregroundStyle(.green)
 
-            VStack(spacing: AppSpacing.sm) {
+            VStack(spacing: 8) {
                 Text(String(localized: "翻译完成", comment: ""))
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.title2.weight(.semibold))
                 Text(String(format: String(localized: "共翻译 %d 条字幕", comment: ""), total))
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
 
             Button {
@@ -172,37 +167,32 @@ struct SubtitleTranslateView: View {
                 exportTranslatedSRT()
             } label: {
                 Label(String(localized: "导出为 .srt 文件", comment: ""), systemImage: "square.and.arrow.up")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, AppSpacing.xl)
-                    .padding(.vertical, AppSpacing.md)
-                    .background(
-                        RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                            .fill(AppColors.success)
-                    )
             }
-            .buttonStyle(ScaleButtonStyle())
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .tint(.green)
 
             Spacer()
         }
     }
 
     private func errorView(_ msg: String) -> some View {
-        VStack(spacing: AppSpacing.lg) {
+        VStack(spacing: 16) {
             Spacer()
 
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
-                .foregroundColor(AppColors.danger)
+                .foregroundStyle(.red)
 
             Text(msg)
-                .descriptionSmall(AppColors.danger)
+                .font(.footnote)
+                .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
 
             Button(String(localized: "重试", comment: "")) {
                 state = .idle
             }
-            .buttonStyle(ScaleButtonStyle())
+            .buttonStyle(.bordered)
 
             Spacer()
         }

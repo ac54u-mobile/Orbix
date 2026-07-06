@@ -9,29 +9,23 @@ struct SpeedLimitSection: View {
 
     var body: some View {
         Section {
-            HStack {
-                Text(OrbixStrings.labelDownloadLimit).foregroundColor(AppColors.textSecondary)
-                Spacer()
-                TextField(OrbixStrings.phNoLimit, text: $dlLimitStr)
-                    .keyboardType(.numberPad).multilineTextAlignment(.trailing)
-                Text("KB/s").font(.system(size: 12)).foregroundColor(AppColors.textTertiary)
+            LabeledContent(OrbixStrings.labelDownloadLimit) {
+                HStack(spacing: 4) {
+                    TextField(OrbixStrings.phNoLimit, text: $dlLimitStr)
+                        .keyboardType(.numberPad).multilineTextAlignment(.trailing)
+                    Text("KB/s").font(.caption).foregroundStyle(.tertiary)
+                }
             }
-            HStack {
-                Text(OrbixStrings.labelUploadLimit).foregroundColor(AppColors.textSecondary)
-                Spacer()
-                TextField(OrbixStrings.phNoLimit, text: $ulLimitStr)
-                    .keyboardType(.numberPad).multilineTextAlignment(.trailing)
-                Text("KB/s").font(.system(size: 12)).foregroundColor(AppColors.textTertiary)
+            LabeledContent(OrbixStrings.labelUploadLimit) {
+                HStack(spacing: 4) {
+                    TextField(OrbixStrings.phNoLimit, text: $ulLimitStr)
+                        .keyboardType(.numberPad).multilineTextAlignment(.trailing)
+                    Text("KB/s").font(.caption).foregroundStyle(.tertiary)
+                }
             }
-            Button {
+            Button(OrbixStrings.btnApplyLimit) {
                 AppHaptics.medium()
                 onApply()
-            } label: {
-                Text(OrbixStrings.btnApplyLimit)
-                    .font(.system(size: 14, weight: .medium))
-                    .frame(maxWidth: .infinity).padding(.vertical, 8)
-                    .background(RoundedRectangle(cornerRadius: AppRadius.sm).fill(AppColors.accentPrimary))
-                    .foregroundColor(AppColors.textPrimary)
             }
         } header: {
             Text(sectionTitle)

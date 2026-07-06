@@ -17,50 +17,32 @@ struct QBitSearchView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppColors.backgroundGradient.ignoresSafeArea()
+            VStack(spacing: 0) {
+                pluginBar
+                    .padding(.vertical, 8)
 
-                VStack(spacing: 0) {
-                    pluginBar
-                        .padding(.vertical, 8)
-
-                    if isLoading && results.isEmpty {
-                        VStack(spacing: 16) {
-                            Spacer()
-                            ProgressView()
-                                .tint(AppColors.accentPrimary)
-                            Text(OrbixStrings.msgSearchingAll)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.textSecondary)
-                            Spacer()
-                        }
-                    } else if let error = searchError {
-                        VStack(spacing: 12) {
-                            Spacer()
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 40, weight: .light))
-                                .foregroundColor(AppColors.warning)
-                        Text(error)
-                            .descriptionSmall()
-                            .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
-                            Spacer()
-                        }
-                    } else if !query.isEmpty && results.isEmpty && !isLoading {
-                        VStack(spacing: 12) {
-                            Spacer()
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 40, weight: .light))
-                                .foregroundColor(AppColors.textTertiary)
-                        Text(OrbixStrings.errNoResults)
-                            .descriptionSmall()
-                            Spacer()
-                        }
-                    } else {
-                        resultsList
+                if isLoading && results.isEmpty {
+                    Spacer()
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text(OrbixStrings.msgSearchingAll)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
+                    Spacer()
+                } else if let error = searchError {
+                    ContentUnavailableView {
+                        Label(OrbixStrings.errBuiltInSearchFailed, systemImage: "exclamationmark.triangle.fill")
+                    } description: {
+                        Text(error)
+                    }
+                } else if !query.isEmpty && results.isEmpty && !isLoading {
+                    ContentUnavailableView.search(text: query)
+                } else {
+                    resultsList
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(OrbixStrings.navExplore)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -68,8 +50,6 @@ struct QBitSearchView: View {
                         searchMode.use141.toggle()
                     } label: {
                         Image(systemName: "globe")
-                            .foregroundColor(AppColors.accentPrimary)
-                            .font(.system(size: 14))
                     }
                 }
             }
@@ -113,76 +93,63 @@ struct QBitSearchView: View {
             }
         } label: {
             Text(label)
-                .font(.system(size: 14, weight: selected ? .semibold : .medium))
-                .foregroundColor(selected ? .white : .primary)
+                .font(.subheadline.weight(selected ? .semibold : .medium))
+                .foregroundStyle(selected ? Color.white : Color.primary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(selected ? AppColors.accentPrimary : Color.clear)
-                        .background(
-                            Capsule().fill(.regularMaterial)
-                        )
-                        .shadow(color: selected ? AppColors.accentPrimary.opacity(0.3) : .clear, radius: 4, y: 2)
+                        .fill(selected ? Color.accentColor : Color(.secondarySystemFill))
                 )
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Results List
 
     private var resultsList: some View {
-        ScrollView {
-            LazyVStack(spacing: 12) {
+        List {
+            Section {
+                ForEach(results) { item in
+                    resultRow(item)
+                }
+            } header: {
                 if !results.isEmpty {
                     HStack {
                         Text(String(format: OrbixStrings.miscCountResults, results.count))
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(AppColors.textSecondary)
-                            .textCase(.uppercase)
                         Spacer()
                         if status == "Running" {
                             ProgressView()
                                 .controlSize(.mini)
-                                .tint(AppColors.accentPrimary)
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 4)
-                }
-
-                ForEach(results) { item in
-                    resultRow(item)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
         }
+        .listStyle(.insetGrouped)
     }
 
     private func resultRow(_ item: SearchResult) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .top, spacing: 6) {
-                Text(item.fileName)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(2)
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            Text(item.fileName)
+                .font(.subheadline.weight(.medium))
+                .lineLimit(2)
 
             HStack(spacing: 16) {
                 Label(formatBytes(Int64(item.fileSize)), systemImage: "internaldrive")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
                 if item.nbSeeders > 0 {
                     Label("\(item.nbSeeders)", systemImage: "arrow.up.circle.fill")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(AppColors.success)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.green)
                 }
 
                 if item.nbLeechers > 0 {
                     Label("\(item.nbLeechers)", systemImage: "arrow.down.circle.fill")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(AppColors.danger)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.red)
                 }
 
                 Spacer()
@@ -194,38 +161,23 @@ struct QBitSearchView: View {
                     if downloadingNum == item.num {
                         ProgressView()
                             .controlSize(.mini)
-                            .tint(AppColors.accentPrimary)
-                            .padding(8)
                     } else {
                         Image(systemName: "icloud.and.arrow.down.fill")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(AppColors.accentPrimary)
-                            .padding(8)
-                            .background(
-                                Circle().fill(AppColors.accentPrimary.opacity(0.1))
-                            )
+                            .font(.body.weight(.semibold))
                     }
                 }
+                .buttonStyle(.borderless)
                 .disabled(downloadingNum != nil)
             }
 
             if !item.siteUrl.isEmpty {
                 Text(item.siteUrl)
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundColor(AppColors.textTertiary)
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
                     .lineLimit(1)
             }
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                        .stroke(AppColors.glassBorder, lineWidth: 0.5)
-                )
-                .shadow(color: .black.opacity(0.03), radius: 8, x: 0, y: 4)
-        )
+        .padding(.vertical, 2)
     }
 
     // MARK: - Data Loading

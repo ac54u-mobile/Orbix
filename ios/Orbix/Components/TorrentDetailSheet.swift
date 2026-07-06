@@ -12,36 +12,34 @@ struct TorrentDetailSheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: AppSpacing.xl) {
+            List {
+                Section {
                     coverSection
-
-                    headerSection
-
-                    actionSection
-
-                    if let desc = translatedDescription ?? torrent.description {
-                        descriptionCard(desc)
-                    }
-
-                    infoCards
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
                 }
-                .padding(AppSpacing.lg)
-                .padding(.bottom, 32)
+
+                headerSection
+
+                actionSection
+
+                if let desc = translatedDescription ?? torrent.description {
+                    descriptionSection(desc)
+                }
+
+                infoSection
             }
-            .background(AppColors.gridBackgroundGradient)
+            .listStyle(.insetGrouped)
             .navigationTitle(torrent.code)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(OrbixStrings.btnClose) { dismiss() }
-                        .fontWeight(.medium)
-                        .foregroundColor(AppColors.accentPrimary)
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button { toggleBookmark() } label: {
                         Image(systemName: isBookmarked ? "heart.fill" : "heart")
-                            .foregroundColor(isBookmarked ? AppColors.danger : AppColors.textTertiary)
+                            .foregroundStyle(isBookmarked ? Color.red : Color.secondary)
                     }
                 }
             }
@@ -63,15 +61,12 @@ struct TorrentDetailSheet: View {
                             .overlay(coverGradient, alignment: .bottom)
                             .overlay(alignment: .bottomLeading) {
                                 Text(torrent.size)
-                                    .font(.system(size: 11, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, AppSpacing.sm)
-                                    .padding(.vertical, AppSpacing.xs)
-                                    .background(
-                                        Capsule()
-                                            .fill(.black.opacity(0.55))
-                                    )
-                                    .padding(AppSpacing.md)
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(.black.opacity(0.55), in: Capsule())
+                                    .padding(12)
                             }
                             .onTapGesture { showMediaViewer = true }
                     default:
@@ -82,7 +77,6 @@ struct TorrentDetailSheet: View {
                 placeholderCover
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous))
     }
 
     private var coverGradient: some View {
@@ -95,203 +89,126 @@ struct TorrentDetailSheet: View {
 
     private var placeholderCover: some View {
         ZStack {
-            AppColors.card
+            Color(.secondarySystemGroupedBackground)
             Image(systemName: "photo")
-                .font(.system(size: 32))
-                .foregroundColor(AppColors.placeholder)
+                .font(.largeTitle)
+                .foregroundStyle(.tertiary)
         }
         .frame(height: 160)
     }
 
     // MARK: - Header
     private var headerSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            Text(torrent.code)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(AppColors.accentPrimary)
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(torrent.code)
+                    .font(.title3.bold())
 
-            if torrent.title != torrent.code {
-                Text(torrent.title)
-                    .font(.system(size: 14))
-                    .foregroundColor(AppColors.textSecondary)
-                    .lineLimit(3)
+                if torrent.title != torrent.code {
+                    Text(torrent.title)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(3)
+                }
+
+                HStack(spacing: 16) {
+                    Label(torrent.size, systemImage: "internaldrive")
+                    Label(torrent.date, systemImage: "calendar")
+                }
+                .font(.footnote)
+                .foregroundStyle(.tertiary)
             }
-
-            HStack(spacing: AppSpacing.lg) {
-                Label(torrent.size, systemImage: "internaldrive")
-                    .font(.system(size: 13))
-                    .foregroundColor(AppColors.textTertiary)
-
-                Label(torrent.date, systemImage: "calendar")
-                    .font(.system(size: 13))
-                    .foregroundColor(AppColors.textTertiary)
-            }
-            .padding(.top, AppSpacing.xs)
+            .padding(.vertical, 4)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(AppSpacing.lg)
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .fill(AppColors.card)
-        )
     }
 
     // MARK: - Actions
     private var actionSection: some View {
-        VStack(spacing: AppSpacing.sm) {
+        Section {
             Button {
                 Task { _ = try? await QBitApi.shared.addMagnet([torrent.magnet]); dismiss() }
             } label: {
                 Label(OrbixStrings.btnAddToQueue, systemImage: "square.and.arrow.down")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(AppColors.textPrimary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                            .fill(AppColors.accentPrimary)
-                    )
+                    .fontWeight(.semibold)
             }
-            .buttonStyle(ScaleButtonStyle())
 
-            HStack(spacing: AppSpacing.sm) {
-                Button {
-                    UIPasteboard.general.string = torrent.magnet
-                    AppHaptics.success()
-                } label: {
-                    Label(OrbixStrings.btnCopyMagnet, systemImage: "doc.on.doc")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(AppColors.accentPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                                .stroke(AppColors.accentPrimary, lineWidth: 1)
-                        )
-                }
-                .buttonStyle(ScaleButtonStyle())
+            Button {
+                UIPasteboard.general.string = torrent.magnet
+                AppHaptics.success()
+            } label: {
+                Label(OrbixStrings.btnCopyMagnet, systemImage: "doc.on.doc")
+            }
 
-                Button {
-                    UIPasteboard.general.string = torrent.code
-                    AppHaptics.success()
-                } label: {
-                    Label(OrbixStrings.miscCode, systemImage: "number")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(AppColors.textSecondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                                .stroke(AppColors.separator, lineWidth: 1)
-                        )
-                }
-                .buttonStyle(ScaleButtonStyle())
+            Button {
+                UIPasteboard.general.string = torrent.code
+                AppHaptics.success()
+            } label: {
+                Label(OrbixStrings.miscCode, systemImage: "number")
             }
 
             if let torrentUrl = torrent.torrentUrl {
                 Button { downloadTorrent(torrentUrl) } label: {
                     Label(OrbixStrings.btnDownloadTorrent, systemImage: "arrow.down.doc")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(AppColors.accentPrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                                .stroke(AppColors.accentPrimary, lineWidth: 1)
-                        )
                 }
-                .buttonStyle(ScaleButtonStyle())
             }
         }
     }
 
     // MARK: - Description
-    private func descriptionCard(_ desc: String) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.sm) {
-            HStack(spacing: AppSpacing.xs) {
-                Image(systemName: "text.alignleft")
-                    .font(.system(size: 11))
-                    .foregroundColor(AppColors.textTertiary)
-                Text(OrbixStrings.miscFilm)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(AppColors.textTertiary)
-            }
-
+    private func descriptionSection(_ desc: String) -> some View {
+        Section(OrbixStrings.miscFilm) {
             Text(desc)
-                .font(.system(size: 14))
-                .foregroundColor(AppColors.textSecondary)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
                 .textSelection(.enabled)
 
             if translatedDescription != nil, let raw = torrent.description {
-                Divider()
-                    .background(AppColors.separator)
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(OrbixStrings.miscOriginalJP, systemImage: "textformat")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
 
-                HStack(spacing: AppSpacing.xs) {
-                    Image(systemName: "textformat")
-                        .font(.system(size: 10))
-                        .foregroundColor(AppColors.textTertiary)
-                    Text(OrbixStrings.miscOriginalJP)
-                        .font(.system(size: 11))
-                        .foregroundColor(AppColors.textTertiary)
+                    Text(raw)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
                 }
-
-                Text(raw)
-                    .font(.system(size: 14))
-                    .foregroundColor(AppColors.textSecondary)
-                    .textSelection(.enabled)
             }
         }
-        .padding(AppSpacing.lg)
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .fill(AppColors.card)
-        )
     }
 
-    // MARK: - Info Cards
-    private var infoCards: some View {
-        VStack(spacing: AppSpacing.sm) {
-            infoRow(icon: "number", label: OrbixStrings.miscCode, value: torrent.code, copyValue: torrent.code)
+    // MARK: - Info
+    private var infoSection: some View {
+        Section {
+            infoRow(label: OrbixStrings.miscCode, value: torrent.code, copyValue: torrent.code)
 
             if let pageUrl = torrent.pageUrl {
-                infoRow(icon: "link", label: OrbixStrings.miscPageLink, value: pageUrl, copyValue: pageUrl, monospacedSize: 11)
+                infoRow(label: OrbixStrings.miscPageLink, value: pageUrl, copyValue: pageUrl)
             }
         }
     }
 
-    private func infoRow(icon: String, label: String, value: String, copyValue: String, monospacedSize: CGFloat = 13) -> some View {
-        HStack(spacing: AppSpacing.md) {
-            Image(systemName: icon)
-                .font(.system(size: 13))
-                .foregroundColor(AppColors.textTertiary)
-                .frame(width: 18)
-
-            VStack(alignment: .leading, spacing: 2) {
+    private func infoRow(label: String, value: String, copyValue: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
                 Text(label)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(AppColors.textTertiary)
-                Text(value)
-                    .font(.system(size: monospacedSize, design: .monospaced))
-                    .foregroundColor(AppColors.textPrimary)
-                    .lineLimit(2)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button {
+                    UIPasteboard.general.string = copyValue
+                    AppHaptics.success()
+                } label: {
+                    Image(systemName: "doc.on.doc")
+                        .font(.footnote)
+                }
+                .buttonStyle(.borderless)
             }
-
-            Spacer()
-
-            Button {
-                UIPasteboard.general.string = copyValue
-                AppHaptics.success()
-            } label: {
-                Image(systemName: "doc.on.doc")
-                    .font(.system(size: 13))
-                    .foregroundColor(AppColors.accentPrimary)
-            }
+            Text(value)
+                .font(.system(.footnote, design: .monospaced))
+                .lineLimit(2)
         }
-        .padding(AppSpacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.md, style: .continuous)
-                .fill(AppColors.card)
-        )
+        .padding(.vertical, 2)
     }
 
     // MARK: - Actions (privates)

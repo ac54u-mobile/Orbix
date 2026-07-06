@@ -32,16 +32,15 @@ struct LoginView: View {
         NavigationStack {
             Form {
                 Section {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 12) {
                         GlowingLogo(size: 64)
 
-                        VStack(spacing: 6) {
+                        VStack(spacing: 4) {
                             Text("Orbix")
-                                .font(.system(size: 22, weight: .bold, design: .rounded))
-                                .foregroundColor(AppColors.textPrimary)
+                                .font(.title2.bold())
                             Text(OrbixStrings.infoConfigHint)
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(AppColors.textSecondary)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -50,59 +49,54 @@ struct LoginView: View {
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets())
 
-                Section {
-                    FormRow(icon: "tag.fill", title: OrbixStrings.miscNameOptional) {
+                Section(OrbixStrings.sectionServerInfo) {
+                    LabeledContent(OrbixStrings.miscNameOptional) {
                         TextField(OrbixStrings.phServerName, text: $name)
+                            .multilineTextAlignment(.trailing)
                     }
-                    FormRow(icon: "server.rack", title: OrbixStrings.miscHost) {
+                    LabeledContent(OrbixStrings.miscHost) {
                         TextField(OrbixStrings.phHostAddress, text: $host)
+                            .multilineTextAlignment(.trailing)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                             .keyboardType(.URL)
                     }
-                    FormRow(icon: "network", title: OrbixStrings.miscPort) {
+                    LabeledContent(OrbixStrings.miscPort) {
                         TextField(OrbixStrings.phPort, text: $port)
+                            .multilineTextAlignment(.trailing)
                             .keyboardType(.numberPad)
                     }
-                } header: {
-                    Text(OrbixStrings.sectionServerInfo)
                 }
 
-                Section {
-                    FormRow(icon: "person.fill", title: OrbixStrings.miscUsername) {
+                Section(OrbixStrings.sectionAuth) {
+                    LabeledContent(OrbixStrings.miscUsername) {
                         TextField(OrbixStrings.phUsername, text: $username)
+                            .multilineTextAlignment(.trailing)
                             .autocapitalization(.none)
                             .disableAutocorrection(true)
                     }
-
-                    FormRow(icon: "lock.fill", title: OrbixStrings.miscPassword) {
+                    LabeledContent(OrbixStrings.miscPassword) {
                         HStack {
                             if showPassword {
                                 TextField(OrbixStrings.phPassword, text: $password)
+                                    .multilineTextAlignment(.trailing)
                             } else {
                                 SecureField(OrbixStrings.phPassword, text: $password)
+                                    .multilineTextAlignment(.trailing)
                             }
                             Button {
                                 showPassword.toggle()
                             } label: {
                                 Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .foregroundColor(AppColors.textSecondary)
+                                    .foregroundStyle(.secondary)
                             }
                             .buttonStyle(.plain)
                         }
                     }
-                } header: {
-                    Text(OrbixStrings.sectionAuth)
                 }
 
                 Section {
-                    HStack {
-                        Image(systemName: "lock.shield.fill")
-                            .foregroundColor(AppColors.textSecondary)
-                            .frame(width: 28, alignment: .leading)
-                        Toggle(OrbixStrings.miscEnableHTTPS, isOn: $https)
-                            .tint(AppColors.accentPrimary)
-                    }
+                    Toggle(OrbixStrings.miscEnableHTTPS, isOn: $https)
                 } footer: {
                     if https {
                         Text(OrbixStrings.infoSSLHint)
@@ -118,10 +112,8 @@ struct LoginView: View {
                             Spacer()
                             if isTesting {
                                 ProgressView()
-                                    .tint(AppColors.accentPrimary)
                             } else {
                                 Text(OrbixStrings.btnTestConnection)
-                                    .font(.system(size: 15, weight: .semibold))
                             }
                             Spacer()
                         }
@@ -130,11 +122,10 @@ struct LoginView: View {
                     if let result = testResult {
                         HStack {
                             Image(systemName: result.isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                .foregroundColor(result.isSuccess ? AppColors.success : AppColors.danger)
                             Text(result.isSuccess ? OrbixStrings.miscConnectSuccess : result.message)
-                                .font(.system(size: 13))
-                                .foregroundColor(result.isSuccess ? AppColors.success : AppColors.danger)
+                                .font(.footnote)
                         }
+                        .foregroundStyle(result.isSuccess ? Color.green : Color.red)
                         .frame(maxWidth: .infinity, alignment: .center)
                         .padding(.vertical, 4)
                     }
@@ -143,8 +134,6 @@ struct LoginView: View {
                 }
             }
             .formStyle(.grouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.backgroundGradient.ignoresSafeArea())
             .navigationTitle(server != nil ? OrbixStrings.navEditServer : OrbixStrings.navAddServer)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -153,7 +142,7 @@ struct LoginView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(OrbixStrings.btnSave) { save() }
-                        .font(.system(size: 15, weight: .bold))
+                        .fontWeight(.semibold)
                         .disabled(host.isEmpty || username.isEmpty)
                 }
             }
@@ -170,7 +159,7 @@ struct LoginView: View {
             let result = await QBitApi.shared.connect()
             await MainActor.run {
                 isTesting = false
-                withAnimation(AppMotion.spring) {
+                withAnimation(.spring) {
                     testResult = result
                 }
                 if result.isSuccess {
@@ -207,4 +196,3 @@ struct LoginView: View {
     LoginView { _ in }
 }
 #endif
-

@@ -13,7 +13,7 @@ struct TorrentDetailFileSheet: View {
                     let file = files[index]
                     HStack(spacing: 10) {
                         Image(systemName: selectedFileIndices.contains(index) ? "checkmark.circle.fill" : "circle")
-                            .foregroundColor(selectedFileIndices.contains(index) ? AppColors.accentPrimary : AppColors.textTertiary)
+                            .foregroundStyle(selectedFileIndices.contains(index) ? Color.accentColor : Color(.tertiaryLabel))
                             .onTapGesture {
                                 if selectedFileIndices.contains(index) {
                                     selectedFileIndices.remove(index)
@@ -24,12 +24,11 @@ struct TorrentDetailFileSheet: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(file.name)
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.primary)
+                                .font(.subheadline)
                                 .lineLimit(2)
                             Text(formatBytes(file.size))
-                                .font(.system(size: 12))
-                                .foregroundColor(.secondary)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
 
                         Spacer()
@@ -39,16 +38,13 @@ struct TorrentDetailFileSheet: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(OrbixStrings.navFilePriority)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button(OrbixStrings.btnCancel) { dismiss(); selectedFileIndices = [] }
-                        .foregroundColor(.secondary)
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .confirmationAction) {
                     if !selectedFileIndices.isEmpty {
                         Menu {
                             Button { setPrio(0) } label: { Label(OrbixStrings.btnIgnore, systemImage: "nosign") }
@@ -57,13 +53,10 @@ struct TorrentDetailFileSheet: View {
                             Button { setPrio(7) } label: { Label(OrbixStrings.btnMax, systemImage: "arrow.up.to.line") }
                         } label: {
                             Text("\(OrbixStrings.miscBatch) (\(selectedFileIndices.count))")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.accentPrimary)
                         }
                     }
                     Button(OrbixStrings.btnDone) { dismiss(); selectedFileIndices = [] }
-                        .fontWeight(.medium)
-                        .foregroundColor(AppColors.accentPrimary)
+                        .fontWeight(.semibold)
                 }
             }
         }
@@ -72,21 +65,18 @@ struct TorrentDetailFileSheet: View {
     private func priorityBadge(_ priority: Int) -> some View {
         let (label, color): (String, Color) = {
             switch priority {
-            case 0: return (OrbixStrings.btnIgnore, AppColors.textSecondary)
-            case 6: return (OrbixStrings.btnHigh, AppColors.accentPrimary)
-            case 7: return (OrbixStrings.btnMax, AppColors.success)
-            default: return (OrbixStrings.btnNormal, AppColors.textTertiary)
+            case 0: return (OrbixStrings.btnIgnore, .secondary)
+            case 6: return (OrbixStrings.btnHigh, .blue)
+            case 7: return (OrbixStrings.btnMax, .green)
+            default: return (OrbixStrings.btnNormal, Color(.tertiaryLabel))
             }
         }()
         return Text(label)
-            .font(.system(size: 11, weight: .semibold))
-            .foregroundColor(color)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(color)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.xs)
-                    .fill(color.opacity(0.12))
-            )
+            .background(color.opacity(0.12), in: Capsule())
     }
 
     private func setPrio(_ priority: Int) {

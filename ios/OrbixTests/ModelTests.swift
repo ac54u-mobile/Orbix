@@ -1,17 +1,18 @@
 import XCTest
+import SwiftUI
 @testable import Orbix
 
 final class TorrentStatusTests: XCTestCase {
     func testStatusColor_forDownloading_returnsAccent() {
-        XCTAssertEqual(TorrentStatus.downloading.statusColor, AppColors.accentPrimary)
+        XCTAssertEqual(TorrentStatus.downloading.statusColor, Color.blue)
     }
 
     func testStatusColor_forUploading_returnsSuccess() {
-        XCTAssertEqual(TorrentStatus.uploading.statusColor, AppColors.success)
+        XCTAssertEqual(TorrentStatus.uploading.statusColor, Color.green)
     }
 
     func testStatusColor_forError_returnsDanger() {
-        XCTAssertEqual(TorrentStatus.error.statusColor, AppColors.danger)
+        XCTAssertEqual(TorrentStatus.error.statusColor, Color.red)
     }
 
     func testIsActive_forDownloading_returnsTrue() {
@@ -30,17 +31,17 @@ final class TorrentStatusTests: XCTestCase {
 final class TorrentInfoTests: XCTestCase {
     func testProgressColor_whenError_returnsDanger() {
         let t = TorrentInfo(name: "test", state: "error")
-        XCTAssertEqual(t.progressColor, AppColors.danger)
+        XCTAssertEqual(t.progressColor, Color.red)
     }
 
     func testProgressColor_whenCompleted_returnsSuccess() {
         let t = TorrentInfo(name: "test", state: "uploading", progress: 1.0)
-        XCTAssertEqual(t.progressColor, AppColors.success)
+        XCTAssertEqual(t.progressColor, Color.green)
     }
 
     func testProgressColor_default_returnsAccent() {
         let t = TorrentInfo(name: "test", state: "downloading", progress: 0.5)
-        XCTAssertEqual(t.progressColor, AppColors.accentPrimary)
+        XCTAssertEqual(t.progressColor, Color.blue)
     }
 
     func testStatusBadge_fromRawValue() {
@@ -57,12 +58,12 @@ final class TorrentInfoTests: XCTestCase {
 final class TrackerStatusTests: XCTestCase {
     func testStatusColor_working_returnsSuccess() {
         let t = TorrentTracker(url: "udp://test", status: 2, tier: 0, numPeers: 0, numSeeds: 0, numLeeches: 0, numDownloaded: 0, msg: "")
-        XCTAssertEqual(t.statusColor, AppColors.success)
+        XCTAssertEqual(t.statusColor, Color.green)
     }
 
     func testStatusColor_disabled_returnsDanger() {
         let t = TorrentTracker(url: "udp://test", status: 0, tier: 0, numPeers: 0, numSeeds: 0, numLeeches: 0, numDownloaded: 0, msg: "")
-        XCTAssertEqual(t.statusColor, AppColors.danger)
+        XCTAssertEqual(t.statusColor, Color.red)
     }
 }
 

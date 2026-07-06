@@ -29,7 +29,7 @@ struct VideoSubtitleView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: AppSpacing.xl) {
+            VStack(spacing: 24) {
                 switch state {
                 case .idle:
                     idleView
@@ -44,7 +44,7 @@ struct VideoSubtitleView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(AppColors.gridBackgroundGradient)
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(String(localized: "提取字幕", comment: ""))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -65,113 +65,110 @@ struct VideoSubtitleView: View {
     }
 
     private var idleView: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: 24) {
             Spacer()
             Image(systemName: "waveform.circle.fill")
                 .font(.system(size: 56, weight: .light))
-                .foregroundColor(AppColors.accentPrimary)
-            VStack(spacing: AppSpacing.sm) {
+                .foregroundStyle(Color.accentColor)
+            VStack(spacing: 8) {
                 Text(String(localized: "语音转字幕", comment: ""))
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.title2.weight(.semibold))
                 Text(String(localized: "选择视频 → 提取音频 → Whisper 识别 → DeepSeek 翻译 → 中文 .srt", comment: ""))
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, AppSpacing.xl)
+                    .padding(.horizontal, 24)
             }
             Button {
                 AppHaptics.medium()
                 showFilePicker = true
             } label: {
                 Label(String(localized: "选择视频文件", comment: ""), systemImage: "film")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, AppSpacing.xl)
-                    .padding(.vertical, AppSpacing.md)
-                    .background(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous).fill(AppColors.accentPrimary))
             }
-            .buttonStyle(ScaleButtonStyle())
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
             Spacer()
         }
-        .padding(AppSpacing.xl)
+        .padding(24)
     }
 
     private var singleProgressView: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: 24) {
             Spacer()
             ProgressView()
-                .scaleEffect(1.5)
-                .tint(AppColors.accentPrimary)
-            VStack(spacing: AppSpacing.sm) {
+                .controlSize(.large)
+            VStack(spacing: 8) {
                 Text(phaseText)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.headline)
                 Text(String(format: String(localized: "已运行 %d 秒", comment: ""), elapsedSeconds))
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
         }
     }
 
     private var translatingView: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: 24) {
             Spacer()
             ProgressView(value: Double(progress), total: Double(total))
-                .progressViewStyle(LinearProgressViewStyle(tint: AppColors.accentPrimary))
-                .padding(.horizontal, AppSpacing.xxl)
-            VStack(spacing: AppSpacing.sm) {
+                .padding(.horizontal, 32)
+            VStack(spacing: 8) {
                 Text(String(localized: "翻译中…", comment: ""))
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.headline)
                 Text("\(progress) / \(total) \(String(localized: "条", comment: ""))")
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 Text(String(format: String(localized: "耗时 %d 秒", comment: ""), elapsedSeconds))
-                    .caption()
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             Spacer()
         }
     }
 
     private var doneView: some View {
-        VStack(spacing: AppSpacing.xl) {
+        VStack(spacing: 24) {
             Spacer()
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 56))
-                .foregroundColor(AppColors.success)
-            VStack(spacing: AppSpacing.sm) {
+                .foregroundStyle(.green)
+            VStack(spacing: 8) {
                 Text(String(localized: "字幕生成完成", comment: ""))
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.title2.weight(.semibold))
                 Text(String(format: String(localized: "共 %d 条字幕，耗时 %d 秒", comment: ""), total, elapsedSeconds))
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
             Button {
                 AppHaptics.medium()
                 exportSRT()
             } label: {
                 Label(String(localized: "导出为 .srt 文件", comment: ""), systemImage: "square.and.arrow.up")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, AppSpacing.xl)
-                    .padding(.vertical, AppSpacing.md)
-                    .background(RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous).fill(AppColors.success))
             }
-            .buttonStyle(ScaleButtonStyle())
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .tint(.green)
             Spacer()
         }
     }
 
     private func errorView(_ msg: String) -> some View {
-        VStack(spacing: AppSpacing.lg) {
+        VStack(spacing: 16) {
             Spacer()
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 48))
-                .foregroundColor(AppColors.danger)
+                .foregroundStyle(.red)
             Text(msg)
-                .descriptionSmall(AppColors.danger)
+                .font(.footnote)
+                .foregroundStyle(.red)
                 .multilineTextAlignment(.center)
             Button(String(localized: "重试", comment: "")) {
                 state = .idle
                 elapsedSeconds = 0
                 isTimerRunning = false
             }
-            .buttonStyle(ScaleButtonStyle())
+            .buttonStyle(.bordered)
             Spacer()
         }
     }

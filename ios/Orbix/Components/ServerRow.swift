@@ -9,23 +9,24 @@ struct ServerRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(server.name)
-                        .bodyFont()
                     Image(systemName: server.https ? "lock.fill" : "lock.open")
                         .font(.caption2)
-                        .foregroundColor(server.https ? AppColors.success : AppColors.textSecondary)
+                        .foregroundStyle(server.https ? Color.green : Color.secondary)
                 }
                 Text(server.url)
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                 Text(server.username)
-                    .caption()
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()
 
             if showChevron {
                 Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(AppColors.textTertiary)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
             }
         }
         .padding(.vertical, 4)

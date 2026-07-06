@@ -6,13 +6,13 @@ struct ScrapedTorrentRow: View {
     @State private var loadedThumbnail: UIImage?
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             // Thumbnail
             ZStack(alignment: .topLeading) {
                 thumbnailView
                 if isBookmarked {
-                    Circle().fill(AppColors.danger).frame(width: 14, height: 14)
-                        .overlay(Image(systemName: "heart.fill").font(.system(size: 7)).foregroundColor(.white))
+                    Circle().fill(Color.red).frame(width: 14, height: 14)
+                        .overlay(Image(systemName: "heart.fill").font(.system(size: 7)).foregroundStyle(.white))
                         .offset(x: -4, y: -4)
                 }
             }
@@ -20,15 +20,14 @@ struct ScrapedTorrentRow: View {
             // Text
             VStack(alignment: .leading, spacing: 3) {
                 Text(torrent.code)
-                    .font(AppTypography.titleSmall())
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.headline)
                     .lineLimit(1)
 
                 let subtitle = subtitleText
                 if !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(AppTypography.descriptionSmall())
-                        .foregroundColor(AppColors.textSecondary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
             }
@@ -36,12 +35,10 @@ struct ScrapedTorrentRow: View {
             Spacer()
 
             Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(AppColors.textTertiary)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 11)
-        .background(Color.clear)
+        .padding(.vertical, 2)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(torrent.code)
         .accessibilityValue(subtitleText)
@@ -88,13 +85,13 @@ struct ScrapedTorrentRow: View {
                 ZStack {
                     Color(.tertiarySystemFill)
                     Image(systemName: "photo")
-                        .font(.system(size: 18))
-                        .foregroundColor(AppColors.textTertiary)
+                        .font(.body)
+                        .foregroundStyle(.tertiary)
                 }
             }
         }
         .frame(width: 52, height: 52)
-        .clipShape(RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
@@ -131,9 +128,6 @@ struct ScrapedTorrentRow: View {
             isBookmarked: false
         )
     }
-    .background(Color.clear)
-    .clipShape(RoundedRectangle(cornerRadius: 14))
     .padding(.horizontal, 16)
-    .background(AppColors.gridBackgroundGradient)
 }
 #endif

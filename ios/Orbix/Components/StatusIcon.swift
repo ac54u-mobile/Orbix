@@ -33,21 +33,20 @@ struct StatusIcon: View {
 
     private var backgroundColor: Color {
         switch status {
-        case .uploading, .stalledUP, .forcedUP: return AppColors.success.opacity(0.15)
-        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accentPrimary.opacity(0.15)
-        case .error, .missingFiles: return AppColors.danger.opacity(0.15)
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.textTertiary.opacity(0.15)
-        default: return AppColors.separator.opacity(0.3)
+        case .uploading, .stalledUP, .forcedUP: return Color.green.opacity(0.15)
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return Color.blue.opacity(0.15)
+        case .error, .missingFiles: return Color.red.opacity(0.15)
+        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return Color(.tertiaryLabel).opacity(0.15)
+        default: return Color(.separator).opacity(0.3)
         }
     }
-    
+
     private var iconColor: Color {
         switch status {
-        case .uploading, .stalledUP, .forcedUP: return AppColors.success
-        case .downloading, .metaDL, .forcedDL, .stalledDL: return AppColors.accentPrimary
-        case .error, .missingFiles: return AppColors.danger
-        case .pausedDL, .pausedUP, .stoppedDL, .stoppedUP, .queuedDL, .queuedUP, .moving: return AppColors.textSecondary
-        default: return AppColors.textSecondary
+        case .uploading, .stalledUP, .forcedUP: return .green
+        case .downloading, .metaDL, .forcedDL, .stalledDL: return .blue
+        case .error, .missingFiles: return .red
+        default: return .secondary
         }
     }
 }

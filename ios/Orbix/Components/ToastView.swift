@@ -7,9 +7,9 @@ enum ToastType {
 
     var color: Color {
         switch self {
-        case .neutral: return AppColors.elevated
-        case .success: return AppColors.success
-        case .error: return AppColors.danger
+        case .neutral: return Color(.secondarySystemBackground)
+        case .success: return .green
+        case .error: return .red
         }
     }
 }
@@ -26,8 +26,8 @@ struct ToastView: View {
 
     var body: some View {
         Text(message)
-            .font(.system(size: 15, weight: .medium))
-            .foregroundColor(textColor)
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(textColor)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
             .background(
@@ -38,11 +38,11 @@ struct ToastView: View {
             .opacity(isShowing ? 1 : 0)
             .scaleEffect(isShowing ? 1 : 0.85)
             .onAppear {
-                withAnimation(AppMotion.mediumAnim()) {
+                withAnimation(.easeOut(duration: 0.35)) {
                     isShowing = true
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
-                    withAnimation(AppMotion.mediumAnim()) {
+                    withAnimation(.easeOut(duration: 0.35)) {
                         isShowing = false
                     }
                 }

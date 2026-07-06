@@ -15,7 +15,7 @@ struct OrbixApp: App {
                 ContentView()
             }
             .environmentObject(appLock)
-            .tint(AppColors.accentPrimary)
+            .tint(.blue)
         }
     }
 }

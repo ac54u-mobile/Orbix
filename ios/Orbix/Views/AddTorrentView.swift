@@ -30,36 +30,29 @@ struct AddTorrentView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppColors.backgroundGradient.ignoresSafeArea()
-
-                ScrollView {
-                    VStack(spacing: 24) {
-                        modePicker
-
-                        Group {
-                            if mode == .link {
-                                linkInputSection
-                                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                            } else {
-                                fileInputSection
-                                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
-                            }
-                        }
-
-                        optionsSection
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 24)
+            Form {
+                Section {
+                    modePicker
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets())
                 }
-                .scrollDismissesKeyboard(.interactively)
+
+                if mode == .link {
+                    linkInputSection
+                } else {
+                    fileInputSection
+                }
+
+                optionsSection
             }
+            .formStyle(.grouped)
+            .scrollDismissesKeyboard(.interactively)
             .navigationTitle(OrbixStrings.navAddTorrent)
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showFilePicker) {
                 DocumentPickerView { url in
                     if let data = try? Data(contentsOf: url) {
-                        withAnimation(AppMotion.mediumAnim()) {
+                        withAnimation(.default) {
                             selectedFileURL = url
                             selectedFileData = data
                         }
@@ -78,10 +71,9 @@ struct AddTorrentView: View {
                     Button(action: submit) {
                         if isSubmitting {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: AppColors.accentPrimary))
                         } else {
                             Text(OrbixStrings.btnAdd)
-                                .font(.system(size: 16, weight: .bold))
+                                .fontWeight(.semibold)
                         }
                     }
                     .disabled(!canSubmit || isSubmitting)
@@ -97,144 +89,81 @@ struct AddTorrentView: View {
     }
 
     private var modePicker: some View {
-        Picker(OrbixStrings.sectionAddMethod, selection: $mode.animation(AppMotion.mediumAnim())) {
+        Picker(OrbixStrings.sectionAddMethod, selection: $mode.animation(.default)) {
             ForEach(AddMode.allCases, id: \.self) { m in
                 Text(m.displayName).tag(m)
             }
         }
         .pickerStyle(.segmented)
-        .padding(.horizontal, 4)
     }
 
     private var linkInputSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(OrbixStrings.labelMagnetURL)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.textSecondary)
-                .textCase(.uppercase)
-                .padding(.leading, 4)
-
+        Section(OrbixStrings.labelMagnetURL) {
             ZStack(alignment: .topLeading) {
                 TextEditor(text: $linkText)
-                    .font(.system(size: 15, design: .monospaced))
-                    .scrollContentBackground(.hidden)
-                    .background(Color.clear)
+                    .font(.system(.subheadline, design: .monospaced))
                     .frame(minHeight: 160)
 
                 if linkText.isEmpty {
                     Text(OrbixStrings.phMagnet)
-                        .font(.system(size: 15))
-                        .foregroundColor(AppColors.placeholder)
+                        .font(.subheadline)
+                        .foregroundStyle(Color(.placeholderText))
                         .padding(.top, 8)
                         .padding(.leading, 5)
                         .allowsHitTesting(false)
                 }
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
-            )
         }
     }
 
     private var fileInputSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(OrbixStrings.sectionTorrentFile)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.textSecondary)
-                .textCase(.uppercase)
-                .padding(.leading, 4)
-
+        Section(OrbixStrings.sectionTorrentFile) {
             if let url = selectedFileURL {
                 HStack(spacing: 16) {
-                    Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(AppColors.accentPrimary)
+                    Image(systemName: "doc.fill")
+                        .font(.title2)
+                        .foregroundStyle(Color.accentColor)
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(url.lastPathComponent)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(AppColors.textPrimary)
+                            .font(.subheadline.weight(.medium))
                             .lineLimit(1)
                         Text(OrbixStrings.msgReadyToUpload)
-                            .font(.system(size: 12))
-                            .foregroundColor(AppColors.success)
+                            .font(.caption)
+                            .foregroundStyle(.green)
                     }
 
                     Spacer()
 
                     Button {
                         AppHaptics.light()
-                        withAnimation(AppMotion.mediumAnim()) {
+                        withAnimation(.default) {
                             selectedFileURL = nil
                             selectedFileData = nil
                         }
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundColor(AppColors.textTertiary)
+                            .foregroundStyle(.tertiary)
                     }
+                    .buttonStyle(.borderless)
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                        .fill(AppColors.card)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                                .stroke(AppColors.success.opacity(0.3), lineWidth: 1)
-                        )
-                )
             } else {
                 Button {
                     pickFile()
                 } label: {
-                    VStack(spacing: 12) {
-                        Image(systemName: "doc.badge.plus")
-                            .font(.system(size: 32))
-                            .foregroundColor(AppColors.accentPrimary)
-                        Text(OrbixStrings.msgClickSelectTorrent)
-                            .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(AppColors.textPrimary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 120)
+                    Label(OrbixStrings.msgClickSelectTorrent, systemImage: "doc.badge.plus")
                 }
-                .background(
-                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                        .fill(AppColors.card.opacity(0.5))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                                .strokeBorder(
-                                    style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])
-                                )
-                                .foregroundColor(AppColors.textTertiary)
-                        )
-                )
-                .contentShape(Rectangle())
             }
         }
     }
 
     private var optionsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(OrbixStrings.sectionAdvancedOptions)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(AppColors.textSecondary)
-                .textCase(.uppercase)
-                .padding(.leading, 4)
-
-            VStack(spacing: 0) {
-                IconTextFieldRow(icon: "square.grid.2x2.fill", placeholder: OrbixStrings.phCategoryPlaceholder, text: $category)
-                Divider().padding(.leading, 44)
-                IconTextFieldRow(icon: "tag.fill", placeholder: OrbixStrings.phTagsPlaceholder, text: $tags)
-                Divider().padding(.leading, 44)
-                IconTextFieldRow(icon: "folder.fill", placeholder: OrbixStrings.phSavePathPlaceholder, text: $savePath, disableAutocap: true)
-            }
-            .background(
-                RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                    .fill(AppColors.card)
-            )
+        Section(OrbixStrings.sectionAdvancedOptions) {
+            TextField(OrbixStrings.phCategoryPlaceholder, text: $category)
+            TextField(OrbixStrings.phTagsPlaceholder, text: $tags)
+            TextField(OrbixStrings.phSavePathPlaceholder, text: $savePath)
+                .textInputAutocapitalization(.never)
+                .disableAutocorrection(true)
         }
     }
 

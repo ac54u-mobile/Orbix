@@ -11,63 +11,31 @@ struct TorrentDetailAdvancedSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
-                    VStack(alignment: .leading, spacing: 6) {
-                    Text(OrbixStrings.miscModifyPath)
-                        .sectionHeader()
-                        TextField(OrbixStrings.phNewSavePath, text: $newLocation)
-                            .font(.system(size: 14, design: .monospaced))
-                            .foregroundColor(.primary)
-                    }
-                    .padding(.vertical, 4)
+                Section(OrbixStrings.sectionLocation) {
+                    TextField(OrbixStrings.phNewSavePath, text: $newLocation)
+                        .font(.system(.subheadline, design: .monospaced))
 
-                    Button {
+                    Button(OrbixStrings.btnApplyPath) {
                         AppHaptics.medium()
                         Task {
                             try? await QBitApi.shared.setTorrentLocation(hash, location: newLocation)
                             AppHaptics.success()
                         }
-                    } label: {
-                        Text(OrbixStrings.btnApplyPath)
-                            .font(.system(size: 14, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: AppRadius.sm)
-                                    .fill(newLocation.isEmpty ? AppColors.elevated : AppColors.accentPrimary)
-                            )
-                            .foregroundColor(newLocation.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
                     }
                     .disabled(newLocation.isEmpty)
-                } header: {
-                    Text(OrbixStrings.sectionLocation)
                 }
 
-                Section {
+                Section(OrbixStrings.sectionRename) {
                     TextField(OrbixStrings.phRename, text: $newName)
-                        .font(.system(size: 14))
-                        .foregroundColor(.primary)
 
-                    Button {
+                    Button(OrbixStrings.btnApplyName) {
                         Task {
                             try? await QBitApi.shared.renameTorrent(hash, name: newName)
                             AppHaptics.success()
                             dismiss()
                         }
-                    } label: {
-                        Text(OrbixStrings.btnApplyName)
-                            .font(.system(size: 14, weight: .medium))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(
-                                RoundedRectangle(cornerRadius: AppRadius.sm)
-                                    .fill(newName.isEmpty ? AppColors.elevated : AppColors.accentPrimary)
-                            )
-                            .foregroundColor(newName.isEmpty ? AppColors.textSecondary : AppColors.textPrimary)
                     }
                     .disabled(newName.isEmpty)
-                } header: {
-                    Text(OrbixStrings.sectionRename)
                 }
 
                 SpeedLimitSection(
@@ -96,14 +64,7 @@ struct TorrentDetailAdvancedSheet: View {
                             AppHaptics.success()
                         }
                     } label: {
-                        HStack {
-                            Label(OrbixStrings.btnToggleSequential, systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                                .foregroundColor(.primary)
-                            Spacer()
-                            Image(systemName: "chevron.forward")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(AppColors.textTertiary)
-                        }
+                        Label(OrbixStrings.btnToggleSequential, systemImage: "arrow.left.and.right.righttriangle.left.righttriangle.right")
                     }
                 } header: {
                     Text(OrbixStrings.sectionDownloadMode)
@@ -112,15 +73,12 @@ struct TorrentDetailAdvancedSheet: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(OrbixStrings.navAdvancedControl)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button(OrbixStrings.btnDone) { dismiss() }
-                        .fontWeight(.medium)
-                        .foregroundColor(AppColors.accentPrimary)
+                        .fontWeight(.semibold)
                 }
             }
         }

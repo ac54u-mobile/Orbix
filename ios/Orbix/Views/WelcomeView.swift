@@ -5,7 +5,7 @@ struct WelcomeView: View {
 
     var body: some View {
         ZStack {
-            AppColors.backgroundGradient.ignoresSafeArea()
+            Color(.systemBackground).ignoresSafeArea()
 
             VStack(spacing: 32) {
                 Spacer()
@@ -13,12 +13,11 @@ struct WelcomeView: View {
                 GlowingLogo(size: 88)
 
                 Text("Orbix")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.system(.title, design: .rounded).bold())
 
                 Text(OrbixStrings.welcomeQBittorrent)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
 
                 VStack(spacing: 12) {
                     FeatureTile(
@@ -45,22 +44,13 @@ struct WelcomeView: View {
                     AppHaptics.medium()
                     onAddServer()
                 } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 18, weight: .semibold))
-                        Text(OrbixStrings.btnStartSetup)
-                            .font(.system(size: 16, weight: .bold))
-                    }
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(
-                        RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                            .fill(AppColors.accentPrimary)
-                            .shadow(color: AppColors.accentPrimary.opacity(0.3), radius: 12, x: 0, y: 6)
-                    )
+                    Label(OrbixStrings.btnStartSetup, systemImage: "plus.circle.fill")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
                 }
-                .buttonStyle(ScaleButtonStyle())
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
                 .padding(.horizontal, 20)
                 .padding(.bottom, 40)
             }
@@ -79,28 +69,25 @@ private struct FeatureTile: View {
     let title: String
     let subtitle: String
 
-    @Environment(\.colorScheme) var colorScheme
-
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(AppColors.accentPrimary.opacity(0.15))
+                    .fill(Color.accentColor.opacity(0.15))
                     .frame(width: 48, height: 48)
 
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(AppColors.accentPrimary)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.accentColor)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(AppColors.textPrimary)
+                    .font(.subheadline.weight(.semibold))
 
                 Text(subtitle)
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(AppColors.textSecondary)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -109,14 +96,7 @@ private struct FeatureTile: View {
         }
         .padding(.vertical, 14)
         .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                        .stroke(AppColors.glassBorder, lineWidth: 0.5)
-                )
-        )
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 

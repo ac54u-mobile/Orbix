@@ -12,8 +12,7 @@ struct TorrentDetailTrackerSheet: View {
                 Section {
                     HStack(spacing: 8) {
                         TextField(OrbixStrings.phTrackerURL, text: $newTrackerURL)
-                            .font(.system(size: 14, design: .monospaced))
-                            .foregroundColor(.primary)
+                            .font(.system(.subheadline, design: .monospaced))
                         Button {
                             guard !newTrackerURL.isEmpty else { return }
                             let urls = newTrackerURL.components(separatedBy: "\n").filter { !$0.isEmpty }
@@ -27,9 +26,9 @@ struct TorrentDetailTrackerSheet: View {
                             }
                         } label: {
                             Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 22))
-                                .foregroundColor(newTrackerURL.isEmpty ? AppColors.textTertiary : AppColors.accentPrimary)
+                                .font(.title3)
                         }
+                        .buttonStyle(.borderless)
                         .disabled(newTrackerURL.isEmpty)
                     }
                 } header: {
@@ -44,16 +43,16 @@ struct TorrentDetailTrackerSheet: View {
                                     .fill(tracker.statusColor)
                                     .frame(width: 8, height: 8)
                                 Text(tracker.statusText)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(tracker.statusColor)
+                                    .font(.footnote.weight(.medium))
+                                    .foregroundStyle(tracker.statusColor)
                                 Spacer()
                                 Text("\(OrbixStrings.miscSeedsPrefix)\(tracker.numSeeds)")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(AppColors.textTertiary)
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
                             }
                             Text(tracker.url)
-                                .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(.secondary)
+                                .font(.system(.caption, design: .monospaced))
+                                .foregroundStyle(.secondary)
                                 .lineLimit(2)
                         }
                         .padding(.vertical, 4)
@@ -76,15 +75,12 @@ struct TorrentDetailTrackerSheet: View {
                 }
             }
             .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.gridBackgroundGradient)
             .navigationTitle(OrbixStrings.navTrackerManagement)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button(OrbixStrings.btnDone) { dismiss() }
-                        .fontWeight(.medium)
-                        .foregroundColor(AppColors.accentPrimary)
+                        .fontWeight(.semibold)
                 }
             }
         }

@@ -3,7 +3,6 @@ import SwiftUI
 struct TorrentDetailPagerView: View {
     let hashes: [String]
     @State private var currentHash: String
-    @Environment(\.colorScheme) private var colorScheme
 
     init(hashes: [String], initialHash: String) {
         self.hashes = hashes
@@ -17,10 +16,9 @@ struct TorrentDetailPagerView: View {
                     if shouldLoad(hash) {
                         TorrentDetailView(hash: hash)
                     } else {
-                        AppColors.gridBackgroundGradient.ignoresSafeArea()
+                        Color(.systemGroupedBackground).ignoresSafeArea()
                             .overlay {
                                 ProgressView()
-                                    .tint(AppColors.textTertiary)
                             }
                     }
                 }
@@ -29,7 +27,7 @@ struct TorrentDetailPagerView: View {
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
         .ignoresSafeArea(edges: .bottom)
-        .animation(AppMotion.draggingCurve, value: currentHash)
+        .animation(.spring(response: 0.15, dampingFraction: 1.0), value: currentHash)
         .onChange(of: currentHash) { _, _ in
             AppHaptics.light()
         }
@@ -48,11 +46,11 @@ struct TorrentDetailPagerView: View {
 
     private var pageIndicator: some View {
         Text("\(currentIndexDisplay) / \(hashes.count)")
-            .font(.system(size: 12, weight: .medium, design: .monospaced))
-            .foregroundColor(AppColors.textSecondary)
-            .padding(.horizontal, AppSpacing.md)
+            .font(.system(.caption, design: .monospaced).weight(.medium))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 12)
             .padding(.vertical, 5)
-            .background(Capsule().fill(AppColors.glassThick(for: colorScheme)))
+            .background(.regularMaterial, in: Capsule())
             .padding(.bottom, 4)
             .transition(.opacity)
     }

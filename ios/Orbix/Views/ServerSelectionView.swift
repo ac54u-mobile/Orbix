@@ -10,7 +10,7 @@ struct ServerSelectionView: View {
 
     var body: some View {
         ZStack {
-            AppColors.backgroundGradient.ignoresSafeArea()
+            Color(.systemGroupedBackground).ignoresSafeArea()
 
             VStack(spacing: 24) {
                 Spacer()
@@ -18,33 +18,17 @@ struct ServerSelectionView: View {
                 GlowingLogo(size: 88)
 
                 Text(OrbixStrings.serverSelect)
-                    .titleLarge()
+                    .font(.largeTitle.bold())
 
                 if servers.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "server.rack")
-                            .font(.system(size: 48))
-                            .foregroundColor(AppColors.placeholder)
-
-                        Text(OrbixStrings.serverNotAdded)
-                            .descriptionSmall()
-
-                        Button {
+                    ContentUnavailableView {
+                        Label(OrbixStrings.serverNotAdded, systemImage: "server.rack")
+                    } actions: {
+                        Button(OrbixStrings.navAddServer) {
                             AppHaptics.light()
                             showLogin = true
-                        } label: {
-                            Text(OrbixStrings.navAddServer)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 32)
-                                .padding(.vertical, 12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                        .fill(AppColors.accentPrimary)
-                                        .shadow(color: AppColors.accentPrimary.opacity(0.25), radius: 10, y: 4)
-                                )
                         }
-                        .buttonStyle(ScaleButtonStyle())
+                        .buttonStyle(.borderedProminent)
                     }
                 } else {
                     List(servers) { server in
@@ -54,10 +38,8 @@ struct ServerSelectionView: View {
                         } label: {
                             ServerRow(server: server, showChevron: false)
                         }
-                        .listRowBackground(Color.clear)
                     }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
+                    .listStyle(.insetGrouped)
                 }
 
                 Spacer()
@@ -66,11 +48,8 @@ struct ServerSelectionView: View {
                     Button {
                         showManagement = true
                     } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "gearshape")
-                            Text(OrbixStrings.btnManageServers)
-                        }
-                        .descriptionSmall(AppColors.accentPrimary)
+                        Label(OrbixStrings.btnManageServers, systemImage: "gearshape")
+                            .font(.footnote)
                     }
                     .padding(.bottom, 20)
                 }

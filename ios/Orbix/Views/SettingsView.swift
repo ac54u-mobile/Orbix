@@ -22,41 +22,48 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppColors.backgroundGradient.ignoresSafeArea()
-
+            Group {
                 if isLoading {
-                    SkeletonList(count: 4)
-                        .padding(.top, AppSpacing.lg)
+                    ProgressView()
+                        .controlSize(.large)
                 } else {
-                    ScrollView {
-                        VStack(spacing: AppSpacing.lg) {
-                            serverProfileCard
+                    List {
+                        serverProfileSection
 
-                            if appLock.isDeviceSupported {
-                                settingsSection(title: String(localized: "安全", comment: "Security")) {
-                                    appLockToggle
-                                }
-                            }
-
-                            settingsSection(title: String(localized: "更新", comment: "Update")) {
-                                updateRow
-                                if let release = updateCheck?.latest {
-                                    releaseCard(release)
-                                }
-                                if isDownloading {
-                                    downloadBar
-                                }
-                            }
-
-                            settingsSection(title: String(localized: "关于", comment: "About")) {
-                                aboutRow(icon: "info.circle", label: String(localized: "版本", comment: "Version"), value: appVersion)
-                                aboutRow(icon: "number", label: String(localized: "构建号", comment: "Build"), value: buildNumber)
+                        if appLock.isDeviceSupported {
+                            Section(String(localized: "安全", comment: "Security")) {
+                                appLockToggle
                             }
                         }
-                        .padding(.horizontal, AppSpacing.lg)
-                        .padding(.vertical, AppSpacing.lg)
+
+                        Section(String(localized: "更新", comment: "Update")) {
+                            updateRow
+                            if let release = updateCheck?.latest {
+                                releaseRow(release)
+                            }
+                            if isDownloading {
+                                downloadRow
+                            }
+                        }
+
+                        Section(String(localized: "关于", comment: "About")) {
+                            LabeledContent(String(localized: "版本", comment: "Version")) {
+                                Text(appVersion).monospacedDigit()
+                            }
+                            LabeledContent(String(localized: "构建号", comment: "Build")) {
+                                Text(buildNumber).monospacedDigit()
+                            }
+                        }
+
+                        Section {
+                            Button(role: .destructive) {
+                                logout()
+                            } label: {
+                                Label(OrbixStrings.btnSwitchServer, systemImage: "rectangle.portrait.and.arrow.right")
+                            }
+                        }
                     }
+                    .listStyle(.insetGrouped)
                 }
             }
             .navigationTitle(OrbixStrings.navSettings)
@@ -64,68 +71,61 @@ struct SettingsView: View {
         }
     }
 
-    // Glass card section helper
-    private func settingsSection(title: String, @ViewBuilder content: () -> some View) -> some View {
-        VStack(alignment: .leading, spacing: SettingsConfig.itemContentSpacing) {
-            Text(title)
-                .caption(AppColors.textSecondary)
-            content()
-        }
-        .padding(AppSpacing.lg)
-        .liquidGlass(.regular)
-    }
+    // MARK: - Server Profile
 
-    // MARK: - Server Profile Card (Glass)
-    private var serverProfileCard: some View {
-        VStack(spacing: 14) {
-            HStack(alignment: .top, spacing: 14) {
+    private var serverProfileSection: some View {
+        Section {
+            HStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(AppColors.accentPrimary)
+                        .fill(Color.accentColor)
                         .frame(width: 48, height: 48)
                     Text(String(serverName.prefix(1).uppercased()))
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white)
+                        .font(.system(.title2, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.white)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Text(serverName)
-                            .titleSmall()
+                            .font(.headline)
                         if serverHttps {
                             Image(systemName: "lock.fill")
-                                .tagCaption(AppColors.success)
+                                .font(.caption2)
+                                .foregroundStyle(.green)
                         }
                     }
 
                     HStack(spacing: 4) {
                         Circle()
-                            .fill(serverOnline == true ? AppColors.success : (serverOnline == false ? AppColors.danger : AppColors.textTertiary))
+                            .fill(serverOnline == true ? Color.green : (serverOnline == false ? Color.red : Color(.tertiaryLabel)))
                             .frame(width: 7, height: 7)
                         Text(serverOnline == true ? String(localized: "在线", comment: "Online") :
                                 serverOnline == false ? String(localized: "离线", comment: "Offline") :
                                 String(localized: "检测中…", comment: "Checking"))
-                            .descriptionSmall(serverOnline == true ? AppColors.success : AppColors.textSecondary)
+                            .font(.footnote)
+                            .foregroundStyle(serverOnline == true ? Color.green : Color.secondary)
                     }
                 }
 
                 Spacer()
             }
+            .padding(.vertical, 4)
 
-            HairlineDivider()
-
-            VStack(spacing: 0) {
-                settingDetailRow(label: OrbixStrings.sectionAddress, value: serverURL, monospaced: true)
-                HairlineDivider()
-                if !serverVersion.isEmpty {
-                    settingDetailRow(label: OrbixStrings.miscQBVersion, value: serverVersion, monospaced: true)
-                    HairlineDivider()
-                }
-                settingDetailRow(label: OrbixStrings.sectionUser, value: username)
+            LabeledContent(OrbixStrings.sectionAddress) {
+                Text(serverURL)
+                    .font(.system(.subheadline, design: .monospaced))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
             }
+            if !serverVersion.isEmpty {
+                LabeledContent(OrbixStrings.miscQBVersion) {
+                    Text(serverVersion)
+                        .font(.system(.subheadline, design: .monospaced))
+                }
+            }
+            LabeledContent(OrbixStrings.sectionUser, value: username)
         }
-        .padding(AppSpacing.lg)
-        .liquidGlass(.regular)
         .contextMenu {
             if !serverURL.isEmpty {
                 Button {
@@ -145,15 +145,12 @@ struct SettingsView: View {
     // MARK: - Security
     private var appLockToggle: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Toggle(isOn: $appLock.isEnabled) {
-                Text(String(localized: "应用锁", comment: "App lock"))
-                    .bodyFont()
-            }
-            .tint(AppColors.accentPrimary)
+            Toggle(String(localized: "应用锁", comment: "App lock"), isOn: $appLock.isEnabled)
 
             if appLock.isEnabled {
                 Text(String(localized: "切到后台 \(Int(AppConstants.lockGracePeriod)) 秒后自动锁定", comment: "Auto-lock hint"))
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -166,35 +163,36 @@ struct SettingsView: View {
             HStack(spacing: 12) {
                 Group {
                     if isCheckingUpdate {
-                        ProgressView().scaleEffect(0.8)
+                        ProgressView()
                     } else if let check = updateCheck, check.latest != nil {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .foregroundColor(AppColors.warning)
+                            .foregroundStyle(.orange)
                     } else if updateCheck?.error != nil {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .foregroundColor(AppColors.danger)
+                            .foregroundStyle(.red)
                     } else if updateCheck != nil {
                         Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(AppColors.success)
+                            .foregroundStyle(.green)
                     } else {
                         Image(systemName: "arrow.triangle.2.circlepath")
-                            .foregroundColor(AppColors.textSecondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
-                .font(AppTypography.body())
                 .frame(width: 26)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(updateStatusText)
-                        .bodyFont()
+                        .foregroundStyle(.primary)
                     if let detail = updateStatusDetail {
                         Text(detail)
-                            .descriptionSmall()
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .iconSymbol(AppColors.textTertiary)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.tertiary)
             }
         }
         .disabled(isCheckingUpdate)
@@ -216,17 +214,18 @@ struct SettingsView: View {
         return nil
     }
 
-    private func releaseCard(_ release: AppRelease) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.md) {
+    private func releaseRow(_ release: AppRelease) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(release.version)
-                    .titleSmall()
+                    .font(.headline)
                 Spacer()
                 if let size = release.ipaSize {
                     Text(formatBytes(size))
-                        .caption(AppColors.textSecondary)
-                        .padding(.horizontal, AppSpacing.sm).padding(.vertical, 3)
-                        .background(Capsule().fill(Color(.secondarySystemFill)))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 8).padding(.vertical, 3)
+                        .background(Color(.secondarySystemFill), in: Capsule())
                 }
             }
 
@@ -236,7 +235,8 @@ struct SettingsView: View {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if !cleanNotes.isEmpty {
                 Text(cleanNotes)
-                    .descriptionSmall()
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
                     .lineLimit(3)
             }
 
@@ -244,62 +244,23 @@ struct SettingsView: View {
                 downloadUpdate(release)
             } label: {
                 Text(isDownloading ? OrbixStrings.msgDownloadingDot : OrbixStrings.btnDownloadInstall)
-                    .font(AppTypography.filterLabel())
-                    .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-                    .background(RoundedRectangle(cornerRadius: 10).fill(AppColors.accentPrimary))
             }
+            .buttonStyle(.borderedProminent)
             .disabled(isDownloading)
         }
+        .padding(.vertical, 4)
     }
 
-    private var downloadBar: some View {
+    private var downloadRow: some View {
         VStack(spacing: 6) {
-            GeometryReader { geo in
-                Capsule()
-                    .fill(AppColors.accentPrimary)
-                    .frame(width: max(4, geo.size.width * downloadProgress))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Capsule().fill(AppColors.separator))
-                    .animation(.easeOut(duration: 0.3), value: downloadProgress)
-            }
-            .frame(height: 4)
+            ProgressView(value: downloadProgress)
+                .animation(.easeOut(duration: 0.3), value: downloadProgress)
             Text("\(min(99, Int(downloadProgress * 100)))%")
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                .foregroundColor(AppColors.accentPrimary)
+                .font(.caption.monospacedDigit().weight(.medium))
+                .foregroundStyle(.secondary)
         }
-    }
-
-    // Detail row for server card
-    private func settingDetailRow(label: String, value: String, monospaced: Bool = false) -> some View {
-        HStack {
-            Text(label)
-                .font(AppTypography.body())
-                .foregroundColor(AppColors.textPrimary)
-            Spacer()
-            Text(value)
-                .font(monospaced ? AppTypography.monoValue() : AppTypography.body())
-                .foregroundColor(AppColors.textSecondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-        }
-        .padding(.vertical, AppSpacing.sm)
-    }
-
-    // MARK: - About
-    private func aboutRow(icon: String, label: String, value: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(AppTypography.body())
-                .foregroundColor(AppColors.textTertiary)
-                .frame(width: 26)
-            Text(label)
-                .bodyFont()
-            Spacer()
-            Text(value)
-                .monoValue(AppColors.textSecondary)
-        }
+        .padding(.vertical, 4)
     }
 
     // MARK: - Data

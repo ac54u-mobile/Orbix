@@ -10,30 +10,15 @@ struct ServerManagementView: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                AppColors.backgroundGradient.ignoresSafeArea()
-
+            Group {
                 if servers.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "server.rack")
-                            .font(.system(size: 48))
-                            .foregroundColor(AppColors.placeholder)
-
-                        Text(OrbixStrings.msgNoServer)
-                            .descriptionSmall()
-
-                        Button {
+                    ContentUnavailableView {
+                        Label(OrbixStrings.msgNoServer, systemImage: "server.rack")
+                    } actions: {
+                        Button(OrbixStrings.navAddServer) {
                             showLogin = true
-                        } label: {
-                            Text(OrbixStrings.navAddServer)
-                                .bodyFont(AppColors.textPrimary)
-                                .padding(.horizontal, 32)
-                                .padding(.vertical, 12)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .fill(AppColors.accentPrimary)
-                                )
                         }
+                        .buttonStyle(.borderedProminent)
                     }
                 } else {
                     List {
@@ -55,7 +40,7 @@ struct ServerManagementView: View {
                                     } label: {
                                         Label(OrbixStrings.btnEdit, systemImage: "pencil")
                                     }
-                                    .tint(AppColors.accentPrimary)
+                                    .tint(.blue)
                                 }
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
@@ -64,9 +49,8 @@ struct ServerManagementView: View {
                                     } label: {
                                         Label(OrbixStrings.btnConnect, systemImage: "link")
                                     }
-                                    .tint(AppColors.success)
+                                    .tint(.green)
                                 }
-                                .listRowBackground(AppColors.card)
                         }
                         .onDelete { indexSet in
                             for idx in indexSet {
@@ -75,7 +59,7 @@ struct ServerManagementView: View {
                             servers.remove(atOffsets: indexSet)
                         }
                     }
-                    .insetGroupedStyle()
+                    .listStyle(.insetGrouped)
                 }
             }
             .navigationTitle(OrbixStrings.navServerManagement)

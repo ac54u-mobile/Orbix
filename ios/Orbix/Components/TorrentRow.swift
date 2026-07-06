@@ -1,84 +1,52 @@
 import SwiftUI
 
-// MARK: - Torrent Row (iOS 26 Liquid Glass Card)
+// MARK: - Torrent Row (native list row)
 
 struct TorrentRow: View {
     let torrent: TorrentInfo
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: AppSpacing.md) {
-                statusIconView
+        HStack(spacing: 12) {
+            StatusIcon(status: torrent.statusBadge)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(torrent.name)
-                        .titleSmall()
-                        .lineLimit(2)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(torrent.name)
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(2)
 
-                    Text(torrent.secondaryInfoLine)
-                        .descriptionSmall()
-                        .lineLimit(2)
+                Text(torrent.secondaryInfoLine)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+
+                if !torrent.isCompleted && torrent.progress > 0 {
+                    ProgressView(value: torrent.progress)
+                        .tint(torrent.lineStatusColor)
+                        .accessibilityHidden(true)
                 }
-
-                Spacer(minLength: 0)
-
-                trailingBadge
             }
-            .padding(.vertical, AppSpacing.sm)
-            .padding(.horizontal, AppSpacing.lg)
-            .frame(minHeight: 60)
 
-            // Progress bar
-            if !torrent.isCompleted && torrent.progress > 0 {
-                ProgressBar(progress: torrent.progress, color: torrent.lineStatusColor)
-                    .padding(.horizontal, AppSpacing.lg)
-                    .padding(.top, 2)
-                    .accessibilityHidden(true)
-            }
+            Spacer(minLength: 0)
+
+            trailingBadge
         }
-        .background(
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .fill(AppColors.glassRegular(for: colorScheme))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: AppRadius.lg, style: .continuous)
-                .stroke(AppColors.glassBorder(for: colorScheme), lineWidth: 0.5)
-        )
-        .padding(.horizontal, AppSpacing.lg)
-        .padding(.vertical, AppSpacing.xs)
+        .padding(.vertical, 4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(torrent.name)
         .accessibilityValue(torrent.secondaryInfoLine)
         .accessibilityHint(String(localized: "Double-tap to view details"))
     }
 
-    private var statusColor: Color {
-        torrent.lineStatusColor
-    }
-
-    private var statusIconView: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: AppRadius.sm, style: .continuous)
-                .fill(statusColor.opacity(0.12))
-                .frame(width: IconLayout.sfSymbolSize, height: IconLayout.sfSymbolSize)
-
-            Image(systemName: torrent.statusBadge.iconName)
-                .sfSymbolFrame()
-                .foregroundColor(statusColor)
-        }
-    }
-
     @ViewBuilder
     private var trailingBadge: some View {
         if torrent.isCompleted {
             Text(OrbixStrings.filterCompleted)
-                .caption(AppColors.success)
-                .fontWeight(.medium)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.green)
         } else {
             Image(systemName: "chevron.right")
-                .iconSymbol(AppColors.textTertiary)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.tertiary)
         }
     }
 }
@@ -92,15 +60,9 @@ struct TorrentRow: View {
         .demo(name: "Debian 12.8.0 amd64 netinst.iso", state: "uploading", progress: 1.0, dlspeed: 0, upspeed: 6_200_000, size: 629_145_600, ratio: 3.42, numSeeds: 120, numLeechs: 0, addedOn: now - 604800, completionOn: now - 259200),
         .demo(name: "Fedora-Workstation-Live-x86_64-41-1.4.iso", state: "error", progress: 0.08, dlspeed: 0, upspeed: 0, size: 2_147_483_648, ratio: 0.0, numSeeds: 0, numLeechs: 0, addedOn: now - 43200, completionOn: 0),
     ]
-    ScrollView {
-        VStack(spacing: 0) {
-            ForEach(samples) { t in
-                TorrentRow(torrent: t)
-            }
-        }
-        .padding(.top, 20)
+    List(samples) { t in
+        TorrentRow(torrent: t)
     }
-    .background(AppColors.gridBackgroundGradient.ignoresSafeArea())
-    .preferredColorScheme(.light)
+    .listStyle(.plain)
 }
 #endif
