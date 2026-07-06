@@ -8,6 +8,7 @@ struct SubtitleJobsListView: View {
     @State private var exportURL: URL?
     @State private var showExportSheet = false
     @State private var exportingJobId: String?
+    @State private var pendingDeleteJob: SubtitleJob?
 
     var body: some View {
         Group {
@@ -40,6 +41,25 @@ struct SubtitleJobsListView: View {
         .sheet(isPresented: $showExportSheet) {
             if let exportURL {
                 ShareSheet(activityItems: [exportURL])
+            }
+        }
+        .confirmationDialog(
+            String(localized: "删除字幕任务", comment: "Delete subtitle job"),
+            isPresented: Binding(
+                get: { pendingDeleteJob != nil },
+                set: { if !$0 { pendingDeleteJob = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            if let job = pendingDeleteJob {
+                Button(String(localized: "仅删除任务记录", comment: ""), role: .destructive) {
+                    deleteJob(job, deleteFile: false)
+                }
+                if job.stage == "done" {
+                    Button(String(localized: "同时删除服务器上的字幕文件", comment: ""), role: .destructive) {
+                        deleteJob(job, deleteFile: true)
+                    }
+                }
             }
         }
     }
@@ -81,6 +101,11 @@ struct SubtitleJobsListView: View {
                     .font(.caption)
                     .foregroundStyle(.red)
                     .lineLimit(2)
+            case "paused":
+                Label(String(localized: "已暂停，左滑可继续", comment: "Paused hint"),
+                      systemImage: "pause.circle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
             default:
                 VStack(alignment: .leading, spacing: 4) {
                     ProgressView(value: job.overallProgress)
@@ -97,6 +122,53 @@ struct SubtitleJobsListView: View {
             }
         }
         .padding(.vertical, 4)
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                pendingDeleteJob = job
+            } label: {
+                Label(String(localized: "删除", comment: "Delete"), systemImage: "trash")
+            }
+
+            if job.isRunningOrQueued {
+                Button {
+                    pauseJob(job)
+                } label: {
+                    Label(String(localized: "暂停", comment: "Pause"), systemImage: "pause.fill")
+                }
+                .tint(.orange)
+            } else if job.stage == "paused" {
+                Button {
+                    resumeJob(job)
+                } label: {
+                    Label(String(localized: "继续", comment: "Resume"), systemImage: "play.fill")
+                }
+                .tint(.green)
+            }
+        }
+    }
+
+    private func pauseJob(_ job: SubtitleJob) {
+        AppHaptics.light()
+        Task {
+            try? await SubtitleServerApi.shared.pauseJob(id: job.id)
+            await refreshOnce()
+        }
+    }
+
+    private func resumeJob(_ job: SubtitleJob) {
+        AppHaptics.light()
+        Task {
+            try? await SubtitleServerApi.shared.resumeJob(id: job.id)
+            await refreshOnce()
+        }
+    }
+
+    private func deleteJob(_ job: SubtitleJob, deleteFile: Bool) {
+        AppHaptics.medium()
+        Task {
+            try? await SubtitleServerApi.shared.deleteJob(id: job.id, deleteFile: deleteFile)
+            await refreshOnce()
+        }
     }
 
     private func exportSrt(_ job: SubtitleJob) {
@@ -115,25 +187,29 @@ struct SubtitleJobsListView: View {
         }
     }
 
+    private func refreshOnce() async {
+        do {
+            let list = try await SubtitleServerApi.shared.listJobs()
+            await MainActor.run {
+                jobs = list
+                isLoading = false
+                errorMessage = nil
+                SubtitleBadgeStore.shared.sync(with: list)
+            }
+        } catch {
+            await MainActor.run {
+                isLoading = false
+                if jobs.isEmpty { errorMessage = error.localizedDescription }
+            }
+        }
+    }
+
     private func refreshLoop() async {
         while !Task.isCancelled {
-            do {
-                let list = try await SubtitleServerApi.shared.listJobs()
-                await MainActor.run {
-                    jobs = list
-                    isLoading = false
-                    errorMessage = nil
-                    SubtitleBadgeStore.shared.sync(with: list)
-                }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                    if jobs.isEmpty { errorMessage = error.localizedDescription }
-                }
-            }
-            // 有进行中的任务时 3 秒刷新，否则不再轮询
-            guard jobs.contains(where: { !$0.isFinished }) else { return }
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            await refreshOnce()
+            // 有进行中的任务时 3 秒刷新；空闲时放慢，便于暂停/继续后仍能更新
+            let hasActive = jobs.contains { $0.isRunningOrQueued }
+            try? await Task.sleep(nanoseconds: hasActive ? 3_000_000_000 : 10_000_000_000)
         }
     }
 }

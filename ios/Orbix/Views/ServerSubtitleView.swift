@@ -131,9 +131,40 @@ struct ServerSubtitleView: View {
             doneView(job)
         case "error":
             failedView(job)
+        case "paused":
+            pausedView(job)
         default:
             runningView(job)
         }
+    }
+
+    private func pausedView(_ job: SubtitleJob) -> some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Image(systemName: "pause.circle.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(.orange)
+            Text(String(localized: "任务已暂停", comment: "Job paused"))
+                .font(.headline)
+            Text((job.videoPath as NSString).lastPathComponent)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .padding(.horizontal, 32)
+            Button(String(localized: "继续", comment: "Resume")) {
+                Task {
+                    if let resumed = try? await SubtitleServerApi.shared.resumeJob(id: job.id) {
+                        await MainActor.run { self.job = resumed }
+                        await pollJob()
+                    }
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color(.systemGroupedBackground))
     }
 
     private func runningView(_ job: SubtitleJob) -> some View {

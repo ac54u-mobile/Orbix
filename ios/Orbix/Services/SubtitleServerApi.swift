@@ -87,6 +87,29 @@ actor SubtitleServerApi {
         return try JSONDecoder().decode([SubtitleJob].self, from: data)
     }
 
+    /// 暂停任务（运行中的会停下，排队中的下一个任务自动开始）
+    @discardableResult
+    func pauseJob(id: String) async throws -> SubtitleJob {
+        let data = try await request("jobs/\(id)/pause", method: "POST")
+        return try JSONDecoder().decode(SubtitleJob.self, from: data)
+    }
+
+    /// 恢复已暂停的任务（重新排队，从头处理）
+    @discardableResult
+    func resumeJob(id: String) async throws -> SubtitleJob {
+        let data = try await request("jobs/\(id)/resume", method: "POST")
+        return try JSONDecoder().decode(SubtitleJob.self, from: data)
+    }
+
+    /// 删除任务记录，可选同时删除服务器上的字幕文件
+    func deleteJob(id: String, deleteFile: Bool = false) async throws {
+        _ = try await request(
+            "jobs/\(id)",
+            query: deleteFile ? [URLQueryItem(name: "delete_file", value: "true")] : [],
+            method: "DELETE"
+        )
+    }
+
     /// 下载已完成任务的 srt 字幕内容
     func downloadSrt(jobId: String) async throws -> String {
         let data = try await request("jobs/\(jobId)/srt")

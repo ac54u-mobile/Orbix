@@ -87,6 +87,33 @@ class Job:
 JOBS: dict[str, Job] = {}
 JOBS_LOCK = threading.Lock()
 
+# ------------------------------------------------------------- cancellation
+
+
+class JobCancelled(Exception):
+    pass
+
+
+CANCEL_LOCK = threading.Lock()
+CANCEL_REQUESTED: set[str] = set()
+
+
+def request_cancel(job_id: str):
+    with CANCEL_LOCK:
+        CANCEL_REQUESTED.add(job_id)
+
+
+def clear_cancel(job_id: str):
+    with CANCEL_LOCK:
+        CANCEL_REQUESTED.discard(job_id)
+
+
+def check_cancel(job: Job):
+    with CANCEL_LOCK:
+        cancelled = job.id in CANCEL_REQUESTED
+    if cancelled:
+        raise JobCancelled()
+
 # 任务记录落盘，服务重启后仍能查看历史
 JOBS_FILE = os.environ.get("JOBS_FILE", os.path.join(os.path.dirname(os.path.abspath(__file__)), "jobs.json"))
 
@@ -116,8 +143,8 @@ def load_jobs():
             job = Job(**d)
         except TypeError:
             continue
-        # 重启后进行中的任务自动重新排队（从头处理）
-        if job.stage not in ("done", "error"):
+        # 重启后进行中的任务自动重新排队（从头处理）；已暂停的保持暂停
+        if job.stage not in ("done", "error", "paused"):
             job.stage = "queued"
             job.progress = 0
             job.message = "服务重启，已自动重新排队"
@@ -174,6 +201,12 @@ def extract_audio(job: Job, video: str, wav: str, duration: float):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
     )
     for line in proc.stdout:
+        with CANCEL_LOCK:
+            cancelled = job.id in CANCEL_REQUESTED
+        if cancelled:
+            proc.kill()
+            proc.wait()
+            raise JobCancelled()
         m = re.match(r"out_time_ms=(\d+)", line.strip())
         if m and duration > 0:
             pct = min(99, int(int(m.group(1)) / 1_000_000 / duration * 100))
@@ -201,6 +234,7 @@ def transcribe(job: Job, wav: str, duration: float) -> list[dict]:
     )
     segments = []
     for seg in segments_iter:
+        check_cancel(job)
         text = seg.text.strip()
         if text:
             start, end = seg.start, seg.end
@@ -285,6 +319,7 @@ def translate(job: Job, segments: list[dict]) -> list[str]:
     out: list[str] = []
     total = len(texts)
     for i in range(0, total, TRANSLATE_BATCH):
+        check_cancel(job)
         batch = texts[i:i + TRANSLATE_BATCH]
         # 把前一批的译文尾部作为上下文，保证跨批次语境连贯
         context = out[-6:] if out else None
@@ -355,9 +390,12 @@ def run_pipeline(job: Job):
         srt_path = write_srt(job, segments, translated, job.video_path)
         job.update(stage="done", progress=100, srt_path=srt_path,
                    message=f"完成，共 {len(segments)} 条字幕")
+    except JobCancelled:
+        job.update(stage="paused", progress=0, message="已暂停", error="")
     except Exception as e:  # noqa: BLE001
         job.update(stage="error", error=str(e)[:500], message="失败")
     finally:
+        clear_cancel(job.id)
         if os.path.exists(wav):
             os.remove(wav)
         # 队列空了就释放模型，把内存还给系统
@@ -414,10 +452,15 @@ def create_job(req: CreateJobRequest, x_api_key: str | None = Header(default=Non
     check_auth(x_api_key)
     video_path = map_path(req.video_path)
     with JOBS_LOCK:
-        # 同一视频若已有进行中的任务，直接返回它
-        for job in JOBS.values():
-            if job.video_path == video_path and job.stage not in ("done", "error"):
-                return asdict(job)
+        # 同一视频若已有进行中的任务，直接返回它；已暂停的自动恢复排队
+        for existing in JOBS.values():
+            if existing.video_path == video_path and existing.stage not in ("done", "error"):
+                if existing.stage == "paused":
+                    existing.stage = "queued"
+                    existing.progress = 0
+                    existing.message = "排队中"
+                    enqueue(existing)
+                return asdict(existing)
         job = Job(id=uuid.uuid4().hex[:12], video_path=video_path)
         JOBS[job.id] = job
     save_jobs()
@@ -432,6 +475,52 @@ def get_job(job_id: str, x_api_key: str | None = Header(default=None)):
     if job is None:
         raise HTTPException(status_code=404, detail="job not found")
     return asdict(job)
+
+
+@app.post("/api/jobs/{job_id}/pause")
+def pause_job(job_id: str, x_api_key: str | None = Header(default=None)):
+    check_auth(x_api_key)
+    job = JOBS.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    if job.stage == "queued":
+        job.update(stage="paused", progress=0, message="已暂停")
+    elif job.stage in ("extract", "transcribe", "translate", "write"):
+        # 运行中的任务：置取消标记，工作线程停下后自动接着跑队列里的下一个
+        request_cancel(job_id)
+        job.update(message="正在暂停…")
+    return asdict(job)
+
+
+@app.post("/api/jobs/{job_id}/resume")
+def resume_job(job_id: str, x_api_key: str | None = Header(default=None)):
+    check_auth(x_api_key)
+    job = JOBS.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    if job.stage == "paused":
+        job.update(stage="queued", progress=0, message="排队中", error="")
+        enqueue(job)
+    return asdict(job)
+
+
+@app.delete("/api/jobs/{job_id}")
+def delete_job(job_id: str, delete_file: bool = False, x_api_key: str | None = Header(default=None)):
+    check_auth(x_api_key)
+    job = JOBS.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="job not found")
+    if job.stage in ("extract", "transcribe", "translate", "write"):
+        request_cancel(job_id)
+    if delete_file and job.srt_path and os.path.isfile(job.srt_path):
+        try:
+            os.remove(job.srt_path)
+        except OSError:
+            pass
+    with JOBS_LOCK:
+        JOBS.pop(job_id, None)
+    save_jobs()
+    return {"ok": True}
 
 
 @app.get("/api/jobs/{job_id}/srt", response_class=PlainTextResponse)

@@ -56,15 +56,15 @@ final class SubtitleBadgeStore: ObservableObject {
 
     /// 单个任务的即时更新（提取字幕页轮询时同步给卡片）
     func updateActive(_ job: SubtitleJob, torrentHash: String) {
-        if job.isFinished {
+        if job.isRunningOrQueued {
+            activeJobs[torrentHash] = job
+        } else {
             activeJobs.removeValue(forKey: torrentHash)
             if job.stage == "done" { markSubtitled(torrentHash) }
-        } else {
-            activeJobs[torrentHash] = job
         }
     }
 
-    /// 用服务器任务列表整体同步：进行中的显示进度，完成的打标
+    /// 用服务器任务列表整体同步：进行中的显示进度，完成的打标（暂停/失败不上卡片）
     func sync(with jobs: [SubtitleJob]) {
         let map = PersistenceService.shared.subtitleJobMap
         var active: [String: SubtitleJob] = [:]
@@ -72,7 +72,7 @@ final class SubtitleBadgeStore: ObservableObject {
             guard let hash = map[job.id] else { continue }
             if job.stage == "done" {
                 markSubtitled(hash)
-            } else if job.stage != "error" {
+            } else if job.isRunningOrQueued {
                 // 服务器返回按时间倒序，同一种子只保留最新任务
                 if active[hash] == nil { active[hash] = job }
             }
@@ -100,6 +100,9 @@ struct SubtitleJob: Codable, Identifiable, Equatable {
 
     var isFinished: Bool { stage == "done" || stage == "error" }
 
+    /// 排队或正在处理（暂停不算）
+    var isRunningOrQueued: Bool { !isFinished && stage != "paused" }
+
     var stageTitle: String {
         switch stage {
         case "queued": return String(localized: "排队中", comment: "Queued")
@@ -107,6 +110,7 @@ struct SubtitleJob: Codable, Identifiable, Equatable {
         case "transcribe": return String(localized: "Whisper 语音识别", comment: "Transcribing")
         case "translate": return String(localized: "DeepSeek 翻译", comment: "Translating")
         case "write": return String(localized: "写入字幕文件", comment: "Writing subtitle")
+        case "paused": return String(localized: "已暂停", comment: "Paused")
         case "done": return String(localized: "已完成", comment: "Done")
         case "error": return String(localized: "失败", comment: "Failed")
         default: return stage
@@ -117,7 +121,7 @@ struct SubtitleJob: Codable, Identifiable, Equatable {
     var overallProgress: Double {
         let stageRange: (start: Double, span: Double)
         switch stage {
-        case "queued": stageRange = (0, 0)
+        case "queued", "paused": stageRange = (0, 0)
         case "extract": stageRange = (0, 0.10)
         case "transcribe": stageRange = (0.10, 0.60)
         case "translate": stageRange = (0.70, 0.28)
