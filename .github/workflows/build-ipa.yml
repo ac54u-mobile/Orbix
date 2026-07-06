@@ -5,14 +5,8 @@ on:
     branches:
       - master
       - main
-      - 'fix/**'
-      - 'feat/**'
     tags:
       - 'v*'
-  pull_request:
-    branches:
-      - master
-      - main
   workflow_dispatch:
 
 concurrency:
@@ -32,6 +26,7 @@ jobs:
 
       - name: Install XcodeGen
         env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
           HOMEBREW_NO_REQUIRE_TAP_TRUST: 1
         run: brew install xcodegen
 
