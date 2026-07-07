@@ -55,6 +55,37 @@ def map_path(path: str) -> str:
             return dst + path[len(src):]
     return path
 
+def resolve_video_path(path: str) -> str:
+    """文件被刮削工具移动/重命名后（如 hhd800.com@BDST-089.mp4 → BDST-089/BDST-089.mp4），
+    qBittorrent 记录的还是旧路径。在原目录向下搜两层，按文件名（去掉站点前缀等杂质后
+    互为子串）找回真实文件。找不到时原样返回。"""
+    if os.path.isfile(path):
+        return path
+    parent = os.path.dirname(path)
+    if not os.path.isdir(parent):
+        return path
+    stem = os.path.splitext(os.path.basename(path))[0].lower()
+    ext = os.path.splitext(path)[1].lower()
+    best_score, best_path = 0, None
+    for root, dirs, files in os.walk(parent):
+        if os.path.relpath(root, parent).count(os.sep) >= 2:
+            dirs[:] = []
+            continue
+        for name in files:
+            cand_stem, cand_ext = os.path.splitext(name)
+            if cand_ext.lower() != ext:
+                continue
+            cand = cand_stem.lower()
+            if cand == stem:
+                return os.path.join(root, name)
+            # 子串匹配（如 "bdst-089" ⊂ "hhd800.com@bdst-089"），太短的名字不参与，避免误配
+            if min(len(cand), len(stem)) >= 5 and (cand in stem or stem in cand):
+                score = min(len(cand), len(stem))
+                if score > best_score:
+                    best_score, best_path = score, os.path.join(root, name)
+    return best_path or path
+
+
 DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
 TRANSLATE_BATCH = 30
 
@@ -227,7 +258,9 @@ def transcribe(job: Job, wav: str, duration: float) -> list[dict]:
         wav,
         language=None if LANGUAGE == "auto" else LANGUAGE,
         vad_filter=True,
-        vad_parameters={"min_silence_duration_ms": 400, "speech_pad_ms": 150},
+        # threshold 默认 0.5 会把低音量/气声对白整段判成静音（实测某 43 分钟视频只识别出前 5 分钟），
+        # 降到 0.25 才能覆盖全片；幻觉复读靠 postprocess_segments 去重兜底
+        vad_parameters={"threshold": 0.25, "min_silence_duration_ms": 400, "speech_pad_ms": 150},
         beam_size=1,
         word_timestamps=True,
         condition_on_previous_text=False,
@@ -376,6 +409,10 @@ cleanup_workdir()
 def run_pipeline(job: Job):
     wav = os.path.join(WORK_DIR, f"orbix-sub-{job.id}.wav")
     try:
+        # 排队期间文件可能被整理工具移动/重命名，执行前再解析一次
+        real = resolve_video_path(job.video_path)
+        if real != job.video_path:
+            job.update(video_path=real)
         if not os.path.isfile(job.video_path):
             hint = "（qBittorrent 在 Docker 里时，请在 /etc/orbix-subtitle.env 配置 PATH_MAP 路径映射）" \
                 if not PATH_MAP else ""
@@ -450,7 +487,7 @@ def health():
 @app.post("/api/jobs", status_code=202)
 def create_job(req: CreateJobRequest, x_api_key: str | None = Header(default=None)):
     check_auth(x_api_key)
-    video_path = map_path(req.video_path)
+    video_path = resolve_video_path(map_path(req.video_path))
     with JOBS_LOCK:
         # 同一视频若已有进行中的任务，直接返回它；已暂停的自动恢复排队
         for existing in JOBS.values():
@@ -539,7 +576,8 @@ def list_jobs(video_path: str | None = None, x_api_key: str | None = Header(defa
     jobs = sorted(JOBS.values(), key=lambda j: j.created_at, reverse=True)
     if video_path:
         mapped = map_path(video_path)
-        jobs = [j for j in jobs if j.video_path == mapped]
+        resolved = resolve_video_path(mapped)
+        jobs = [j for j in jobs if j.video_path in (mapped, resolved)]
     return [asdict(j) for j in jobs[:50]]
 
 
